@@ -9,6 +9,8 @@ public interface IClientRepository
 
     Task<Client?> GetByCodeAsync(ClientCode code, CancellationToken cancellationToken = default);
 
+    Task<List<Client>> GetAllAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(Client client, CancellationToken cancellationToken = default);
 
     void Update(Client client);

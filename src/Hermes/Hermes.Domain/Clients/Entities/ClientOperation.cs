@@ -1,4 +1,4 @@
-using Hermes.Domain.Operations.ValueObjects;
+using Hermes.Domain.Operations.Entities;
 
 namespace Hermes.Domain.Clients.Entities;
 
@@ -8,11 +8,11 @@ public class ClientOperation
     {
     }
 
-    private ClientOperation(Guid id, Guid clientId, OperationType operationType)
+    private ClientOperation(Guid id, Guid clientId, Guid operationTypeId)
     {
         Id = id;
         ClientId = clientId;
-        OperationType = operationType;
+        OperationTypeId = operationTypeId;
         IsEnabled = true;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
@@ -22,7 +22,7 @@ public class ClientOperation
 
     public Guid ClientId { get; private set; }
 
-    public OperationType OperationType { get; private set; } = null!;
+    public Guid OperationTypeId { get; private set; }
 
     public bool IsEnabled { get; private set; }
 
@@ -30,16 +30,19 @@ public class ClientOperation
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public static ClientOperation Create(Guid clientId, OperationType operationType)
+    public static ClientOperation Create(Guid clientId, Guid operationTypeId)
     {
         if (clientId == Guid.Empty)
         {
             throw new ArgumentException("Client ID cannot be empty.", nameof(clientId));
         }
 
-        ArgumentNullException.ThrowIfNull(operationType);
+        if (operationTypeId == Guid.Empty)
+        {
+            throw new ArgumentException("Operation type ID cannot be empty.", nameof(operationTypeId));
+        }
 
-        return new ClientOperation(Guid.NewGuid(), clientId, operationType);
+        return new ClientOperation(Guid.NewGuid(), clientId, operationTypeId);
     }
 
     public void Enable()

@@ -10,14 +10,14 @@ public sealed class Operation
 
     private Operation(
         Guid id,
-        OperationType type,
+        Guid operationTypeId,
         CorrelationId correlationId,
         ExternalOperationId externalId,
         Guid clientId,
         Guid endpointId)
     {
         Id = id;
-        Type = type;
+        OperationTypeId = operationTypeId;
         CorrelationId = correlationId;
         ExternalId = externalId;
         ClientId = clientId;
@@ -29,7 +29,7 @@ public sealed class Operation
 
     public Guid Id { get; private set; }
 
-    public OperationType Type { get; private set; } = null!;
+    public Guid OperationTypeId { get; private set; } 
 
     public CorrelationId CorrelationId { get; private set; } = null!;
 
@@ -46,27 +46,33 @@ public sealed class Operation
     public DateTimeOffset UpdatedAt { get; private set; }
 
     public static Operation Create(
-        OperationType type,
+        Guid operationTypeId,
         CorrelationId correlationId,
         ExternalOperationId externalId,
-        Guid sourceEndpointId,
-        Guid targetEndpointId)
+        Guid clientId,
+        Guid endpointId)
     {
-        ArgumentNullException.ThrowIfNull(type);
+
         ArgumentNullException.ThrowIfNull(correlationId);
         ArgumentNullException.ThrowIfNull(externalId);
-
-        if (sourceEndpointId == Guid.Empty)
+        
+        if (operationTypeId == Guid.Empty)
         {
-            throw new ArgumentException("Source endpoint ID cannot be empty.", nameof(sourceEndpointId));
+            throw new ArgumentException("OperationTypeId ID cannot be empty.", nameof(operationTypeId));
         }
 
-        if (targetEndpointId == Guid.Empty)
+  
+        if (clientId == Guid.Empty)
         {
-            throw new ArgumentException("Target endpoint ID cannot be empty.", nameof(targetEndpointId));
+            throw new ArgumentException("Client ID cannot be empty.", nameof(clientId));
         }
 
-        return new Operation(Guid.NewGuid(), type, correlationId, externalId, sourceEndpointId, targetEndpointId);
+        if (endpointId == Guid.Empty)
+        {
+            throw new ArgumentException("Endpoint ID cannot be empty.", nameof(endpointId));
+        }
+
+        return new Operation(Guid.NewGuid(), operationTypeId, correlationId, externalId, clientId, endpointId);
     }
 
     public void Validate()
