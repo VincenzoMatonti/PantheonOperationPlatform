@@ -8,12 +8,20 @@ public sealed class Operation
     {
     }
 
-    private Operation(Guid id, OperationType type, CorrelationId correlationId, ExternalOperationId externalId)
+    private Operation(
+        Guid id,
+        OperationType type,
+        CorrelationId correlationId,
+        ExternalOperationId externalId,
+        Guid sourceEndpointId,
+        Guid targetEndpointId)
     {
         Id = id;
         Type = type;
         CorrelationId = correlationId;
         ExternalId = externalId;
+        SourceEndpointId = sourceEndpointId;
+        TargetEndpointId = targetEndpointId;
         Status = OperationStatus.Received;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
@@ -27,19 +35,38 @@ public sealed class Operation
 
     public ExternalOperationId ExternalId { get; private set; } = null!;
 
+    public Guid SourceEndpointId { get; private set; }
+
+    public Guid TargetEndpointId { get; private set; }
+
     public OperationStatus Status { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public static Operation Create(OperationType type, CorrelationId correlationId, ExternalOperationId externalId)
+    public static Operation Create(
+        OperationType type,
+        CorrelationId correlationId,
+        ExternalOperationId externalId,
+        Guid sourceEndpointId,
+        Guid targetEndpointId)
     {
         ArgumentNullException.ThrowIfNull(type);
         ArgumentNullException.ThrowIfNull(correlationId);
         ArgumentNullException.ThrowIfNull(externalId);
 
-        return new Operation(Guid.NewGuid(), type, correlationId, externalId);
+        if (sourceEndpointId == Guid.Empty)
+        {
+            throw new ArgumentException("Source endpoint ID cannot be empty.", nameof(sourceEndpointId));
+        }
+
+        if (targetEndpointId == Guid.Empty)
+        {
+            throw new ArgumentException("Target endpoint ID cannot be empty.", nameof(targetEndpointId));
+        }
+
+        return new Operation(Guid.NewGuid(), type, correlationId, externalId, sourceEndpointId, targetEndpointId);
     }
 
     public void Validate()

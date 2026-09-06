@@ -11,6 +11,10 @@ public interface IOperationRepository
 
     Task<Operation?> GetByCorrelationIdAsync(CorrelationId correlationId, CancellationToken cancellationToken = default);
 
+    Task<List<Operation?>> GetByStatusAsync(CorrelationId status, CancellationToken cancellationToken = default);
+
+    Task<List<Operation?>> GetByTypeAsync(CorrelationId type, CancellationToken cancellationToken = default);
+
     Task AddAsync(Operation operation, CancellationToken cancellationToken = default);
 
     void Update(Operation operation);
