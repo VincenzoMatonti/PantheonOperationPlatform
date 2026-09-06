@@ -13,15 +13,15 @@ public sealed class Operation
         OperationType type,
         CorrelationId correlationId,
         ExternalOperationId externalId,
-        Guid sourceEndpointId,
-        Guid targetEndpointId)
+        Guid clientId,
+        Guid endpointId)
     {
         Id = id;
         Type = type;
         CorrelationId = correlationId;
         ExternalId = externalId;
-        SourceEndpointId = sourceEndpointId;
-        TargetEndpointId = targetEndpointId;
+        ClientId = clientId;
+        EndpointId = endpointId;
         Status = OperationStatus.Received;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
@@ -35,9 +35,9 @@ public sealed class Operation
 
     public ExternalOperationId ExternalId { get; private set; } = null!;
 
-    public Guid SourceEndpointId { get; private set; }
+    public Guid ClientId { get; private set; }
 
-    public Guid TargetEndpointId { get; private set; }
+    public Guid EndpointId { get; private set; }
 
     public OperationStatus Status { get; private set; }
 
