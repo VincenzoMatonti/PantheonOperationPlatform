@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Hermes/">
+    <Project Path="src/Hermes/Hermes.Api/Hermes.Api.csproj" />
+    <Project Path="src/Hermes/Hermes.Application/Hermes.Application.csproj" />
+    <Project Path="src/Hermes/Hermes.Domain/Hermes.Domain.csproj" />
+    <Project Path="src/Hermes/Hermes.Infrastructure/Hermes.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Hermes.Api.Tests/Hermes.Api.Tests.csproj" />
+    <Project Path="tests/Hermes.IntegrationTests/Hermes.IntegrationTests.csproj" />
+    <Project Path="tests/Hermes.UnitTests/Hermes.UnitTests.csproj" />
+  </Folder>
+</Solution>
