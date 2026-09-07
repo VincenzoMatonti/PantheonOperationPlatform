@@ -8,20 +8,12 @@ public sealed class Operation
     {
     }
 
-    private Operation(
-        Guid id,
-        Guid operationTypeId,
-        CorrelationId correlationId,
-        ExternalOperationId externalId,
-        Guid clientId,
-        Guid endpointId)
+    private Operation(Guid id, Guid routeId, CorrelationId correlationId, ExternalOperationId externalId)
     {
         Id = id;
-        OperationTypeId = operationTypeId;
+        RouteId = routeId;
         CorrelationId = correlationId;
         ExternalId = externalId;
-        ClientId = clientId;
-        EndpointId = endpointId;
         Status = OperationStatus.Received;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
@@ -29,15 +21,11 @@ public sealed class Operation
 
     public Guid Id { get; private set; }
 
-    public Guid OperationTypeId { get; private set; } 
+    public Guid RouteId { get; private set; }
 
     public CorrelationId CorrelationId { get; private set; } = null!;
 
     public ExternalOperationId ExternalId { get; private set; } = null!;
-
-    public Guid ClientId { get; private set; }
-
-    public Guid EndpointId { get; private set; }
 
     public OperationStatus Status { get; private set; }
 
@@ -45,34 +33,17 @@ public sealed class Operation
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public static Operation Create(
-        Guid operationTypeId,
-        CorrelationId correlationId,
-        ExternalOperationId externalId,
-        Guid clientId,
-        Guid endpointId)
+    public static Operation Create(Guid routeId, CorrelationId correlationId, ExternalOperationId externalId)
     {
-
         ArgumentNullException.ThrowIfNull(correlationId);
         ArgumentNullException.ThrowIfNull(externalId);
-        
-        if (operationTypeId == Guid.Empty)
+
+        if (routeId == Guid.Empty)
         {
-            throw new ArgumentException("OperationTypeId ID cannot be empty.", nameof(operationTypeId));
+            throw new ArgumentException("Route ID cannot be empty.", nameof(routeId));
         }
 
-  
-        if (clientId == Guid.Empty)
-        {
-            throw new ArgumentException("Client ID cannot be empty.", nameof(clientId));
-        }
-
-        if (endpointId == Guid.Empty)
-        {
-            throw new ArgumentException("Endpoint ID cannot be empty.", nameof(endpointId));
-        }
-
-        return new Operation(Guid.NewGuid(), operationTypeId, correlationId, externalId, clientId, endpointId);
+        return new Operation(Guid.NewGuid(), routeId, correlationId, externalId);
     }
 
     public void Validate()
