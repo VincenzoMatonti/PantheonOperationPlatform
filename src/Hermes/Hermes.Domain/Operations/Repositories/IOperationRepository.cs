@@ -13,7 +13,7 @@ public interface IOperationRepository
 
     Task<List<Operation?>> GetByStatusAsync(OperationStatus status, CancellationToken cancellationToken = default);
 
-    Task<List<Operation?>> GetByRouteIdAsync(Guid routeId, CancellationToken cancellationToken = default);
+    Task<List<Operation?>> GetByExecutionIdAsync(Guid executionId, CancellationToken cancellationToken = default);
 
     Task AddAsync(Operation operation, CancellationToken cancellationToken = default);
 

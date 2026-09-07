@@ -1,6 +1,6 @@
 namespace Hermes.Domain.Operations.Entities;
 
-public sealed class OperationType
+public class OperationType
 {
     private OperationType()
     {

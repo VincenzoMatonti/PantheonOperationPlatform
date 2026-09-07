@@ -2,16 +2,16 @@ using Hermes.Domain.Operations.ValueObjects;
 
 namespace Hermes.Domain.Operations.Entities;
 
-public sealed class Operation
+public class Operation
 {
     private Operation()
     {
     }
 
-    private Operation(Guid id, Guid routeId, CorrelationId correlationId, ExternalOperationId externalId)
+    private Operation(Guid id, Guid executionId, CorrelationId correlationId, ExternalOperationId externalId)
     {
         Id = id;
-        RouteId = routeId;
+        ExecutionId = executionId;
         CorrelationId = correlationId;
         ExternalId = externalId;
         Status = OperationStatus.Received;
@@ -21,7 +21,7 @@ public sealed class Operation
 
     public Guid Id { get; private set; }
 
-    public Guid RouteId { get; private set; }
+    public Guid ExecutionId { get; private set; }
 
     public CorrelationId CorrelationId { get; private set; } = null!;
 
@@ -33,17 +33,17 @@ public sealed class Operation
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public static Operation Create(Guid routeId, CorrelationId correlationId, ExternalOperationId externalId)
+    public static Operation Create(Guid executionId, CorrelationId correlationId, ExternalOperationId externalId)
     {
         ArgumentNullException.ThrowIfNull(correlationId);
         ArgumentNullException.ThrowIfNull(externalId);
 
-        if (routeId == Guid.Empty)
+        if (executionId == Guid.Empty)
         {
-            throw new ArgumentException("Route ID cannot be empty.", nameof(routeId));
+            throw new ArgumentException("Execution ID cannot be empty.", nameof(executionId));
         }
 
-        return new Operation(Guid.NewGuid(), routeId, correlationId, externalId);
+        return new Operation(Guid.NewGuid(), executionId, correlationId, externalId);
     }
 
     public void Validate()

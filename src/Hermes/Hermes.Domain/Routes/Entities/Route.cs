@@ -1,6 +1,6 @@
 namespace Hermes.Domain.Routes.Entities;
 
-public sealed class Route
+public class Route
 {
     private Route()
     {

@@ -1,14 +1,14 @@
-using Hermes.Domain.Clients.ValueObjects;
+using Hermes.Domain.Executions.ValueObjects;
 
-namespace Hermes.Domain.Clients.Entities;
+namespace Hermes.Domain.Executions.Entities;
 
-public class Client
+public class ExecutionType
 {
-    private Client()
+    private ExecutionType()
     {
     }
 
-    private Client(Guid id, ClientCode code, string name)
+    private ExecutionType(Guid id, ExecutionTypeCode code, string name)
     {
         Id = id;
         Code = code;
@@ -20,7 +20,7 @@ public class Client
 
     public Guid Id { get; private set; }
 
-    public ClientCode Code { get; private set; } = null!;
+    public ExecutionTypeCode Code { get; private set; } = null!;
 
     public string Name { get; private set; } = null!;
 
@@ -30,16 +30,16 @@ public class Client
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public static Client Create(ClientCode code, string name)
+    public static ExecutionType Create(ExecutionTypeCode code, string name)
     {
         ArgumentNullException.ThrowIfNull(code);
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Client name cannot be empty.", nameof(name));
+            throw new ArgumentException("Execution type name cannot be empty.", nameof(name));
         }
 
-        return new Client(Guid.NewGuid(), code, name.Trim());
+        return new ExecutionType(Guid.NewGuid(), code, name.Trim());
     }
 
     public void Activate()
@@ -50,6 +50,7 @@ public class Client
         }
 
         IsActive = true;
+
         UpdateTimestamp();
     }
 
@@ -61,6 +62,7 @@ public class Client
         }
 
         IsActive = false;
+
         UpdateTimestamp();
     }
 
@@ -68,10 +70,11 @@ public class Client
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Client name cannot be empty.", nameof(name));
+            throw new ArgumentException("Execution type name cannot be empty.", nameof(name));
         }
 
         Name = name.Trim();
+
         UpdateTimestamp();
     }
 

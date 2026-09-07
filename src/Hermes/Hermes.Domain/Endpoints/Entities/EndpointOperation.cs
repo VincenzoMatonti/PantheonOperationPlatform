@@ -1,6 +1,6 @@
 namespace Hermes.Domain.Endpoints.Entities;
 
-public sealed class EndpointOperation
+public class EndpointOperation
 {
     private EndpointOperation()
     {
