@@ -14,6 +14,7 @@ public class ClientOperation
         ClientId = clientId;
         OperationTypeId = operationTypeId;
         IsEnabled = true;
+        IsDeleted = false;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -25,6 +26,8 @@ public class ClientOperation
     public Guid OperationTypeId { get; private set; }
 
     public bool IsEnabled { get; private set; }
+
+    public bool IsDeleted { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -64,6 +67,28 @@ public class ClientOperation
         }
 
         IsEnabled = false;
+        UpdateTimestamp();
+    }
+
+    public void MarkAsDeleted()
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = true;
+        UpdateTimestamp();
+    }
+
+    public void Restore()
+    {
+        if (!IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = false;
         UpdateTimestamp();
     }
 

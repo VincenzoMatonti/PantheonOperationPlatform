@@ -14,6 +14,7 @@ public class Client
         Code = code;
         Name = name;
         IsActive = true;
+        IsDeleted = false;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -25,6 +26,8 @@ public class Client
     public string Name { get; private set; } = null!;
 
     public bool IsActive { get; private set; }
+
+    public bool IsDeleted { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -72,6 +75,28 @@ public class Client
         }
 
         Name = name.Trim();
+        UpdateTimestamp();
+    }
+
+    public void MarkAsDeleted()
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = true;
+        UpdateTimestamp();
+    }
+
+    public void Restore()
+    {
+        if (!IsDeleted)
+        {
+            return;
+        }
+
+        IsDeleted = false;
         UpdateTimestamp();
     }
 

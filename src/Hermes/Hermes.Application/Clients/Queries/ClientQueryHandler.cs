@@ -1,21 +1,21 @@
 using Hermes.Application.Clients.DTOs;
 using Hermes.Domain.Clients.ValueObjects;
-using Hermes.Domain.Clients.Repositories;
+using Hermes.Domain.Clients.Repositories.ClientRepositories;
 
 namespace Hermes.Application.Clients.Queries
 {
     public class ClientQueryHandler
     {
-        private readonly IClientRepository _clientRepository;
+        private readonly IClientQueryRepository _clientQueryRepository;
 
-        public ClientQueryHandler(IClientRepository clientRepository)
+        public ClientQueryHandler(IClientQueryRepository clientQueryRepository)
         {
-            _clientRepository = clientRepository;
+            _clientQueryRepository = clientQueryRepository;
         }
 
         public async Task<List<ClientDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            var clients = await _clientRepository.GetAllAsync(cancellationToken);
+            var clients = await _clientQueryRepository.GetAllAsync(cancellationToken);
             return [.. clients.Select(client => new ClientDto
             {
                 Id = client.Id,
@@ -29,7 +29,7 @@ namespace Hermes.Application.Clients.Queries
 
         public async Task<ClientDto?> GetClientByIdAsync(Guid clientId, CancellationToken cancellationToken = default)
         {
-            var client = await _clientRepository.GetByIdAsync(clientId, cancellationToken);
+            var client = await _clientQueryRepository.GetByIdAsync(clientId, cancellationToken);
             if (client is null)
             {
                 return null;
@@ -47,7 +47,7 @@ namespace Hermes.Application.Clients.Queries
         public async Task<ClientDto?> GetClientByCodeAsync(GetClientByCodeQuery query, CancellationToken cancellationToken = default)
         {
             var code = ClientCode.Create(query.Code);
-            var client = await _clientRepository.GetByCodeAsync(code, cancellationToken);
+            var client = await _clientQueryRepository.GetByCodeAsync(code, cancellationToken);
             if (client is null)
             {
                 return null;
@@ -64,7 +64,7 @@ namespace Hermes.Application.Clients.Queries
 
         public async Task<List<ActiveClientDto>> GetActiveClientsAsync(CancellationToken cancellationToken = default)
         {
-            var clients = await _clientRepository.GetActiveClientAsync(cancellationToken);
+            var clients = await _clientQueryRepository.GetActiveClientAsync(cancellationToken);
             var activeClients = clients.Select(client => new ActiveClientDto
             {
                 Id = client.Id,
@@ -74,12 +74,11 @@ namespace Hermes.Application.Clients.Queries
             .ToList();
 
             return activeClients;
-
         }
 
         public async Task<List<ActiveClientDto>> GetNonActiveClientsAsync(CancellationToken cancellationToken = default)
         {
-            var clients = await _clientRepository.GetNonActiveClientAsync(cancellationToken);
+            var clients = await _clientQueryRepository.GetNonActiveClientAsync(cancellationToken);
             var nonActiveClients = clients.Select(client => new ActiveClientDto
             {
                 Id = client.Id,
@@ -89,7 +88,6 @@ namespace Hermes.Application.Clients.Queries
             .ToList();
 
             return nonActiveClients;
-
         }
     }
 }

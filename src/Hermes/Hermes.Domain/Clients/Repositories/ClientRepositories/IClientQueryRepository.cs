@@ -1,21 +1,23 @@
 using Hermes.Domain.Clients.Entities;
 using Hermes.Domain.Clients.ValueObjects;
 
-namespace Hermes.Domain.Clients.Repositories;
+namespace Hermes.Domain.Clients.Repositories.ClientRepositories;
 
-public interface IClientRepository
+public interface IClientQueryRepository
 {
     Task<Client?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<Client?> GetByCodeAsync(ClientCode code, CancellationToken cancellationToken = default);
 
+    Task<List<ClientCode>> GetAllClientCodeAsync(CancellationToken cancellationToken = default);
+
+    Task <ClientCode?> GetClientCodeByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<List<Client>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    Task<List<Client>> GetDeletedClientAsync(CancellationToken cancellationToken = default);
 
     Task<List<Client>> GetActiveClientAsync(CancellationToken cancellationToken = default);
 
     Task<List<Client>> GetNonActiveClientAsync(CancellationToken cancellationToken = default);
-
-    Task AddAsync(Client client, CancellationToken cancellationToken = default);
-
-    void Update(Client client);
 }
