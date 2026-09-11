@@ -1,11 +1,5 @@
-using Hermes.Application.Clients.Commands.CreateClient;
-using Hermes.Application.Clients.Commands.ActivateClient;
-using Hermes.Application.Clients.Commands.DeactivateClient;
-using Hermes.Application.Clients.Commands.RenameClient;
-using Hermes.Application.Clients.Queries.GetClientById;
-using Hermes.Application.Clients.Queries.GetClientByCode;
-using Hermes.Application.Clients.Queries.GetClients;
-using Hermes.Application.Clients.Queries.GetActiveClients;
+using Hermes.Application.Clients.Commands;
+using Hermes.Application.Clients.Queries;
 
 
 
@@ -15,14 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddScoped<CreateClientHandler>();
-builder.Services.AddScoped<ActivateClientHandler>();
-builder.Services.AddScoped<DeactivateClientHandler>();
-builder.Services.AddScoped<RenameClientHandler>();
-builder.Services.AddScoped<GetClientByIdHandler>();
-builder.Services.AddScoped<GetClientByCodeHandler>();
-builder.Services.AddScoped<GetClientsHandler>();
-builder.Services.AddScoped<GetActiveClientsHandler>();
+builder.Services.AddScoped<ClientCommandHandler>();
+builder.Services.AddScoped<ClientQueryHandler>();
 
 var app = builder.Build();
 

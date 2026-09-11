@@ -13,6 +13,8 @@ public interface IClientRepository
 
     Task<List<Client>> GetActiveClientAsync(CancellationToken cancellationToken = default);
 
+    Task<List<Client>> GetNonActiveClientAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(Client client, CancellationToken cancellationToken = default);
 
     void Update(Client client);
