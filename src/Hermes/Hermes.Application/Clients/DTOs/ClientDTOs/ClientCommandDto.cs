@@ -29,7 +29,7 @@ public class CreateClientCommand
 public class RenameClientCommand
 {
     public Guid ClientId { get; set; }
-    public string Name { get; set; } = null!;
+    public string NewName { get; set; } = null!;
 }
 
 public class RenameCodeClientCommand

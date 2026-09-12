@@ -1,7 +1,6 @@
 using Hermes.Application.Clients.Queries;
 using Hermes.Application.Clients.Commands;
 using Hermes.Application.Clients.DTOs.ClientDTOs;
-using Hermes.Domain.Clients.ValueObjects;
 
 
 namespace Hermes.Application.Clients.UseCases
@@ -27,7 +26,7 @@ namespace Hermes.Application.Clients.UseCases
             if (client != null)
             {
                 var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.RenameClientAsync(clientEntity);
+                await _clientCommandHandler.RenameClientAsync(clientEntity, command.NewName);
             }
             else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }

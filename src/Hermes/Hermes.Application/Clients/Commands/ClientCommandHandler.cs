@@ -34,9 +34,9 @@ namespace Hermes.Application.Clients.Commands
             return client;
         }
 
-        public async Task RenameClientAsync(Client client)
+        public async Task RenameClientAsync(Client client, string newName)
         {
-            client.Rename(client.Name);
+            client.Rename(newName);
             _clientCommandRepository.Update(client);
         }
 
