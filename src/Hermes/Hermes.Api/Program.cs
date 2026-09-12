@@ -1,16 +1,34 @@
+using FluentValidation;
+using Hermes.Api.Filters;
+using Hermes.Api.Clients.Validations;
+using Hermes.Api.Clients.Mappings.Commands;
+using Hermes.Api.Clients.Mappings.Queries;
 using Hermes.Application.Clients.Commands;
 using Hermes.Application.Clients.Queries;
+using Hermes.Application.Clients.UseCases;
+
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<FluentValidationFilter>();
+});
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateClientRequestValidator>();
+
+builder.Services.AddScoped<ClientCommandRequestMapper>();
+builder.Services.AddScoped<ClientCommandResponseMapper>();
+builder.Services.AddScoped<ClientQueryRequestMapper>();
+builder.Services.AddScoped<ClientQueryResponseMapper>();
 builder.Services.AddScoped<ClientCommandHandler>();
 builder.Services.AddScoped<ClientQueryHandler>();
+builder.Services.AddScoped<ClientUseCaseHandler>();
+
+
 
 var app = builder.Build();
 
