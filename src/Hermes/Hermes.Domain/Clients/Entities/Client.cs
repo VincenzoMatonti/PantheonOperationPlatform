@@ -78,6 +78,14 @@ public class Client
         UpdateTimestamp();
     }
 
+    public void RenameCode(ClientCode code)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+
+        Code = code;
+        UpdateTimestamp();
+    }
+
     public void MarkAsDeleted()
     {
         if (IsDeleted)

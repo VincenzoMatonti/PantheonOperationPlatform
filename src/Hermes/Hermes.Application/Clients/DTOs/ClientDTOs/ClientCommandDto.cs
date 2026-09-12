@@ -1,4 +1,4 @@
-namespace Hermes.Application.Clients.Commands;
+namespace Hermes.Application.Clients.DTOs.ClientDTOs;
 
 public class ActivateClientCommand
 {
@@ -6,6 +6,16 @@ public class ActivateClientCommand
 }
 
 public class DeactivateClientCommand
+{
+    public Guid ClientId { get; set; }
+}
+
+public class DeletedClientCommand
+{
+    public Guid ClientId { get; set; }
+}
+
+public class RestoreClientCommand
 {
     public Guid ClientId { get; set; }
 }
@@ -20,4 +30,10 @@ public class RenameClientCommand
 {
     public Guid ClientId { get; set; }
     public string Name { get; set; } = null!;
+}
+
+public class RenameCodeClientCommand
+{
+    public Guid ClientId { get; set; }
+    public string NewCode { get; set; } = null!;
 }

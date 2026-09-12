@@ -1,68 +1,74 @@
-using Hermes.Domain.Clients.Repositories.ClientRepositories;
 using Hermes.Domain.Clients.Entities;
 using Hermes.Domain.Clients.ValueObjects;
-using Hermes.Application.Clients.DTOs;
-
+using Hermes.Application.Clients.DTOs.ClientDTOs;
+using Hermes.Domain.Clients.Repositories.ClientRepositories;
 
 namespace Hermes.Application.Clients.Commands
 {
-    public class ClientCommandHandler
+    public class ClientCommandHandler(IClientCommandRepository clientCommandRepository)
     {
-        private readonly IClientCommandRepository _clientCommandRepository;
-        private readonly IClientQueryRepository _clientQueryRepository;
+        private readonly IClientCommandRepository _clientCommandRepository = clientCommandRepository;
 
-        public ClientCommandHandler(IClientCommandRepository clientCommandRepository, IClientQueryRepository clientQueryRepository)
+        public static async Task<ClientDto> ConvertEntitesToDtoAsync(Client client)
         {
-            _clientCommandRepository = clientCommandRepository;
-            _clientQueryRepository = clientQueryRepository;
-        }
-
-        public async Task<ClientDto> CreateClientAsync(CreateClientCommand command, CancellationToken cancellationToken = default)
-        {
-            var code = ClientCode.Create(command.Code);
-            var existingClient = await _clientQueryRepository.GetByCodeAsync(code, cancellationToken);
-            if (existingClient is not null)
-            {
-                throw new InvalidOperationException($"A client with code '{code.Value}' already exists.");
-            }
-
-            var client = Client.Create(code, command.Name);
-            await _clientCommandRepository.AddAsync(client, cancellationToken);
             return new ClientDto
             {
                 Id = client.Id,
                 Code = client.Code.Value,
                 Name = client.Name,
-                IsActive = client.IsActive
             };
         }
 
-        public async Task RenameClientAsync(RenameClientCommand command, CancellationToken cancellationToken = default)
+        public static async Task<Client> ConvertDtoToEntitesAsync(ClientDto clientDto)
         {
-            var client = await _clientQueryRepository.GetByIdAsync(command.ClientId, cancellationToken) ??
-                         throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            var code = ClientCode.Create(clientDto.Code);
+            var client = Client.Create(code, clientDto.Name);
+            return client;
+        }
 
-            client.Rename(command.Name);
+        public async Task<Client> CreateClientAsync(CreateClientCommand command, CancellationToken cancellationToken = default)
+        {
+            var code = ClientCode.Create(command.Code);
+            var client = Client.Create(code, command.Name);
+            await _clientCommandRepository.AddAsync(client, cancellationToken);
+            return client;
+        }
+
+        public async Task RenameClientAsync(Client client)
+        {
+            client.Rename(client.Name);
             _clientCommandRepository.Update(client);
         }
 
-        public async Task ActivateClientAsync(ActivateClientCommand command, CancellationToken cancellationToken = default)
+        public async Task RenameCodeClientAsync(Client client, string newCode)
         {
-            var client = await _clientQueryRepository.GetByIdAsync(command.ClientId, cancellationToken) ??
-                         throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            var code = ClientCode.Create(newCode);
+            client.RenameCode(code);
+            _clientCommandRepository.Update(client);
+        }
 
+        public async Task ActivateClientAsync(Client client)
+        {
             client.Activate();
             _clientCommandRepository.Update(client);
         }
 
-        public async Task DeactivateClientAsync(DeactivateClientCommand command, CancellationToken cancellationToken = default)
+        public async Task DeactivateClientAsync(Client client)
         {
-            var client = await _clientQueryRepository.GetByIdAsync(command.ClientId, cancellationToken) ??
-                         throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
-
             client.Deactivate();
             _clientCommandRepository.Update(client);
+        }
 
+        public async Task DeleteClientAsync(Client client)
+        {
+            client.MarkAsDeleted();
+            _clientCommandRepository.Update(client);
+        }
+
+        public async Task RestoreClientAsync(Client client)
+        {
+            client.Restore();
+            _clientCommandRepository.Update(client);
         }
     }
 }

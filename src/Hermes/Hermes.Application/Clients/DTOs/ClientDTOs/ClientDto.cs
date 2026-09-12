@@ -1,16 +1,13 @@
-namespace Hermes.Application.Clients.DTOs;
+namespace Hermes.Application.Clients.DTOs.ClientDTOs;
 
 public class ClientDto
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
-    public bool IsActive { get; set; }
 }
 
-public class ActiveClientDto
+public class ClientCodeDto
 {
-    public Guid Id { get; set; }
     public string Code { get; set; } = null!;
-    public string Name { get; set; } = null!;
 }

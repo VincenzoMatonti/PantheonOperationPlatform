@@ -1,4 +1,4 @@
-namespace Hermes.Application.Clients.Queries;
+namespace Hermes.Application.Clients.DTOs.ClientDTOs;
 
 public class GetClientByCodeQuery
 {
@@ -6,6 +6,11 @@ public class GetClientByCodeQuery
 }
 
 public class GetClientByIdQuery
+{
+    public Guid ClientId { get; set; }
+}
+
+public class GetClientCodeByIdQuery
 {
     public Guid ClientId { get; set; }
 }
