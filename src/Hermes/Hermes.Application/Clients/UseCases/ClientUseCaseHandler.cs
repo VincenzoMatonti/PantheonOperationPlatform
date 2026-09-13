@@ -10,149 +10,156 @@ namespace Hermes.Application.Clients.UseCases
         private readonly ClientQueryHandler _clientQueryHandler = clientQueryHandler;
         private readonly ClientCommandHandler _clientCommandHandler = clientCommandHandler;
 
-        public async Task<ClientDto> CreateClientAsync(CreateClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<CreateClientDto> CreateClientAsync(CreateClientCommand command, CancellationToken cancellationToken = default)
         {
             var clientCode = new GetClientByCodeQuery { Code = command.Code };
             var existingClient = await _clientQueryHandler.GetClientByCodeAsync(clientCode, cancellationToken);
             if (existingClient != null) throw new InvalidOperationException($"Client with code '{clientCode.Code}' already exists.");
-            var newClient = await _clientCommandHandler.CreateClientAsync(command, cancellationToken);
-            var newClientDto = await ClientCommandHandler.ConvertEntitesToDtoAsync(newClient);
+            var newClient = await _clientCommandHandler.CreateClientAsync(command, cancellationToken);            
+            var newClientDto = ClientCommandHandler.ConvertClientEntitesToCreateDto(newClient);
             return newClientDto;
         }
 
-        public async Task RenameClientAsync(RenameClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<RenameClientDto> RenameClientAsync(RenameClientCommand command, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(command.ClientId, cancellationToken);
+            var queryCommand = new GetClientByIdQuery { ClientId = command.ClientId };
+            var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
-                var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.RenameClientAsync(clientEntity, command.NewName);
+                await _clientCommandHandler.RenameClientAsync(client, command.NewName);
+                return ClientCommandHandler.ConvertClientEntitesToRenameDto(client);
             }
-            else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }
 
-        public async Task RenameCodeClientAsync(RenameCodeClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<RenameClientCodeDto> RenameCodeClientAsync(RenameCodeClientCommand command, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(command.ClientId, cancellationToken);
+            var queryCommand = new GetClientByIdQuery { ClientId = command.ClientId };
+            var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
                 var clientCode = new GetClientByCodeQuery { Code = command.NewCode };
                 var existingClientWithNewCode = await _clientQueryHandler.GetClientByCodeAsync(clientCode, cancellationToken);
                 if (existingClientWithNewCode != null) throw new InvalidOperationException($"Client with code '{command.NewCode}' already exists.");
-                var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.RenameCodeClientAsync(clientEntity, command.NewCode);
+                await _clientCommandHandler.RenameCodeClientAsync(client, command.NewCode);
+                return ClientCommandHandler.ConvertClientEntitesToRenameCodeDto(client);
             }
             else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }
 
-        public async Task ActivateClientAsync(ActivateClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<ActivateClientDto> ActivateClientAsync(ActivateClientCommand command, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(command.ClientId, cancellationToken);
+            var queryCommand = new GetClientByIdQuery { ClientId = command.ClientId };
+            var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
                 var result = await _clientQueryHandler.IsActiveClientAsync(command.ClientId, cancellationToken);
                 if (result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is already active.");
-                var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.ActivateClientAsync(clientEntity);
+                await _clientCommandHandler.ActivateClientAsync(client);
+                return ClientCommandHandler.ConvertClientEntitesToActivateDto(client);
             }
             else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }
 
-        public async Task DeactivateClientAsync(DeactivateClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<DeactivateClientDto> DeactivateClientAsync(DeactivateClientCommand command, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(command.ClientId, cancellationToken);
+            var queryCommand = new GetClientByIdQuery { ClientId = command.ClientId };
+            var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
                 var result = await _clientQueryHandler.IsNonActiveClientAsync(command.ClientId, cancellationToken);
                 if (result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is already inactive.");
-                var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.DeactivateClientAsync(clientEntity);
+                await _clientCommandHandler.DeactivateClientAsync(client);
+                return ClientCommandHandler.ConvertClientEntitesToDeactivateDto(client);
             }
             else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }
 
-        public async Task DeletedClientAsync(DeletedClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<DeleteClientDto> DeletedClientAsync(DeletedClientCommand command, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(command.ClientId, cancellationToken);
+            var queryCommand = new GetClientByIdQuery { ClientId = command.ClientId };
+            var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
                 var result = await _clientQueryHandler.IsDeletedClientAsync(command.ClientId, cancellationToken);
                 if (result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is already deleted.");
-                var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.DeleteClientAsync(clientEntity);
+                await _clientCommandHandler.DeleteClientAsync(client);
+                return ClientCommandHandler.ConvertClientEntitesToDeleteDto(client);
             }
             else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }
 
-        public async Task RestoreClientAsync(RestoreClientCommand command, CancellationToken cancellationToken = default)
+        public async Task<RestoreClientDto> RestoreClientAsync(RestoreClientCommand command, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(command.ClientId, cancellationToken);
+            var queryCommand = new GetClientByIdQuery { ClientId = command.ClientId };
+            var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
                 var result = await _clientQueryHandler.IsDeletedClientAsync(command.ClientId, cancellationToken);
                 if (!result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is not deleted.");
-                var clientEntity = await ClientCommandHandler.ConvertDtoToEntitesAsync(client);
-                await _clientCommandHandler.RestoreClientAsync(clientEntity);
+                await _clientCommandHandler.RestoreClientAsync(client);
+                return ClientCommandHandler.ConvertClientEntitesToRestoreDto(client);
             }
             else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
         }
 
-        public async Task<ClientDto?> GetClientByIdAsync(GetClientByIdQuery query, CancellationToken cancellationToken = default)
+        //==================================================================================================================================================
+        //USE CASE ONLY QUERY
+
+        public async Task<ClientDto> GetClientByIdAsync(GetClientByIdQuery query, CancellationToken cancellationToken = default)
         {
-            var client = await _clientQueryHandler.GetClientByIdAsync(query.ClientId, cancellationToken);
-            return client is null ? throw new InvalidOperationException($"Client with ID '{query.ClientId}' was not found.") : client;
+            var client = await _clientQueryHandler.GetClientByIdAsync(query, cancellationToken);
+            if (client != null) return ClientQueryHandler.ConvertClientEntitesToDto(client);
+            throw new InvalidOperationException($"Client with ID '{query.ClientId}' was not found.");
         }
 
-        public async Task<ClientDto?> GetClientByCodeAsync(GetClientByCodeQuery query, CancellationToken cancellationToken = default)
+        public async Task<ClientDto> GetClientByCodeAsync(GetClientByCodeQuery query, CancellationToken cancellationToken = default)
         {
             var client = await _clientQueryHandler.GetClientByCodeAsync(query, cancellationToken);
-            return client is null ? throw new InvalidOperationException($"Client with code '{query.Code}' was not found.") : client;
+            if (client != null) return ClientQueryHandler.ConvertClientEntitesToDto(client);
+            throw new InvalidOperationException($"Client with code '{query.Code}' was not found.");
         }
 
-        public async Task<ClientCodeDto?> GetClientCodeByIdAsync(GetClientCodeByIdQuery query, CancellationToken cancellationToken = default)
+        public async Task<ClientCodeDto> GetClientCodeByIdAsync(GetClientCodeByIdQuery query, CancellationToken cancellationToken = default)
         {
-            var clientCode = await _clientQueryHandler.GetClientCodeByIdAsync(query.ClientId, cancellationToken);
-            if (clientCode != null)
-            {
-                ClientCodeDto? clientCodeDto = await ClientQueryHandler.ConvertClientCodeEntitesToDtoAsync(clientCode);
-                return clientCodeDto;
-            }
-            else throw new InvalidOperationException($"Client code with ID '{query.ClientId}' was not found.");          
+            var clientCode = await _clientQueryHandler.GetClientCodeByIdAsync(query, cancellationToken);
+            if (clientCode != null) return ClientQueryHandler.ConvertClientCodeEntitesToDto(clientCode);
+            throw new InvalidOperationException($"Client code with ID '{query.ClientId}' was not found.");
         }
 
         public async Task<List<ClientDto>> GetAllClientsAsync(CancellationToken cancellationToken = default)
         {
             var clients = await _clientQueryHandler.GetAllAsync(cancellationToken);
             if (clients == null || clients.Count == 0) return [];
-            return clients;
+            return ClientQueryHandler.ConvertClientEntitesToDto(clients);
         }
 
         public async Task<List<ClientCodeDto>> GetAllClientCodesAsync(CancellationToken cancellationToken = default)
         {
             var clientCodes = await _clientQueryHandler.GetAllClientCodesAsync(cancellationToken);
             if (clientCodes == null || clientCodes.Count == 0) return [];
-            return clientCodes;
+            return ClientQueryHandler.ConvertClientCodeEntitesToDto(clientCodes);
         }
 
         public async Task<List<ClientDto>> GetActiveClientsAsync(CancellationToken cancellationToken = default)
         {
             var clients = await _clientQueryHandler.GetActiveClientsAsync(cancellationToken);
             if (clients == null || clients.Count == 0) return [];
-            return clients;
+            return ClientQueryHandler.ConvertClientEntitesToDto(clients);
         }
 
         public async Task<List<ClientDto>> GetNonActiveClientsAsync(CancellationToken cancellationToken = default)
         {
             var clients = await _clientQueryHandler.GetNonActiveClientsAsync(cancellationToken);
             if (clients == null || clients.Count == 0) return [];
-            return clients;
+            return ClientQueryHandler.ConvertClientEntitesToDto(clients);
         }
 
         public async Task<List<ClientDto>> GetDeletedClientsAsync(CancellationToken cancellationToken = default)
         {
             var clients = await _clientQueryHandler.GetDeletedClientsAsync(cancellationToken);
             if (clients == null || clients.Count == 0) return [];
-            return clients;
+            return ClientQueryHandler.ConvertClientEntitesToDto(clients);
         }
     }
 }

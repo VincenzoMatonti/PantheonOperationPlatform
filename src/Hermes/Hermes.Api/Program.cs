@@ -19,7 +19,6 @@ builder.Services.AddControllers(options =>
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateClientRequestValidator>();
-
 builder.Services.AddScoped<ClientCommandRequestMapper>();
 builder.Services.AddScoped<ClientCommandResponseMapper>();
 builder.Services.AddScoped<ClientQueryRequestMapper>();
