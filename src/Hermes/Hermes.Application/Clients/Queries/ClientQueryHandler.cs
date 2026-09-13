@@ -68,29 +68,14 @@ namespace Hermes.Application.Clients.Queries
             return await _clientQueryRepository.GetActiveClientAsync(cancellationToken);
         }
 
-        public async Task<bool> IsActiveClientAsync(Guid clientId, CancellationToken cancellationToken = default)
-        {
-            return await _clientQueryRepository.IsActiveClientAsync(clientId, cancellationToken);
-        }
-
         public async Task<List<Client>> GetNonActiveClientsAsync(CancellationToken cancellationToken = default)
         {
             return await _clientQueryRepository.GetNonActiveClientAsync(cancellationToken);
         }
 
-        public async Task<bool> IsNonActiveClientAsync(Guid clientId, CancellationToken cancellationToken = default)
-        {
-            return await _clientQueryRepository.IsNonActiveClientAsync(clientId, cancellationToken);
-        }
-
         public async Task<List<Client>> GetDeletedClientsAsync(CancellationToken cancellationToken = default)
         {
             return await _clientQueryRepository.GetDeletedClientAsync(cancellationToken);
-        }
-
-        public async Task<bool> IsDeletedClientAsync(Guid clientId, CancellationToken cancellationToken = default)
-        {
-            return await _clientQueryRepository.IsDeletedClientAsync(clientId, cancellationToken);
         }
     }
 }

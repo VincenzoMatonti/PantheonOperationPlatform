@@ -1,6 +1,7 @@
 using Hermes.Application.Clients.Queries;
 using Hermes.Application.Clients.Commands;
 using Hermes.Application.Clients.DTOs.ClientDTOs;
+using Hermes.Application.Clients.Exceptions;
 
 
 namespace Hermes.Application.Clients.UseCases
@@ -14,8 +15,8 @@ namespace Hermes.Application.Clients.UseCases
         {
             var clientCode = new GetClientByCodeQuery { Code = command.Code };
             var existingClient = await _clientQueryHandler.GetClientByCodeAsync(clientCode, cancellationToken);
-            if (existingClient != null) throw new InvalidOperationException($"Client with code '{clientCode.Code}' already exists.");
-            var newClient = await _clientCommandHandler.CreateClientAsync(command, cancellationToken);            
+            if (existingClient != null) throw new ClientAlreadyExistsException(command.Code);
+            var newClient = await _clientCommandHandler.CreateClientAsync(command, cancellationToken);
             var newClientDto = ClientCommandHandler.ConvertClientEntitesToCreateDto(newClient);
             return newClientDto;
         }
@@ -29,7 +30,7 @@ namespace Hermes.Application.Clients.UseCases
                 await _clientCommandHandler.RenameClientAsync(client, command.NewName);
                 return ClientCommandHandler.ConvertClientEntitesToRenameDto(client);
             }
-            throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new ClientNotFoundException(command.ClientId);
         }
 
         public async Task<RenameClientCodeDto> RenameCodeClientAsync(RenameCodeClientCommand command, CancellationToken cancellationToken = default)
@@ -40,11 +41,11 @@ namespace Hermes.Application.Clients.UseCases
             {
                 var clientCode = new GetClientByCodeQuery { Code = command.NewCode };
                 var existingClientWithNewCode = await _clientQueryHandler.GetClientByCodeAsync(clientCode, cancellationToken);
-                if (existingClientWithNewCode != null) throw new InvalidOperationException($"Client with code '{command.NewCode}' already exists.");
+                if (existingClientWithNewCode != null) throw new ClientAlreadyExistsException(command.NewCode);
                 await _clientCommandHandler.RenameCodeClientAsync(client, command.NewCode);
                 return ClientCommandHandler.ConvertClientEntitesToRenameCodeDto(client);
             }
-            else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new ClientNotFoundException(command.ClientId);
         }
 
         public async Task<ActivateClientDto> ActivateClientAsync(ActivateClientCommand command, CancellationToken cancellationToken = default)
@@ -53,12 +54,10 @@ namespace Hermes.Application.Clients.UseCases
             var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
-                var result = await _clientQueryHandler.IsActiveClientAsync(command.ClientId, cancellationToken);
-                if (result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is already active.");
                 await _clientCommandHandler.ActivateClientAsync(client);
                 return ClientCommandHandler.ConvertClientEntitesToActivateDto(client);
             }
-            else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new ClientNotFoundException(command.ClientId);
         }
 
         public async Task<DeactivateClientDto> DeactivateClientAsync(DeactivateClientCommand command, CancellationToken cancellationToken = default)
@@ -67,12 +66,10 @@ namespace Hermes.Application.Clients.UseCases
             var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
-                var result = await _clientQueryHandler.IsNonActiveClientAsync(command.ClientId, cancellationToken);
-                if (result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is already inactive.");
                 await _clientCommandHandler.DeactivateClientAsync(client);
                 return ClientCommandHandler.ConvertClientEntitesToDeactivateDto(client);
             }
-            else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new ClientNotFoundException(command.ClientId);
         }
 
         public async Task<DeleteClientDto> DeletedClientAsync(DeletedClientCommand command, CancellationToken cancellationToken = default)
@@ -81,12 +78,10 @@ namespace Hermes.Application.Clients.UseCases
             var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
-                var result = await _clientQueryHandler.IsDeletedClientAsync(command.ClientId, cancellationToken);
-                if (result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is already deleted.");
                 await _clientCommandHandler.DeleteClientAsync(client);
                 return ClientCommandHandler.ConvertClientEntitesToDeleteDto(client);
             }
-            else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new ClientNotFoundException(command.ClientId);
         }
 
         public async Task<RestoreClientDto> RestoreClientAsync(RestoreClientCommand command, CancellationToken cancellationToken = default)
@@ -95,12 +90,10 @@ namespace Hermes.Application.Clients.UseCases
             var client = await _clientQueryHandler.GetClientByIdAsync(queryCommand, cancellationToken);
             if (client != null)
             {
-                var result = await _clientQueryHandler.IsDeletedClientAsync(command.ClientId, cancellationToken);
-                if (!result) throw new InvalidOperationException($"Client with ID '{command.ClientId}' is not deleted.");
                 await _clientCommandHandler.RestoreClientAsync(client);
                 return ClientCommandHandler.ConvertClientEntitesToRestoreDto(client);
             }
-            else throw new InvalidOperationException($"Client with ID '{command.ClientId}' was not found.");
+            throw new ClientNotFoundException(command.ClientId);
         }
 
         //==================================================================================================================================================
@@ -110,21 +103,21 @@ namespace Hermes.Application.Clients.UseCases
         {
             var client = await _clientQueryHandler.GetClientByIdAsync(query, cancellationToken);
             if (client != null) return ClientQueryHandler.ConvertClientEntitesToDto(client);
-            throw new InvalidOperationException($"Client with ID '{query.ClientId}' was not found.");
+            throw new ClientNotFoundException(query.ClientId);
         }
 
         public async Task<ClientDto> GetClientByCodeAsync(GetClientByCodeQuery query, CancellationToken cancellationToken = default)
         {
             var client = await _clientQueryHandler.GetClientByCodeAsync(query, cancellationToken);
             if (client != null) return ClientQueryHandler.ConvertClientEntitesToDto(client);
-            throw new InvalidOperationException($"Client with code '{query.Code}' was not found.");
+            throw new ClientNotFoundByCodeException(query.Code);
         }
 
         public async Task<ClientCodeDto> GetClientCodeByIdAsync(GetClientCodeByIdQuery query, CancellationToken cancellationToken = default)
         {
             var clientCode = await _clientQueryHandler.GetClientCodeByIdAsync(query, cancellationToken);
             if (clientCode != null) return ClientQueryHandler.ConvertClientCodeEntitesToDto(clientCode);
-            throw new InvalidOperationException($"Client code with ID '{query.ClientId}' was not found.");
+            throw new ClientNotFoundException(query.ClientId);
         }
 
         public async Task<List<ClientDto>> GetAllClientsAsync(CancellationToken cancellationToken = default)

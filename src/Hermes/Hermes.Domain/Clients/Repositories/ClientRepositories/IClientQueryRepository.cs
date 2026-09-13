@@ -11,9 +11,6 @@ public interface IClientQueryRepository
     Task<ClientCode?> GetClientCodeByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Client>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<List<Client>> GetActiveClientAsync(CancellationToken cancellationToken = default);
-    Task<bool> IsActiveClientAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Client>> GetNonActiveClientAsync(CancellationToken cancellationToken = default);
-    Task<bool> IsNonActiveClientAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Client>> GetDeletedClientAsync(CancellationToken cancellationToken = default);
-    Task<bool> IsDeletedClientAsync(Guid id, CancellationToken cancellationToken = default);
 }

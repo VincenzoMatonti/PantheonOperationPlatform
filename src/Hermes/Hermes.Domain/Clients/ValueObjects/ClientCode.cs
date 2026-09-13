@@ -1,3 +1,5 @@
+using Hermes.Domain.Clients.Exceptions;
+
 namespace Hermes.Domain.Clients.ValueObjects;
 
 public class ClientCode
@@ -11,11 +13,7 @@ public class ClientCode
 
     public static ClientCode Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException("Client code cannot be empty.", nameof(value));
-        }
-
+        if (string.IsNullOrWhiteSpace(value)) throw new ClientCodeRequiredException();
         return new ClientCode(value.Trim());
     }
 

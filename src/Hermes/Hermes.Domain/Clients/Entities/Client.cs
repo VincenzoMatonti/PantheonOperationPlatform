@@ -1,4 +1,5 @@
 using Hermes.Domain.Clients.ValueObjects;
+using Hermes.Domain.Clients.Exceptions;
 
 namespace Hermes.Domain.Clients.Entities;
 
@@ -35,75 +36,49 @@ public class Client
 
     public static Client Create(ClientCode code, string name)
     {
-        ArgumentNullException.ThrowIfNull(code);
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Client name cannot be empty.", nameof(name));
-        }
-
+        if (code is null) throw new ClientCodeRequiredException();
+        if (string.IsNullOrWhiteSpace(name)) throw new ClientNameRequiredException();
         return new Client(Guid.NewGuid(), code, name.Trim());
     }
 
     public void Activate()
     {
-        if (IsActive)
-        {
-            return;
-        }
-
+        if (IsActive) throw new ClientAlreadyActiveException(Id);
         IsActive = true;
         UpdateTimestamp();
     }
 
     public void Deactivate()
     {
-        if (!IsActive)
-        {
-            return;
-        }
-
+        if (!IsActive) throw new ClientAlreadyInactiveException(Id);
         IsActive = false;
         UpdateTimestamp();
     }
 
     public void Rename(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Client name cannot be empty.", nameof(name));
-        }
-
+        if (string.IsNullOrWhiteSpace(name)) throw new ClientNameRequiredException();
         Name = name.Trim();
         UpdateTimestamp();
     }
 
     public void RenameCode(ClientCode code)
     {
-        ArgumentNullException.ThrowIfNull(code);
-
+        if (code is null) throw new ClientCodeRequiredException();
         Code = code;
         UpdateTimestamp();
     }
 
     public void MarkAsDeleted()
     {
-        if (IsDeleted)
-        {
-            return;
-        }
-
+        if (IsDeleted) throw new ClientAlreadyDeletedException(Id);
         IsDeleted = true;
         UpdateTimestamp();
     }
 
     public void Restore()
     {
-        if (!IsDeleted)
-        {
-            return;
-        }
-
+        if (!IsDeleted) throw new ClientNotDeletedException(Id);
         IsDeleted = false;
         UpdateTimestamp();
     }

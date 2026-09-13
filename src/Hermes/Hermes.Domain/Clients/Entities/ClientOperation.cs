@@ -1,4 +1,4 @@
-using Hermes.Domain.Operations.Entities;
+using Hermes.Domain.Clients.Exceptions;
 
 namespace Hermes.Domain.Clients.Entities;
 
@@ -35,59 +35,35 @@ public class ClientOperation
 
     public static ClientOperation Create(Guid clientId, Guid operationTypeId)
     {
-        if (clientId == Guid.Empty)
-        {
-            throw new ArgumentException("Client ID cannot be empty.", nameof(clientId));
-        }
-
-        if (operationTypeId == Guid.Empty)
-        {
-            throw new ArgumentException("Operation type ID cannot be empty.", nameof(operationTypeId));
-        }
-
+        if (clientId == Guid.Empty) throw new ClientOperationClientIdRequiredException();
+        if (operationTypeId == Guid.Empty) throw new ClientOperationTypeIdRequiredException();
         return new ClientOperation(Guid.NewGuid(), clientId, operationTypeId);
     }
 
     public void Enable()
     {
-        if (IsEnabled)
-        {
-            return;
-        }
-
+        if (IsEnabled) throw new ClientOperationAlreadyEnabledException(Id);
         IsEnabled = true;
         UpdateTimestamp();
     }
 
     public void Disable()
     {
-        if (!IsEnabled)
-        {
-            return;
-        }
-
+        if (!IsEnabled) throw new ClientOperationAlreadyDisabledException(Id);
         IsEnabled = false;
         UpdateTimestamp();
     }
 
     public void MarkAsDeleted()
     {
-        if (IsDeleted)
-        {
-            return;
-        }
-
+        if (IsDeleted) throw new ClientOperationAlreadyDeletedException(Id);
         IsDeleted = true;
         UpdateTimestamp();
     }
 
     public void Restore()
     {
-        if (!IsDeleted)
-        {
-            return;
-        }
-
+        if (!IsDeleted) throw new ClientOperationNotDeletedException(Id);
         IsDeleted = false;
         UpdateTimestamp();
     }
