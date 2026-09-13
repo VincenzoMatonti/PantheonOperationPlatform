@@ -7,7 +7,10 @@ public class GetClientByIdRequestValidator : AbstractValidator<GetClientByIdRequ
 {
     public GetClientByIdRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }
 
@@ -16,8 +19,12 @@ public class GetClientByCodeRequestValidator : AbstractValidator<GetClientByCode
     public GetClientByCodeRequestValidator()
     {
         RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Client code is required.")
-            .MaximumLength(100).WithMessage("Client code cannot exceed 100 characters.");
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientCodeRequired)
+            .WithMessage("Client code is required.")
+            .MaximumLength(100)
+            .WithState(_ => ClientValidationErrorCode.ClientCodeMaximumLength)
+            .WithMessage("Client code cannot exceed 100 characters.");
     }
 }
 
@@ -25,6 +32,9 @@ public class GetClientCodeByIdRequestValidator : AbstractValidator<GetClientCode
 {
     public GetClientCodeByIdRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }

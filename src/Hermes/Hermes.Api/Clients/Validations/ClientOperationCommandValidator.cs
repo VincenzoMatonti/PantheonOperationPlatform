@@ -7,8 +7,15 @@ public class CreateClientOperationRequestValidator : AbstractValidator<CreateCli
 {
     public CreateClientOperationRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
-        RuleFor(x => x.OperationTypeId).NotEmpty().WithMessage("Operation type ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
+
+        RuleFor(x => x.OperationTypeId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.OperationTypeIdRequired)
+            .WithMessage("Operation type ID is required.");
     }
 }
 
@@ -16,7 +23,10 @@ public class EnableClientOperationRequestValidator : AbstractValidator<EnableCli
 {
     public EnableClientOperationRequestValidator()
     {
-        RuleFor(x => x.ClientOperationId).NotEmpty().WithMessage("Client operation ID is required.");
+        RuleFor(x => x.ClientOperationId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientOperationIdRequired)
+            .WithMessage("Client operation ID is required.");
     }
 }
 
@@ -24,7 +34,10 @@ public class DisableClientOperationRequestValidator : AbstractValidator<DisableC
 {
     public DisableClientOperationRequestValidator()
     {
-        RuleFor(x => x.ClientOperationId).NotEmpty().WithMessage("Client operation ID is required.");
+        RuleFor(x => x.ClientOperationId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientOperationIdRequired)
+            .WithMessage("Client operation ID is required.");
     }
 }
 
@@ -32,7 +45,10 @@ public class DeleteClientOperationRequestValidator : AbstractValidator<DeleteCli
 {
     public DeleteClientOperationRequestValidator()
     {
-        RuleFor(x => x.ClientOperationId).NotEmpty().WithMessage("Client operation ID is required.");
+        RuleFor(x => x.ClientOperationId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientOperationIdRequired)
+            .WithMessage("Client operation ID is required.");
     }
 }
 
@@ -40,6 +56,9 @@ public class RestoreClientOperationRequestValidator : AbstractValidator<RestoreC
 {
     public RestoreClientOperationRequestValidator()
     {
-        RuleFor(x => x.ClientOperationId).NotEmpty().WithMessage("Client operation ID is required.");
+        RuleFor(x => x.ClientOperationId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientOperationIdRequired)
+            .WithMessage("Client operation ID is required.");
     }
 }

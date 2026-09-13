@@ -7,7 +7,10 @@ public class GetClientOperationByIdRequestValidator : AbstractValidator<GetClien
 {
     public GetClientOperationByIdRequestValidator()
     {
-        RuleFor(x => x.ClientOperationId).NotEmpty().WithMessage("Client operation ID is required.");
+        RuleFor(x => x.ClientOperationId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientOperationIdRequired)
+            .WithMessage("Client operation ID is required.");
     }
 }
 
@@ -15,8 +18,15 @@ public class GetClientOperationRequestValidator : AbstractValidator<GetClientOpe
 {
     public GetClientOperationRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
-        RuleFor(x => x.OperationTypeId).NotEmpty().WithMessage("Operation type ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
+
+        RuleFor(x => x.OperationTypeId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.OperationTypeIdRequired)
+            .WithMessage("Operation type ID is required.");
     }
 }
 
@@ -24,7 +34,10 @@ public class GetClientOperationsByClientIdRequestValidator : AbstractValidator<G
 {
     public GetClientOperationsByClientIdRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }
 
@@ -32,6 +45,9 @@ public class GetClientOperationsByOperationTypeIdRequestValidator : AbstractVali
 {
     public GetClientOperationsByOperationTypeIdRequestValidator()
     {
-        RuleFor(x => x.OperationTypeId).NotEmpty().WithMessage("Operation type ID is required.");
+        RuleFor(x => x.OperationTypeId)
+            .NotEmpty()
+            .WithState(_ => ClientOperationValidationErrorCode.OperationTypeIdRequired)
+            .WithMessage("Operation type ID is required.");
     }
 }

@@ -8,12 +8,20 @@ public class CreateClientRequestValidator : AbstractValidator<CreateClientReques
     public CreateClientRequestValidator()
     {
         RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Client code is required.")
-            .MaximumLength(100).WithMessage("Client code cannot exceed 100 characters.");
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientCodeRequired)
+            .WithMessage("Client code is required.")
+            .MaximumLength(100)
+            .WithState(_ => ClientValidationErrorCode.ClientCodeMaximumLength)
+            .WithMessage("Client code cannot exceed 100 characters.");
 
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Client name is required.")
-            .MaximumLength(200).WithMessage("Client name cannot exceed 200 characters.");
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientNameRequired)
+            .WithMessage("Client name is required.")
+            .MaximumLength(200)
+            .WithState(_ => ClientValidationErrorCode.ClientNameMaximumLength)
+            .WithMessage("Client name cannot exceed 200 characters.");
     }
 }
 
@@ -21,11 +29,18 @@ public class RenameClientRequestValidator : AbstractValidator<RenameClientReques
 {
     public RenameClientRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
 
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Client name is required.")
-            .MaximumLength(200).WithMessage("Client name cannot exceed 200 characters.");
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientNameRequired)
+            .WithMessage("Client name is required.")
+            .MaximumLength(200)
+            .WithState(_ => ClientValidationErrorCode.ClientNameMaximumLength)
+            .WithMessage("Client name cannot exceed 200 characters.");
     }
 }
 
@@ -35,11 +50,16 @@ public class RenameClientCodeRequestValidator : AbstractValidator<RenameClientCo
     {
         RuleFor(x => x.ClientId)
             .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
             .WithMessage("Client ID is required.");
 
         RuleFor(x => x.NewCode)
-            .NotEmpty().WithMessage("New client code is required.")
-            .MaximumLength(100).WithMessage("Client code cannot exceed 100 characters.");
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientCodeRequired)
+            .WithMessage("New client code is required.")
+            .MaximumLength(100)
+            .WithState(_ => ClientValidationErrorCode.ClientCodeMaximumLength)
+            .WithMessage("Client code cannot exceed 100 characters.");
     }
 }
 
@@ -47,7 +67,10 @@ public class ActivateClientRequestValidator : AbstractValidator<ActivateClientRe
 {
     public ActivateClientRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }
 
@@ -55,7 +78,10 @@ public class DeactivateClientRequestValidator : AbstractValidator<DeactivateClie
 {
     public DeactivateClientRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }
 
@@ -63,7 +89,10 @@ public class DeleteClientRequestValidator : AbstractValidator<DeleteClientReques
 {
     public DeleteClientRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }
 
@@ -71,6 +100,9 @@ public class RestoreClientRequestValidator : AbstractValidator<RestoreClientRequ
 {
     public RestoreClientRequestValidator()
     {
-        RuleFor(x => x.ClientId).NotEmpty().WithMessage("Client ID is required.");
+        RuleFor(x => x.ClientId)
+            .NotEmpty()
+            .WithState(_ => ClientValidationErrorCode.ClientIdRequired)
+            .WithMessage("Client ID is required.");
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Hermes.Api.Common;
+using Hermes.Api.Common.Responses;
 using Hermes.Api.Clients.Requests;
 using Hermes.Api.Clients.Responses;
 using Hermes.Api.Clients.Mappings.Queries;

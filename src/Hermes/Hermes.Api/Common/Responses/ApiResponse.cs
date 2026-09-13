@@ -1,4 +1,4 @@
-namespace Hermes.Api.Common;
+namespace Hermes.Api.Common.Responses;
 
 public class ApiResponse
 {
