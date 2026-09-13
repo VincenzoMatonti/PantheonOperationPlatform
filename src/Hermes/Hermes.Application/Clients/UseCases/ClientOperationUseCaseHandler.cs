@@ -37,7 +37,6 @@ namespace Hermes.Application.Clients.UseCases
                 return newClientOperationDto;
             }
             throw new ClientNotFoundException(command.ClientId);
-
         }
 
 

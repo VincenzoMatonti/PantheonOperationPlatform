@@ -18,15 +18,28 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<FluentValidationFilter>();
 });
 
+//VALIDATION REQUEST
 builder.Services.AddValidatorsFromAssemblyContaining<CreateClientRequestValidator>();
+
+// CLIENT
 builder.Services.AddScoped<ClientCommandRequestMapper>();
 builder.Services.AddScoped<ClientCommandResponseMapper>();
 builder.Services.AddScoped<ClientQueryRequestMapper>();
 builder.Services.AddScoped<ClientQueryResponseMapper>();
+
 builder.Services.AddScoped<ClientCommandHandler>();
 builder.Services.AddScoped<ClientQueryHandler>();
 builder.Services.AddScoped<ClientUseCaseHandler>();
 
+// CLIENT OPERATION
+builder.Services.AddScoped<ClientOperationCommandRequestMapper>();
+builder.Services.AddScoped<ClientOperationCommandResponseMapper>();
+builder.Services.AddScoped<ClientOperationQueryRequestMapper>();
+builder.Services.AddScoped<ClientOperationQueryResponseMapper>();
+
+builder.Services.AddScoped<ClientOperationCommandHandler>();
+builder.Services.AddScoped<ClientOperationQueryHandler>();
+builder.Services.AddScoped<ClientOperationUseCaseHandler>();
 
 
 var app = builder.Build();
