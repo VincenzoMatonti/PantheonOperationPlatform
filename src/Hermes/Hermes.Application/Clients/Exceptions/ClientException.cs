@@ -8,6 +8,9 @@ public enum ClientErrorCode
     AlreadyExists = 2
 }
 
-public abstract class ClientException(ClientErrorCode code, string message) : ApplicationException<ClientErrorCode>(code, message)
+public abstract class ClientException(
+    ClientErrorCode code,
+    string message)
+    : ApplicationException<ClientErrorCode>(code, message)
 {
 }

@@ -11,6 +11,8 @@ namespace Hermes.Application.Clients.UseCases
         private readonly ClientQueryHandler _clientQueryHandler = clientQueryHandler;
         private readonly ClientCommandHandler _clientCommandHandler = clientCommandHandler;
 
+        //==================================================================================================================================================
+        //USE CASE COMMAND
         public async Task<CreateClientDto> CreateClientAsync(CreateClientCommand command, CancellationToken cancellationToken = default)
         {
             var clientCode = new GetClientByCodeQuery { Code = command.Code };
@@ -97,7 +99,7 @@ namespace Hermes.Application.Clients.UseCases
         }
 
         //==================================================================================================================================================
-        //USE CASE ONLY QUERY
+        //USE CASE QUERY
 
         public async Task<ClientDto> GetClientByIdAsync(GetClientByIdQuery query, CancellationToken cancellationToken = default)
         {
