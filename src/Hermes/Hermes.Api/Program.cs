@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hermes.Api.Filters;
+using Hermes.Api.Common.Exceptions;
 using Hermes.Api.Clients.Validations;
 using Hermes.Api.Clients.Mappings.Commands;
 using Hermes.Api.Clients.Mappings.Queries;
@@ -9,9 +10,8 @@ using Hermes.Application.Clients.UseCases;
 
 
 
-
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers(options =>
 {
@@ -26,7 +26,6 @@ builder.Services.AddScoped<ClientCommandRequestMapper>();
 builder.Services.AddScoped<ClientCommandResponseMapper>();
 builder.Services.AddScoped<ClientQueryRequestMapper>();
 builder.Services.AddScoped<ClientQueryResponseMapper>();
-
 builder.Services.AddScoped<ClientCommandHandler>();
 builder.Services.AddScoped<ClientQueryHandler>();
 builder.Services.AddScoped<ClientUseCaseHandler>();
@@ -36,13 +35,12 @@ builder.Services.AddScoped<ClientOperationCommandRequestMapper>();
 builder.Services.AddScoped<ClientOperationCommandResponseMapper>();
 builder.Services.AddScoped<ClientOperationQueryRequestMapper>();
 builder.Services.AddScoped<ClientOperationQueryResponseMapper>();
-
 builder.Services.AddScoped<ClientOperationCommandHandler>();
 builder.Services.AddScoped<ClientOperationQueryHandler>();
 builder.Services.AddScoped<ClientOperationUseCaseHandler>();
 
-
 var app = builder.Build();
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

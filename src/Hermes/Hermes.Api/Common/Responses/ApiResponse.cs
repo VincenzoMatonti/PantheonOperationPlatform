@@ -3,7 +3,8 @@ namespace Hermes.Api.Common.Responses;
 public class ApiResponse
 {
     public bool Success { get; set; }
-    public ApiErrorResponse? Error { get; set; }
+    public List<ApiErrorResponse>? Errors { get; set; }
+
     public static ApiResponse Ok()
     {
         return new ApiResponse
@@ -17,13 +18,24 @@ public class ApiResponse
         return new ApiResponse
         {
             Success = false,
-            Error = new ApiErrorResponse
-            {
-                Type = type,
-                Entity = entity,
-                Code = code,
-                Message = message
-            }
+            Errors = [
+                new ApiErrorResponse
+                {
+                    Type = type,
+                    Entity = entity,
+                    Code = code,
+                    Message = message
+                }
+            ]
+        };
+    }
+
+    public static ApiResponse Fail(List<ApiErrorResponse> errors)
+    {
+        return new ApiResponse
+        {
+            Success = false,
+            Errors = errors
         };
     }
 }
@@ -32,7 +44,7 @@ public class ApiResponse<T>
 {
     public bool Success { get; set; }
     public T? Data { get; set; }
-    public ApiErrorResponse? Error { get; set; }
+    public List<ApiErrorResponse>? Errors { get; set; }
     public static ApiResponse<T> Ok(T data)
     {
         return new ApiResponse<T>
@@ -47,13 +59,24 @@ public class ApiResponse<T>
         return new ApiResponse<T>
         {
             Success = false,
-            Error = new ApiErrorResponse
-            {
-                Type = type,
-                Entity = entity,
-                Code = code,
-                Message = message
-            }
+            Errors = [
+                new ApiErrorResponse
+                {
+                    Type = type,
+                    Entity = entity,
+                    Code = code,
+                    Message = message
+                }
+            ]
+        };
+    }
+
+    public static ApiResponse<T> Fail(List<ApiErrorResponse> errors)
+    {
+        return new ApiResponse<T>
+        {
+            Success = false,
+            Errors = errors
         };
     }
 }
