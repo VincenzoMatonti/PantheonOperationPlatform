@@ -1,3 +1,5 @@
+using Hermes.Domain.Operations.Exceptions;
+
 namespace Hermes.Domain.Operations.ValueObjects;
 
 public class ExternalOperationId
@@ -11,11 +13,7 @@ public class ExternalOperationId
 
     public static ExternalOperationId Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException("External operation ID cannot be empty.", nameof(value));
-        }
-
+        if (string.IsNullOrWhiteSpace(value)) throw new OperationExternalIdRequiredException();
         return new ExternalOperationId(value.Trim());
     }
 

@@ -1,13 +1,10 @@
+using Hermes.Domain.Operations.Exceptions;
 using Hermes.Domain.Operations.ValueObjects;
 
 namespace Hermes.Domain.Operations.Entities;
 
 public class Operation
 {
-    private Operation()
-    {
-    }
-
     private Operation(Guid id, Guid executionId, CorrelationId correlationId, ExternalOperationId externalId)
     {
         Id = id;
@@ -35,35 +32,22 @@ public class Operation
 
     public static Operation Create(Guid executionId, CorrelationId correlationId, ExternalOperationId externalId)
     {
-        ArgumentNullException.ThrowIfNull(correlationId);
-        ArgumentNullException.ThrowIfNull(externalId);
-
-        if (executionId == Guid.Empty)
-        {
-            throw new ArgumentException("Execution ID cannot be empty.", nameof(executionId));
-        }
-
+        if (executionId == Guid.Empty) throw new OperationExecutionIdRequiredException();
+        if (correlationId is null) throw new OperationCorrelationIdRequiredException();
+        if (externalId is null) throw new OperationExternalIdRequiredException();
         return new Operation(Guid.NewGuid(), executionId, correlationId, externalId);
     }
 
     public void Validate()
     {
-        if (Status != OperationStatus.Received)
-        {
-            throw new InvalidOperationException("Only received operations can be validated.");
-        }
-
+        if (Status != OperationStatus.Received) throw new OperationInvalidValidationStateException(Id);
         Status = OperationStatus.Validated;
         UpdateTimestamp();
     }
 
     public void Accept()
     {
-        if (Status != OperationStatus.Validated)
-        {
-            throw new InvalidOperationException("Only validated operations can be accepted.");
-        }
-
+        if (Status != OperationStatus.Validated) throw new OperationInvalidAcceptanceStateException(Id);
         Status = OperationStatus.Accepted;
         UpdateTimestamp();
     }
@@ -71,9 +55,7 @@ public class Operation
     public void Reject()
     {
         if (Status != OperationStatus.Received && Status != OperationStatus.Validated)
-        {
-            throw new InvalidOperationException("Only received or validated operations can be rejected.");
-        }
+            throw new OperationInvalidRejectionStateException(Id);
 
         Status = OperationStatus.Rejected;
         UpdateTimestamp();

@@ -1,11 +1,9 @@
+using Hermes.Domain.Operations.Exceptions;
+
 namespace Hermes.Domain.Operations.Entities;
 
 public class OperationType
 {
-    private OperationType()
-    {
-    }
-
     private OperationType(Guid id, string code, string name)
     {
         Id = id;
@@ -17,61 +15,35 @@ public class OperationType
     }
 
     public Guid Id { get; private set; }
-
     public string Code { get; private set; } = null!;
-
     public string Name { get; private set; } = null!;
-
     public bool IsActive { get; private set; }
-
     public DateTimeOffset CreatedAt { get; private set; }
-
     public DateTimeOffset UpdatedAt { get; private set; }
-
     public static OperationType Create(string code, string name)
     {
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            throw new ArgumentException("Operation type code cannot be empty.", nameof(code));
-        }
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Operation type name cannot be empty.", nameof(name));
-        }
-
+        if (string.IsNullOrWhiteSpace(code)) throw new OperationTypeCodeRequiredException();
+        if (string.IsNullOrWhiteSpace(name)) throw new OperationTypeNameRequiredException();
         return new OperationType(Guid.NewGuid(), code.Trim(), name.Trim());
     }
 
     public void Activate()
     {
-        if (IsActive)
-        {
-            return;
-        }
-
+        if (IsActive) throw new OperationTypeAlreadyActiveException(Id);
         IsActive = true;
         UpdateTimestamp();
     }
 
     public void Deactivate()
     {
-        if (!IsActive)
-        {
-            return;
-        }
-
+        if (!IsActive) throw new OperationTypeAlreadyInactiveException(Id);
         IsActive = false;
         UpdateTimestamp();
     }
 
     public void Rename(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Operation type name cannot be empty.", nameof(name));
-        }
-
+        if (string.IsNullOrWhiteSpace(name)) throw new OperationTypeNameRequiredException();
         Name = name.Trim();
         UpdateTimestamp();
     }

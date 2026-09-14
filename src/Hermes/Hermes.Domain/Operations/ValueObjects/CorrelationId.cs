@@ -1,3 +1,5 @@
+using Hermes.Domain.Operations.Exceptions;
+
 namespace Hermes.Domain.Operations.ValueObjects;
 
 public class CorrelationId
@@ -16,11 +18,7 @@ public class CorrelationId
 
     public static CorrelationId From(Guid value)
     {
-        if (value == Guid.Empty)
-        {
-            throw new ArgumentException("Correlation ID cannot be empty.", nameof(value));
-        }
-            
+        if (value == Guid.Empty) throw new OperationCorrelationIdRequiredException();                  
         return new CorrelationId(value);
     }
 
