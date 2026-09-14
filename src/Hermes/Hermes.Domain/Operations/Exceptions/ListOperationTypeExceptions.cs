@@ -19,3 +19,13 @@ public class OperationTypeAlreadyInactiveException(Guid operationTypeId) : Opera
         OperationTypeErrorCode.AlreadyInactive, $"Operation type with ID '{operationTypeId}' is already inactive.")
 {
 }
+
+public class OperationTypeAlreadyDeletedException(Guid operationTypeId) : OperationTypeException(
+        OperationTypeErrorCode.AlreadyDeleted, $"Operation type with ID '{operationTypeId}' is already deleted.")
+{
+}
+
+public class OperationTypeNotDeletedException(Guid operationTypeId) : OperationTypeException(
+        OperationTypeErrorCode.NotDeleted, $"Operation type with ID '{operationTypeId}' is not deleted.")
+{
+}

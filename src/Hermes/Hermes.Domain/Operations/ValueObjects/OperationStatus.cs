@@ -2,8 +2,9 @@ namespace Hermes.Domain.Operations.ValueObjects;
 
 public enum OperationStatus
 {
-    Received = 1,
-    Validated = 2,
-    Accepted = 3,
-    Rejected = 4
+    Initialized = 1,
+    Sent = 2,
+    Validated = 3,
+    Accepted = 4,
+    Rejected = 5
 }

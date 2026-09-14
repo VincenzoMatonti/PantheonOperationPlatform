@@ -7,9 +7,12 @@ public enum OperationErrorCode
     ExecutionIdRequired = 1,
     CorrelationIdRequired = 2,
     ExternalIdRequired = 3,
-    InvalidValidationState = 4,
-    InvalidAcceptanceState = 5,
-    InvalidRejectionState = 6
+    InvalidSendState = 4,
+    InvalidValidationState = 5,
+    InvalidAcceptanceState = 6,
+    InvalidRejectionState = 7,
+    AlreadyDeleted = 8,
+    NotDeleted = 9
 }
 
 public abstract class OperationException(

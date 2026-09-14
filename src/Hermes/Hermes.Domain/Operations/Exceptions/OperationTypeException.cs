@@ -7,7 +7,9 @@ public enum OperationTypeErrorCode
     CodeRequired = 1,
     NameRequired = 2,
     AlreadyActive = 3,
-    AlreadyInactive = 4
+    AlreadyInactive = 4,
+    AlreadyDeleted = 5,
+    NotDeleted = 6
 }
 
 public abstract class OperationTypeException(

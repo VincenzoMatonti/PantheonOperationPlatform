@@ -1,30 +1,35 @@
 using Hermes.Domain.Operations.Exceptions;
+using Hermes.Domain.Operations.ValueObjects;
 
 namespace Hermes.Domain.Operations.Entities;
 
 public class OperationType
 {
-    private OperationType(Guid id, string code, string name)
+    private OperationType(Guid id, OperationTypeCode code, string name)
     {
         Id = id;
         Code = code;
         Name = name;
         IsActive = true;
+        IsDeleted = false;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
     }
 
     public Guid Id { get; private set; }
-    public string Code { get; private set; } = null!;
+    public OperationTypeCode Code { get; private set; } = null!;
     public string Name { get; private set; } = null!;
     public bool IsActive { get; private set; }
+    public bool IsDeleted { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
-    public static OperationType Create(string code, string name)
+
+    public static OperationType Create(OperationTypeCode code, string name)
     {
-        if (string.IsNullOrWhiteSpace(code)) throw new OperationTypeCodeRequiredException();
+        if (code is null) throw new OperationTypeCodeRequiredException();
         if (string.IsNullOrWhiteSpace(name)) throw new OperationTypeNameRequiredException();
-        return new OperationType(Guid.NewGuid(), code.Trim(), name.Trim());
+
+        return new OperationType(Guid.NewGuid(), code, name.Trim());
     }
 
     public void Activate()
@@ -41,10 +46,31 @@ public class OperationType
         UpdateTimestamp();
     }
 
+    public void MarkAsDeleted()
+    {
+        if (IsDeleted) throw new OperationTypeAlreadyDeletedException(Id);
+        IsDeleted = true;
+        UpdateTimestamp();
+    }
+
+    public void Restore()
+    {
+        if (!IsDeleted) throw new OperationTypeNotDeletedException(Id);
+        IsDeleted = false;
+        UpdateTimestamp();
+    }
+
     public void Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new OperationTypeNameRequiredException();
         Name = name.Trim();
+        UpdateTimestamp();
+    }
+
+    public void RenameCode(OperationTypeCode code)
+    {
+        if (code is null) throw new OperationTypeCodeRequiredException();
+        Code = code;
         UpdateTimestamp();
     }
 

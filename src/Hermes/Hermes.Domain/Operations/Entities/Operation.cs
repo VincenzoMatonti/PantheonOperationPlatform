@@ -11,7 +11,8 @@ public class Operation
         ExecutionId = executionId;
         CorrelationId = correlationId;
         ExternalId = externalId;
-        Status = OperationStatus.Received;
+        Status = OperationStatus.Initialized;
+        IsDeleted = false;
         CreatedAt = DateTimeOffset.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -26,6 +27,8 @@ public class Operation
 
     public OperationStatus Status { get; private set; }
 
+    public bool IsDeleted { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -38,9 +41,16 @@ public class Operation
         return new Operation(Guid.NewGuid(), executionId, correlationId, externalId);
     }
 
+    public void Send()
+    {
+        if (Status != OperationStatus.Initialized) throw new OperationInvalidSendStateException(Id);
+        Status = OperationStatus.Sent;
+        UpdateTimestamp();
+    }
+
     public void Validate()
     {
-        if (Status != OperationStatus.Received) throw new OperationInvalidValidationStateException(Id);
+        if (Status != OperationStatus.Sent) throw new OperationInvalidValidationStateException(Id);
         Status = OperationStatus.Validated;
         UpdateTimestamp();
     }
@@ -54,10 +64,23 @@ public class Operation
 
     public void Reject()
     {
-        if (Status != OperationStatus.Received && Status != OperationStatus.Validated)
+        if (Status != OperationStatus.Sent && Status != OperationStatus.Validated)
             throw new OperationInvalidRejectionStateException(Id);
-
         Status = OperationStatus.Rejected;
+        UpdateTimestamp();
+    }
+
+    public void MarkAsDeleted()
+    {
+        if (IsDeleted) throw new OperationAlreadyDeletedException(Id);
+        IsDeleted = true;
+        UpdateTimestamp();
+    }
+
+    public void Restore()
+    {
+        if (!IsDeleted) throw new OperationNotDeletedException(Id);
+        IsDeleted = false;
         UpdateTimestamp();
     }
 
