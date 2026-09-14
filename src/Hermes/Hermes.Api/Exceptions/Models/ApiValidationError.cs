@@ -1,4 +1,4 @@
-namespace Hermes.Api.Common.Exceptions;
+namespace Hermes.Api.Exceptions.Models;
 
 
 public class ValidationError(string propertyName, Enum code, string message)

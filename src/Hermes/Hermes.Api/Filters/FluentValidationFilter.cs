@@ -1,5 +1,5 @@
 using FluentValidation;
-using Hermes.Api.Common.Exceptions;
+using Hermes.Api.Exceptions.Models;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Hermes.Api.Filters;
