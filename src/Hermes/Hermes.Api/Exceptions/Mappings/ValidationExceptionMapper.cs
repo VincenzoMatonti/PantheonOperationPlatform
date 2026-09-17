@@ -1,8 +1,7 @@
 using Hermes.Api.Common;
 using Hermes.Api.Exceptions.Models;
-using Hermes.Api.Exceptions.Mappings;
 
-namespace Hermes.Api.Clients.Mappings.Exceptions;
+namespace Hermes.Api.Exceptions.Mappings;
 
 public class ValidationExceptionMapper : IExceptionMapper
 {

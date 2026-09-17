@@ -10,6 +10,15 @@ using Hermes.Api.Exceptions.Handlers;
 using Hermes.Application.Clients.Commands;
 using Hermes.Application.Clients.UseCases;
 using Hermes.Application.Clients.Queries;
+using Hermes.Api.Operations.Mappings.Exceptions;
+using Hermes.Api.Operations.Mappings.Commands;
+using Hermes.Api.Operations.Mappings.Queries;
+using Hermes.Application.Operations.Commands;
+using Hermes.Application.Operations.Queries;
+using Hermes.Application.Operations.UseCases;
+using Hermes.Application.OperationTypes.Commands;
+using Hermes.Application.OperationTypes.Queries;
+using Hermes.Application.OperationTypes.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +35,8 @@ builder.Services.AddScoped<IExceptionMapper, ValidationExceptionMapper>();
 builder.Services.AddScoped<IExceptionMapper, InternalExceptionMapper>();
 builder.Services.AddScoped<IExceptionMapper, ClientExceptionMapper>();
 builder.Services.AddScoped<IExceptionMapper, ClientOperationExceptionMapper>();
+builder.Services.AddScoped<IExceptionMapper, OperationExceptionMapper>();
+builder.Services.AddScoped<IExceptionMapper, OperationTypeExceptionMapper>();
 builder.Services.AddScoped<ExceptionMapperResolver>();
 builder.Services.AddScoped<ExceptionResponseBuilder>();
 
@@ -38,9 +49,6 @@ builder.Services.AddScoped<ClientCommandHandler>();
 builder.Services.AddScoped<ClientQueryHandler>();
 builder.Services.AddScoped<ClientUseCaseHandler>();
 
-
-
-
 // CLIENT OPERATION
 builder.Services.AddScoped<ClientOperationCommandRequestMapper>();
 builder.Services.AddScoped<ClientOperationCommandResponseMapper>();
@@ -50,6 +58,23 @@ builder.Services.AddScoped<ClientOperationCommandHandler>();
 builder.Services.AddScoped<ClientOperationQueryHandler>();
 builder.Services.AddScoped<ClientOperationUseCaseHandler>();
 
+// OPERATION
+builder.Services.AddScoped<OperationCommandRequestMapper>();
+builder.Services.AddScoped<OperationCommandResponseMapper>();
+builder.Services.AddScoped<OperationQueryRequestMapper>();
+builder.Services.AddScoped<OperationQueryResponseMapper>();
+builder.Services.AddScoped<OperationCommandHandler>();
+builder.Services.AddScoped<OperationQueryHandler>();
+builder.Services.AddScoped<OperationUseCaseHandler>();
+
+// OPERATION TYPE
+builder.Services.AddScoped<OperationTypeCommandRequestMapper>();
+builder.Services.AddScoped<OperationTypeCommandResponseMapper>();
+builder.Services.AddScoped<OperationTypeQueryRequestMapper>();
+builder.Services.AddScoped<OperationTypeQueryResponseMapper>();
+builder.Services.AddScoped<OperationTypeCommandHandler>();
+builder.Services.AddScoped<OperationTypeQueryHandler>();
+builder.Services.AddScoped<OperationTypeUseCaseHandler>();
 
 var app = builder.Build();
 app.UseExceptionHandler();

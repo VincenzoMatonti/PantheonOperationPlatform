@@ -1,7 +1,6 @@
 using Hermes.Api.Common;
 using Hermes.Api.Exceptions.Mappings;
 using Hermes.Api.Exceptions.Models;
-using Hermes.Domain.Common;
 using ApplicationClientExceptions = Hermes.Application.Clients.Exceptions;
 using DomainClientExceptions = Hermes.Domain.Clients.Exceptions;
 
@@ -11,7 +10,7 @@ public class ClientOperationExceptionMapper : IExceptionMapper
 {
     public bool CanHandle(Exception exception)
     {
-        return exception is ApplicationClientExceptions.ClientOperationException || exception is DomainException<DomainClientExceptions.ClientOperationErrorCode>;
+        return exception is ApplicationClientExceptions.ClientOperationException || exception is DomainClientExceptions.ClientOperationException;
     }
 
     public ExceptionMappingResult Map(Exception exception)
@@ -19,7 +18,7 @@ public class ClientOperationExceptionMapper : IExceptionMapper
         if (exception is ApplicationClientExceptions.ClientOperationException applicationException)
             return MapApplicationException(applicationException);
 
-        if (exception is DomainException<DomainClientExceptions.ClientOperationErrorCode> domainException)
+        if (exception is DomainClientExceptions.ClientOperationException domainException)
             return MapDomainException(domainException);
 
         throw new ApiExceptionMapperConfigurationException(nameof(ClientOperationExceptionMapper), exception.GetType().Name);
@@ -54,7 +53,7 @@ public class ClientOperationExceptionMapper : IExceptionMapper
         return new ExceptionMappingResult(statusCode, errors);
     }
 
-    private static ExceptionMappingResult MapDomainException(DomainException<DomainClientExceptions.ClientOperationErrorCode> exception)
+    private static ExceptionMappingResult MapDomainException(DomainClientExceptions.ClientOperationException exception)
     {
         var errors = new List<ApiErrorResponse>
         {
