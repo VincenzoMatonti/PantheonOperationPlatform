@@ -1,742 +1,269 @@
 # Hermes.Domain
 
-## Overview
+> Il cuore del dominio di Hermes: definisce **cosa** il sistema rappresenta e quali regole deve rispettare, senza conoscere **come** raggiungere i sistemi esterni.
 
-`Hermes.Domain` definisce il **modello concettuale del sistema Hermes**.
+## Indice
 
-Il Domain rappresenta i concetti fondamentali attraverso cui Hermes gestisce:
+- [Panoramica](#panoramica)
+- [Mappa del dominio](#mappa-del-dominio)
+- [Entità](#entità)
+- [Value object ed enumerazioni](#value-object-ed-enumerazioni)
+- [Ciclo di vita](#ciclo-di-vita)
+- [Repository](#repository)
+- [Eccezioni](#eccezioni)
+- [Principi](#principi)
 
-- soggetti che utilizzano il sistema;
-- operazioni;
-- sistemi e destinazioni;
-- percorsi configurati;
-- richieste concrete;
-- esecuzioni;
-- step di elaborazione.
+---
 
-Il dominio è organizzato intorno a cinque concetti principali:
+## Panoramica
 
-| Concept | Description |
+Hermes gestisce operazioni provenienti da diversi client, le valida e le indirizza verso endpoint configurati. Una richiesta può essere composta da più step e ogni step può utilizzare più route, tipi di elaborazione e package di dati.
+
+| Area | Responsabilità |
 |---|---|
-| **Client** | Chi utilizza Hermes |
-| **OperationType** | Quale operazione viene richiesta o gestita |
-| **Endpoint** | Verso quale sistema può essere indirizzata l'operazione |
-| **Route** | La combinazione `Client → OperationType → Endpoint` |
-| **Execution** | Come una `Operation` viene elaborata attraverso uno o più step |
-
-A questi concetti si aggiungono le entità che rappresentano le relazioni e la struttura dell'esecuzione:
-
-- `ClientOperation`
-- `EndpointOperation`
-- `Operation`
-- `ExecutionStep`
-- `ExecutionStepRoute`
-- `ExecutionType`
-- `ExecutionStepType`
-
-## Client
-
-`Client` rappresenta il **sistema, applicazione o soggetto che utilizza Hermes** per effettuare un'operazione.
-
-Il `Client` non definisce direttamente quali operazioni può eseguire.
-
-Le operazioni disponibili vengono configurate attraverso `ClientOperation`.
-
-### Relationship
-
-Client N:N OperationType
-       │
-       └── ClientOperation
-
-a relazione permette di stabilire quali OperationType sono disponibili per ciascun Client.
-
-Responsibility
-
-Il Client identifica quindi chi utilizza Hermes.
-
-Esempi concettuali:
-
-WebApplication
-MobileApplication
-InternalService
-ExternalService
-ScheduledProcess
+| **Configuration** | Definisce client, operazioni, endpoint e route disponibili |
+| **Runtime** | Rappresenta operation, execution e relativi step |
+| **Payload** | Organizza package, dati, header e metadati |
+| **Regole di dominio** | Protegge transizioni di stato e dati obbligatori |
 
 ---
 
-## OperationType
+## Mappa del dominio
 
-`OperationType` rappresenta il **tipo di operazione che Hermes conosce e gestisce**.
+```mermaid
+flowchart LR
+    Client --> ClientOperation
+    ClientOperation --> OperationType
+    Endpoint --> EndpointOperation
+    EndpointOperation --> OperationType
+    Client --> Route
+    OperationType --> Route
+    Endpoint --> Route
 
-È un'entità configurabile e registrabile.
+    Operation --> Execution
+    Execution --> ExecutionStep
+    ExecutionStep --> ExecutionStepRoute
+    ExecutionStepRoute --> Route
+    ExecutionStep --> ExecutionStepType
+    ExecutionStepType --> ExecutionType
 
-Non viene modellata come `enum`, perché il catalogo delle operazioni può evolvere nel tempo.
+    Operation --> Package
+    Package --> Data
+    Package --> Header
+    Package --> Metadata
+    Data --> Metadata
+```
 
-### Examples
+### Relazioni principali
 
-
-CREATE_USER
-UPDATE_USER
-DELETE_USER
-SYNCHRONIZE_DATA
-IMPORT_DATA
-EXPORT_DATA
-
-Un OperationType può essere:
-
-utilizzato da più Client;
-gestito da più Endpoint.
-Relationships
-Client N:N OperationType
-
-OperationType N:N Endpoint
-
-Questa struttura permette di mantenere il catalogo delle operazioni indipendente dai Client e dagli Endpoint.
-
-
----
-## ClientOperation
-
-`ClientOperation` rappresenta la **relazione tra un Client e un OperationType**.
-
-Indica quali operazioni un determinato `Client` è autorizzato o abilitato a utilizzare.
-
-### Relationship
-
-
-┌──────────┐
-│  Client  │
-└────┬─────┘
-     │
-     │ N:N
-     ▼
-┌─────────────────┐
-│ ClientOperation │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  OperationType  │
-└─────────────────┘
-
-La relazione è esplicita per poter essere configurata e abilitata o disabilitata indipendentemente.
-
-Questa struttura permette inoltre di aggiungere in futuro informazioni specifiche sulla relazione tra Client e OperationType.
-
+| Relazione | Cardinalità | Entità di relazione |
+|---|:---:|---|
+| `Client` — `OperationType` | N:N | `ClientOperation` |
+| `Endpoint` — `OperationType` | N:N | `EndpointOperation` |
+| `Operation` — `Execution` | 1:1 | — |
+| `Execution` — `ExecutionStep` | 1:N | — |
+| `ExecutionStep` — `Route` | N:N | `ExecutionStepRoute` |
+| `ExecutionStep` — `ExecutionType` | N:N | `ExecutionStepType` |
+| `Operation` — `Package` | 1:N | — |
+| `Package` — `Data` | 1:N | — |
+| `Package` — `Header` | 1:N | — |
+| `Package` / `Data` — `Metadata` | 1:N | — |
 
 ---
-## Endpoint
 
-`Endpoint` rappresenta un **sistema o una destinazione con cui Hermes può comunicare**.
+## Entità
 
-L'Endpoint identifica la destinazione a livello di dominio, senza definire nel Domain la tecnologia utilizzata per raggiungerla.
+Tutte le entità usano un `Guid` come identificativo e gestiscono, dove previsto, `CreatedAt` e `UpdatedAt` in UTC. La creazione avviene tramite metodi statici `Create(...)`, così le invarianti vengono controllate dal dominio.
 
-### Examples
+### Configurazione
 
-- CRM
-- ERP
-- Moodle
-- DataPlatform
-- ExternalSystem
+| Entità | Scopo | Proprietà principali | Comportamento |
+|---|---|---|---|
+| `Client` | Sistema o soggetto che utilizza Hermes | `Code`, `Name`, `IsActive`, `IsDeleted` | Attivazione, disattivazione, rinomina, soft delete e ripristino |
+| `ClientOperation` | Abilita un `OperationType` per un client | `ClientId`, `OperationTypeId`, `IsEnabled`, `IsDeleted` | Abilitazione, disabilitazione, soft delete e ripristino |
+| `OperationType` | Catalogo delle operazioni gestite | `Code`, `Name`, `IsActive`, `IsDeleted` | Attivazione, disattivazione, rinomina, soft delete e ripristino |
+| `Endpoint` | Destinazione logica raggiungibile | `Code`, `Type`, `IsActive` | Attivazione e disattivazione |
+| `EndpointOperation` | Abilita un `OperationType` per un endpoint | `EndpointId`, `OperationTypeId`, `IsEnabled` | Abilitazione e disabilitazione |
+| `Route` | Percorso configurato `Client → OperationType → Endpoint` | `ClientId`, `OperationTypeId`, `EndpointId`, `IsActive` | Attivazione e disattivazione |
+| `ExecutionType` | Categoria di elaborazione di uno step | `Code`, `Name`, `IsActive` | Attivazione, disattivazione e rinomina |
 
-Un `Endpoint` può gestire più `OperationType`.
+> `OperationType` ed `ExecutionType` sono entità configurabili: non sono enum, perché il loro catalogo può evolvere nel tempo.
 
-### Technology Independence
+### Runtime
 
-Il Domain non deve conoscere la tecnologia utilizzata per raggiungere l'Endpoint.
+| Entità | Scopo | Proprietà principali | Comportamento |
+|---|---|---|---|
+| `Operation` | Richiesta concreta ricevuta da Hermes | `ExecutionId`, `CorrelationId`, `ExternalId`, `Status`, `IsDeleted` | `Send`, `Validate`, `Accept`, `Reject`, soft delete e ripristino |
+| `Execution` | Elaborazione complessiva di una operation | `Status`, `StartedAt`, `CompletedAt` | Avvio, completamento, fallimento e cancellazione |
+| `ExecutionStep` | Singola fase ordinata di un’esecuzione | `ExecutionId`, `Sequence`, `Status`, date di avvio/fine | Avvio, completamento, fallimento, skip e cancellazione |
+| `ExecutionStepRoute` | Associa uno step a una route | `ExecutionStepId`, `RouteId`, `IsEnabled` | Abilitazione e disabilitazione |
+| `ExecutionStepType` | Associa uno step a un tipo di elaborazione | `ExecutionStepId`, `ExecutionTypeId`, `IsEnabled` | Abilitazione e disabilitazione |
 
-Ad esempio:
+### Package e contenuti
 
+Un `Package` contiene i dati trasportati durante una `Operation`. Header e metadati possono descrivere il package; i metadati possono anche appartenere a uno specifico `Data`.
 
-HTTP
-REST
-SOAP
-Message Queue
-Database
-gRPC
-SDK
+| Entità | Scopo | Proprietà principali | Comportamento |
+|---|---|---|---|
+| `Package` | Contenitore versionato associato a un’operation | `OperationId`, `Type`, `Status`, `ContentType`, `Version`, `Sequence` | Preparazione, avvio, completamento, fallimento, cancellazione e modifica dei dati descrittivi |
+| `Data` | Contenuto binario ordinato del package | `PackageId`, `Type`, `ContentType`, `Content`, `Sequence` | Cambio tipo, cambio content type e sostituzione del contenuto |
+| `Header` | Coppia chiave/valore del package | `PackageId`, `Key`, `Value` | Modifica della chiave e del valore |
+| `Metadata` | Informazione descrittiva del package o del data | `PackageId`, `DataId?`, `Key`, `Value` | Identifica il proprietario e modifica chiave/valore |
 
-Questi dettagli appartengono ai layer infrastrutturali e di integrazione.
+`Metadata` può essere creato in due modi:
 
-Il Domain conosce quindi la destinazione, ma non come tecnicamente raggiungerla.
-
-
----
-## EndpointOperation
-
-`EndpointOperation` rappresenta la **relazione tra Endpoint e OperationType**.
-
-Indica quali operazioni un determinato `Endpoint` è in grado di gestire.
-
-### Relationship
-
-
-┌──────────────┐
-│   Endpoint   │
-└──────┬───────┘
-       │
-       │ N:N
-       ▼
-┌──────────────────┐
-│ EndpointOperation│
-└────────┬─────────┘
-         │
-         ▼
-┌─────────────────┐
-│  OperationType  │
-└─────────────────┘
-
-In questo modo Hermes può distinguere chiaramente:
-
-Client
-  │
-  └── quali operazioni può utilizzare
-          │
-          ▼
-     ClientOperation
-
-
-Endpoint
-  │
-  └── quali operazioni può gestire
-          │
-          ▼
-     EndpointOperation
-
----
-## Route
-
-`Route` rappresenta una **specifica combinazione configurata**:
-
-
-Client → OperationType → Endpoint
-
-Una Route definisce quindi un percorso disponibile all'interno di Hermes.
-
-Conceptual Model
-┌──────────┐
-│  Client  │
-└────┬─────┘
-     │
-     ▼
-┌─────────────────┐
-│  OperationType  │
-└────┬────────────┘
-     │
-     ▼
-┌──────────┐
-│ Endpoint │
-└──────────┘
-
-Example
-Client A → CREATE_USER → CRM
-
-Una Route è una configurazione riutilizzabile.
-
-Non rappresenta l'esecuzione concreta di un'operazione.
-
-La distinzione fondamentale è:
-
-Route = configurazione del percorso
-
-Operation = richiesta concreta
-
-Execution = elaborazione concreta della richiesta
-
----
-## Operation
-
-`Operation` rappresenta una **richiesta concreta ricevuta da Hermes**.
-
-È l'istanza dell'operazione che deve essere gestita dal sistema.
-
-### Conceptual Model
-
-
-Operation
-├── Id
-├── ExecutionId
-├── CorrelationId
-├── ExternalId
-└── Status
-
-L'Operation rappresenta quindi la richiesta concreta e il relativo processo di esecuzione.
-
-Separation from Configuration
-
-L'Operation non contiene direttamente:
-
-ClientId
-EndpointId
-OperationTypeId
-RouteId
-
-Il percorso e la configurazione appartengono alle Route.
-
-L'Operation rappresenta invece la richiesta concreta.
-
-Configuration
-      │
-      └── Route
-
-
-Runtime
-      │
-      └── Operation
-
-Questa separazione permette di mantenere distinta la configurazione del sistema dall'esecuzione runtime.
-
+```text
+CreateForPackage(packageId, key, value)  → metadato del Package
+CreateForData(packageId, dataId, key, value) → metadato di uno specifico Data
+```
 
 ---
 
-## Execution
-
-`Execution` rappresenta l'**esecuzione complessiva di una Operation**.
-
-La relazione è:
-
-
-Operation 1:1 Execution
-Relationship
-┌─────────────┐
-│  Operation  │
-└──────┬──────┘
-       │
-       │ 1:1
-       ▼
-┌─────────────┐
-│  Execution  │
-└─────────────┘
-
-Ogni Operation possiede una Execution associata.
-
-La Execution rappresenta il ciclo di vita dell'elaborazione complessiva della richiesta.
-
-
----
-## ExecutionStep
-
-`ExecutionStep` rappresenta una **singola fase dell'esecuzione**.
-
-Una `Execution` può contenere un numero arbitrario di Step.
-
-### Relationship
-
-
-Execution 1:N ExecutionStep
-Example
-Execution
-│
-├── Step 1
-├── Step 2
-├── Step 3
-└── Step N
-
-Ogni Step possiede:
-
-una sequenza;
-un proprio stato di esecuzione;
-i tipi di elaborazione associati;
-le Route utilizzate nella specifica fase.
-
-Lo Step è il punto in cui vengono definite le attività e i percorsi necessari per quella specifica fase dell'esecuzione.
-
-
----
-
-
-## ExecutionStepRoute
-
-`ExecutionStepRoute` rappresenta la relazione tra `ExecutionStep` e `Route`.
-
-### Relationship
-
-
-ExecutionStep N:N Route
-
-Uno Step può utilizzare più Route e la stessa Route può essere riutilizzata da più Step.
-
-┌────────────────┐
-│ ExecutionStep  │
-└───────┬────────┘
-        │
-        │ N:N
-        ▼
-┌────────────────────┐
-│ ExecutionStepRoute │
-└─────────┬──────────┘
-          │
-          ▼
-       ┌───────┐
-       │ Route │
-       └───────┘
-
-Questo permette a uno stesso Step di coinvolgere più sistemi o più percorsi.
-
-Example
-Step 1
-│
-├── Route A
-│      Client A → Operation X → System B
-│
-└── Route B
-       Client A → Operation X → System C
-
----
-
-## ExecutionType
-
-`ExecutionType` rappresenta il **tipo o la categoria di elaborazione associata a uno Step**.
-
-È un'entità configurabile e non un `enum`.
-
-Il catalogo dei tipi di elaborazione può quindi evolvere nel tempo.
-
-### Examples
-
-
-Processing
-Integration
-BackgroundProcessing
-DataStorage
-Validation
-Transformation
-
-Un ExecutionType può essere utilizzato da più ExecutionStep.
-
-
----
-
-## ExecutionStepType
-
-`ExecutionStepType` rappresenta la relazione tra `ExecutionStep` e `ExecutionType`.
-
-### Relationship
-
-
-ExecutionStep N:N ExecutionType
-┌────────────────┐
-│ ExecutionStep  │
-└───────┬────────┘
-        │
-        │ N:N
-        ▼
-┌────────────────────┐
-│ ExecutionStepType  │
-└─────────┬──────────┘
-          │
-          ▼
-┌─────────────────┐
-│  ExecutionType  │
-└─────────────────┘
-
-Uno Step può quindi avere più tipi di elaborazione.
-
-Lo stesso ExecutionType può essere riutilizzato da più Step.
-
-Example
-Step 1
-│
-├── Processing
-└── Integration
-
-Step 2
-│
-└── DataStorage
-
-Step 3
-│
-└── Processing
-
----
-
-# Execution Flow
-
-Una singola `Operation` può produrre un'esecuzione composta da più Step.
-
-
-Operation
-    │
-    │ 1:1
-    ▼
-Execution
-    │
-    │ 1:N
-    ▼
-ExecutionStep
-    │
-    ├── ExecutionTypes
-    │
-    └── Routes
-Complete Example
-Operation
-│
-└── Execution
-    │
-    ├── Step 1
-    │   │
-    │   ├── ExecutionTypes
-    │   │   ├── Processing
-    │   │   └── Integration
-    │   │
-    │   └── Routes
-    │       ├── Client A → Operation X → System B
-    │       └── Client A → Operation X → System C
-    │
-    ├── Step 2
-    │   │
-    │   ├── ExecutionTypes
-    │   │   └── DataStorage
-    │   │
-    │   └── Routes
-    │       └── System C → Operation Y → DataStore
-    │
-    └── Step 3
-        │
-        ├── ExecutionTypes
-        │   └── Processing
-        │
-        └── Routes
-            └── DataStore → Operation Z → System D
-
-In questo modello:
-
-la Route descrive un percorso configurato;
-l'ExecutionStep determina quali percorsi vengono utilizzati in quella fase;
-l'ExecutionType descrive il tipo di elaborazione dello Step;
-la Execution rappresenta l'intero processo;
-l'Operation rappresenta la richiesta concreta.
-
----
-
-# Relationships & Cardinalities
-
-| Relationship | Cardinality | Relationship Entity |
-|---|---:|---|
-| `Client` → `OperationType` | N:N | `ClientOperation` |
-| `Endpoint` → `OperationType` | N:N | `EndpointOperation` |
-| `Operation` → `Execution` | 1:1 | — |
-| `Execution` → `ExecutionStep` | 1:N | — |
-| `ExecutionStep` → `Route` | N:N | `ExecutionStepRoute` |
-| `ExecutionStep` → `ExecutionType` | N:N | `ExecutionStepType` |
-
-## N:N Relationships
-
-Le relazioni N:N sono rappresentate da entità dedicate:
-
-ClientOperation
-EndpointOperation
-ExecutionStepRoute
-ExecutionStepType
-
-Questo permette di mantenere le relazioni esplicite ed estendibili.
-
-
----
-
-# Configuration vs Runtime
-
-Una distinzione fondamentale del Domain Hermes è quella tra **Configuration** e **Runtime**.
-
-## Configuration
-
-La configurazione rappresenta ciò che Hermes è configurato per poter fare.
-
-Client
-   │
-   │ N:N
-   ▼
-ClientOperation
-   │
-   ▼
-OperationType
-   ▲
-   │
-   │ N:N
-   │
-EndpointOperation
-   ▲
-   │
-   │
-Endpoint
-
-Client + OperationType + Endpoint
-                │
-                ▼
-              Route
-
-La configurazione è riutilizzabile.
-
-Runtime
-
-Il runtime rappresenta ciò che Hermes sta effettivamente elaborando.
-
-Operation
-    │
-    │ 1:1
-    ▼
-Execution
-    │
-    │ 1:N
-    ▼
-ExecutionStep
-    │
-    ├── ExecutionType
-    │
-    └── ExecutionStepRoute
-              │
-              ▼
-            Route
-
-La runtime execution utilizza quindi la configurazione esistente per realizzare il processo concreto.
-
-
----
-
-# Domain Responsibilities
-
-Il Domain ha la responsabilità di rappresentare:
-
-- quali soggetti interagiscono con Hermes;
-- quali operazioni Hermes conosce;
-- quali sistemi possono essere raggiunti;
-- quali combinazioni `Client / OperationType / Endpoint` sono configurate;
-- quali richieste vengono ricevute;
-- come una richiesta viene eseguita;
-- quali Step compongono un'esecuzione;
-- quali tipi di elaborazione appartengono agli Step.
-
-Il Domain **non deve invece conoscere il HOW tecnologico**.
-
-Ad esempio, il Domain non deve sapere se un Endpoint viene raggiunto tramite:
-
-HTTP
-REST
-SOAP
-RabbitMQ
-Kafka
-Database
-gRPC
-SDK
-
-Questi dettagli appartengono ai layer esterni, in particolare:
-
-Application
-Infrastructure
-Integration
-
-Il Domain conosce quindi:
-
-WHAT Hermes deve rappresentare
-
-ma non:
-
-HOW Hermes deve tecnicamente implementarlo.
-
-
----
-
-### — Domain Principles
-
-## 1. Configuration is not Runtime
-
-La configurazione del sistema è separata dall'esecuzione concreta.
-
-Route
-   ≠
-Operation
-
-La Route descrive come Hermes può essere configurato.
-
-L'Operation descrive una richiesta concreta.
-
-2. OperationType is Configurable
-
-OperationType è un'entità e non un enum.
-
-Questo permette di evolvere il catalogo delle operazioni senza legare il Domain a un insieme statico di valori.
-
-3. ExecutionType is Configurable
-
-Anche ExecutionType è un'entità e non un enum.
-
-Questo permette di aggiungere nuove categorie di elaborazione senza modificare necessariamente il modello applicativo.
-
-4. Explicit N:N Relationships
-
-Le relazioni N:N vengono rappresentate esplicitamente tramite entità dedicate:
-
-ClientOperation
-EndpointOperation
-ExecutionStepRoute
-ExecutionStepType
-
-Questo mantiene il modello estendibile e permette di aggiungere informazioni alle relazioni.
-
-5. Technology Independence
-
-Il Domain non conosce le tecnologie utilizzate per comunicare con gli Endpoint.
-
-Domain
-   │
-   │ knows
-   ▼
-Endpoint
-
-Domain
-   │
-   │ does NOT know
-   ▼
-HTTP / SOAP / Kafka / RabbitMQ / DB / gRPC
-
-La tecnologia viene definita nei layer esterni.
-
-
----
-
-# Summary
-
-| Concept | Responsibility |
+## Value object ed enumerazioni
+
+I value object incapsulano valori con significato di dominio e vengono creati tramite `Create(...)` (o `From(...)` per `CorrelationId`). Le implementazioni attuali validano il valore non vuoto e lo normalizzano con `Trim()`.
+
+### Value object
+
+| Area | Value object | Valore |
+|---|---|---|
+| Client | `ClientCode` | Codice del client |
+| Endpoint | `EndpointCode` | Codice dell’endpoint |
+| Endpoint | `EndpointType` | Tipo logico dell’endpoint (`Code`) |
+| Operations | `OperationTypeCode` | Codice dell’operazione |
+| Operations | `CorrelationId` | `Guid` di correlazione; generabile o ricostruibile con `From(Guid)` |
+| Operations | `ExternalOperationId` | Identificativo dell’operazione nel sistema esterno |
+| Executions | `ExecutionTypeCode` | Codice del tipo di elaborazione |
+| Packages | `PackageType` | Tipo del package |
+| Packages | `PackageVersion` | Versione del package |
+| Packages | `DataType` | Tipo del contenuto dati |
+| Packages | `ContentType` | Formato/content type del contenuto |
+| Packages | `HeaderKey` / `HeaderValue` | Chiave e valore di un header |
+| Packages | `MetadataKey` / `MetadataValue` | Chiave e valore di un metadato |
+
+### Enumerazioni di stato
+
+| Enum | Valori |
 |---|---|
-| **Client** | Chi utilizza Hermes |
-| **OperationType** | Quale operazione Hermes conosce e gestisce |
-| **Endpoint** | Con quale sistema o destinazione Hermes può interagire |
-| **ClientOperation** | Quali OperationType un Client può utilizzare |
-| **EndpointOperation** | Quali OperationType un Endpoint può gestire |
-| **Route** | Percorso configurato `Client → OperationType → Endpoint` |
-| **Operation** | Richiesta concreta ricevuta da Hermes |
-| **Execution** | Esecuzione complessiva della richiesta |
-| **ExecutionStep** | Singola fase dell'esecuzione |
-| **ExecutionType** | Tipo di elaborazione associato a uno Step |
-| **ExecutionStepRoute** | Route utilizzate da uno Step |
-| **ExecutionStepType** | Tipi di elaborazione associati a uno Step |
+| `OperationStatus` | `Initialized`, `Sent`, `Validated`, `Accepted`, `Rejected` |
+| `ExecutionStatus` | `Pending`, `Running`, `Completed`, `Failed`, `Cancelled` |
+| `ExecutionStepStatus` | `Pending`, `Running`, `Completed`, `Failed`, `Skipped`, `Cancelled` |
+| `PackageStatus` | `Created`, `Ready`, `Processing`, `Completed`, `Failed`, `Cancelled` |
 
-# Final Definition
+---
 
-> **Hermes.Domain definisce il modello concettuale attraverso cui Hermes rappresenta Client, OperationType, Endpoint e Route come configurazione del sistema, e Operation, Execution e ExecutionStep come modello runtime dell'elaborazione.**
+## Ciclo di vita
 
-In sintesi:
+### Operation
 
-Client = chi utilizza Hermes
+```mermaid
+stateDiagram-v2
+    [*] --> Initialized
+    Initialized --> Sent: Send()
+    Sent --> Validated: Validate()
+    Validated --> Accepted: Accept()
+    Sent --> Rejected: Reject()
+    Validated --> Rejected: Reject()
+```
 
-OperationType = cosa viene richiesto
+### Execution e ExecutionStep
 
-Endpoint = con quale sistema/destinazione interagire
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Running: Start()
+    Running --> Completed: Complete()
+    Running --> Failed: Fail()
+    Pending --> Cancelled: Cancel()
+    Running --> Cancelled: Cancel()
+```
 
-ClientOperation = cosa un Client può utilizzare
+Per uno `ExecutionStep` è inoltre possibile passare da `Pending` a `Skipped`.
 
-EndpointOperation = cosa un Endpoint può gestire
+### Package
 
-Route = percorso configurato  Client → OperationType → Endpoint
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Ready: SetReady()
+    Ready --> Processing: StartProcessing()
+    Processing --> Completed: Complete()
+    Processing --> Failed: Fail()
+    Created --> Cancelled: Cancel()
+    Ready --> Cancelled: Cancel()
+    Processing --> Cancelled: Cancel()
+```
 
-Operation = richiesta concreta
+Le transizioni non previste dallo stato corrente generano un `InvalidOperationException`.
 
-Execution = esecuzione della richiesta
+---
 
-ExecutionStep = singola fase dell'esecuzione
+## Repository
 
-ExecutionType = tipo di elaborazione dello Step
+I repository sono **astrazioni del dominio**: espongono operazioni di lettura e scrittura senza legare Hermes a Entity Framework, SQL o altre tecnologie infrastrutturali.
 
-ExecutionStepRoute = Route utilizzate dallo Step
+| Area | Repository |
+|---|---|
+| Clients | `IClientCommandRepository`, `IClientQueryRepository` |
+| Client operations | `IClientOperationCommandRepository`, `IClientOperationQueryRepository` |
+| Endpoints | `IEndpointRepository`, `IEndpointOperationRepository` |
+| Routes | `IRouteRepository` |
+| Operations | `IOperationCommandRepository`, `IOperationQueryRepository` |
+| Operation types | `IOperationTypeCommandRepository`, `IOperationTypeQueryRepository` |
+| Executions | `IExecutionRepository`, `IExecutionStepRepository`, `IExecutionStepRouteRepository`, `IExecutionStepTypeRepository`, `IExecutionTypeRepository` |
+| Packages | `IPackageRepository`, `IDataRepository`, `IHeaderRepository`, `IMetadataRepository` |
 
-ExecutionStepType = tipi associati allo Step
+### Convenzioni
+
+- Le query sono asincrone e accettano un `CancellationToken`.
+- I metodi `Get...` restituiscono `null` quando si cerca una singola risorsa non trovata e una lista per le ricerche multiple.
+- `AddAsync(...)` persiste una nuova entità.
+- `Update(...)` segnala la modifica di un’entità già esistente.
+- Il salvataggio della transazione resta responsabilità del layer applicativo/infrastrutturale.
+
+---
+
+## Eccezioni
+
+### Base comune
+
+`DomainException<TCode>` estende `Exception` e aggiunge un `Code` tipizzato come enum. Le eccezioni specifiche del dominio derivano da questa classe per rendere gli errori identificabili e mappabili dall’Application/API.
+
+### Eccezioni tipizzate presenti
+
+| Famiglia | Codici principali |
+|---|---|
+| `ClientException` | `CodeRequired`, `NameRequired`, `AlreadyActive`, `AlreadyInactive`, `AlreadyDeleted`, `NotDeleted` |
+| `ClientOperationException` | `ClientIdRequired`, `OperationTypeIdRequired`, `AlreadyEnabled`, `AlreadyDisabled`, `AlreadyDeleted`, `NotDeleted` |
+| `OperationException` | `ExecutionIdRequired`, `CorrelationIdRequired`, `ExternalIdRequired`, stati non validi per `Send`, `Validate`, `Accept`, `Reject`, `AlreadyDeleted`, `NotDeleted` |
+| `OperationTypeException` | `CodeRequired`, `NameRequired`, `AlreadyActive`, `AlreadyInactive`, `AlreadyDeleted`, `NotDeleted` |
+
+Le entità di Endpoint, Route, Execution, ExecutionStep e Package usano invece principalmente `ArgumentException`, `ArgumentNullException`, `ArgumentOutOfRangeException` e `InvalidOperationException` per le invarianti locali.
+
+---
+
+## Principi
+
+1. **Configuration ≠ Runtime** — una `Route` descrive un percorso configurato; una `Operation` è una richiesta concreta.
+2. **Stati protetti** — le entità cambiano stato solo attraverso metodi di dominio, non tramite setter pubblici.
+3. **Relazioni N:N esplicite** — `ClientOperation`, `EndpointOperation`, `ExecutionStepRoute` ed `ExecutionStepType` sono entità dedicate ed estendibili.
+4. **Soft delete dove previsto** — `Client`, `ClientOperation`, `OperationType` e `Operation` supportano cancellazione logica e ripristino.
+5. **Tecnologia indipendente** — il Domain conosce `Endpoint`, non HTTP, REST, SOAP, Kafka, RabbitMQ, database o SDK.
+6. **Package separati dall’esecuzione** — `Package`, `Data`, `Header` e `Metadata` modellano il contenuto trasportato senza introdurre dettagli di integrazione.
+
+## In sintesi
+
+```text
+Client          = chi utilizza Hermes
+OperationType   = quale operazione è disponibile
+Endpoint        = quale destinazione può essere raggiunta
+Route           = Client → OperationType → Endpoint
+Operation       = richiesta concreta
+Execution       = elaborazione complessiva
+ExecutionStep   = singola fase dell’elaborazione
+ExecutionType   = categoria dello step
+Package         = contenitore dei dati dell’operation
+Data            = contenuto del package
+Header          = informazione tecnica chiave/valore
+Metadata        = informazione descrittiva del package o del data
+```
