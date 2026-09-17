@@ -44,7 +44,6 @@ Le operazioni disponibili vengono configurate attraverso `ClientOperation`.
 
 ### Relationship
 
-```text
 Client N:N OperationType
        │
        └── ClientOperation
@@ -65,9 +64,6 @@ ScheduledProcess
 
 ---
 
-### BLOCCO 3 — OperationType
-
-```markdown
 ## OperationType
 
 `OperationType` rappresenta il **tipo di operazione che Hermes conosce e gestisce**.
@@ -78,7 +74,7 @@ Non viene modellata come `enum`, perché il catalogo delle operazioni può evolv
 
 ### Examples
 
-```text
+
 CREATE_USER
 UPDATE_USER
 DELETE_USER
@@ -99,10 +95,6 @@ Questa struttura permette di mantenere il catalogo delle operazioni indipendente
 
 
 ---
-
-### BLOCCO 4 — ClientOperation
-
-```markdown
 ## ClientOperation
 
 `ClientOperation` rappresenta la **relazione tra un Client e un OperationType**.
@@ -111,7 +103,7 @@ Indica quali operazioni un determinato `Client` è autorizzato o abilitato a uti
 
 ### Relationship
 
-```text
+
 ┌──────────┐
 │  Client  │
 └────┬─────┘
@@ -133,10 +125,6 @@ Questa struttura permette inoltre di aggiungere in futuro informazioni specifich
 
 
 ---
-
-### BLOCCO 5 — Endpoint
-
-```markdown
 ## Endpoint
 
 `Endpoint` rappresenta un **sistema o una destinazione con cui Hermes può comunicare**.
@@ -159,7 +147,7 @@ Il Domain non deve conoscere la tecnologia utilizzata per raggiungere l'Endpoint
 
 Ad esempio:
 
-```text
+
 HTTP
 REST
 SOAP
@@ -174,10 +162,6 @@ Il Domain conosce quindi la destinazione, ma non come tecnicamente raggiungerla.
 
 
 ---
-
-### BLOCCO 6 — EndpointOperation
-
-```markdown
 ## EndpointOperation
 
 `EndpointOperation` rappresenta la **relazione tra Endpoint e OperationType**.
@@ -186,7 +170,7 @@ Indica quali operazioni un determinato `Endpoint` è in grado di gestire.
 
 ### Relationship
 
-```text
+
 ┌──────────────┐
 │   Endpoint   │
 └──────┬───────┘
@@ -220,15 +204,11 @@ Endpoint
      EndpointOperation
 
 ---
-
-### BLOCCO 7 — Route
-
-```markdown
 ## Route
 
 `Route` rappresenta una **specifica combinazione configurata**:
 
-```text
+
 Client → OperationType → Endpoint
 
 Una Route definisce quindi un percorso disponibile all'interno di Hermes.
@@ -247,6 +227,7 @@ Conceptual Model
 ┌──────────┐
 │ Endpoint │
 └──────────┘
+
 Example
 Client A → CREATE_USER → CRM
 
@@ -256,20 +237,13 @@ Non rappresenta l'esecuzione concreta di un'operazione.
 
 La distinzione fondamentale è:
 
-Route
-    = configurazione del percorso
+Route = configurazione del percorso
 
-Operation
-    = richiesta concreta
+Operation = richiesta concreta
 
-Execution
-    = elaborazione concreta della richiesta
+Execution = elaborazione concreta della richiesta
 
 ---
-
-### BLOCCO 8 — Operation
-
-```markdown
 ## Operation
 
 `Operation` rappresenta una **richiesta concreta ricevuta da Hermes**.
@@ -278,7 +252,7 @@ Execution
 
 ### Conceptual Model
 
-```text
+
 Operation
 ├── Id
 ├── ExecutionId
@@ -315,16 +289,13 @@ Questa separazione permette di mantenere distinta la configurazione del sistema 
 
 ---
 
-### BLOCCO 9 — Execution
-
-```markdown
 ## Execution
 
 `Execution` rappresenta l'**esecuzione complessiva di una Operation**.
 
 La relazione è:
 
-```text
+
 Operation 1:1 Execution
 Relationship
 ┌─────────────┐
@@ -343,10 +314,6 @@ La Execution rappresenta il ciclo di vita dell'elaborazione complessiva della ri
 
 
 ---
-
-### BLOCCO 10 — ExecutionStep
-
-```markdown
 ## ExecutionStep
 
 `ExecutionStep` rappresenta una **singola fase dell'esecuzione**.
@@ -355,7 +322,7 @@ Una `Execution` può contenere un numero arbitrario di Step.
 
 ### Relationship
 
-```text
+
 Execution 1:N ExecutionStep
 Example
 Execution
@@ -377,16 +344,14 @@ Lo Step è il punto in cui vengono definite le attività e i percorsi necessari 
 
 ---
 
-### BLOCCO 11 — ExecutionStepRoute
 
-```markdown
 ## ExecutionStepRoute
 
 `ExecutionStepRoute` rappresenta la relazione tra `ExecutionStep` e `Route`.
 
 ### Relationship
 
-```text
+
 ExecutionStep N:N Route
 
 Uno Step può utilizzare più Route e la stessa Route può essere riutilizzata da più Step.
@@ -419,9 +384,6 @@ Step 1
 
 ---
 
-### BLOCCO 12 — ExecutionType
-
-```markdown
 ## ExecutionType
 
 `ExecutionType` rappresenta il **tipo o la categoria di elaborazione associata a uno Step**.
@@ -432,7 +394,7 @@ Il catalogo dei tipi di elaborazione può quindi evolvere nel tempo.
 
 ### Examples
 
-```text
+
 Processing
 Integration
 BackgroundProcessing
@@ -445,16 +407,13 @@ Un ExecutionType può essere utilizzato da più ExecutionStep.
 
 ---
 
-### BLOCCO 13 — ExecutionStepType
-
-```markdown
 ## ExecutionStepType
 
 `ExecutionStepType` rappresenta la relazione tra `ExecutionStep` e `ExecutionType`.
 
 ### Relationship
 
-```text
+
 ExecutionStep N:N ExecutionType
 ┌────────────────┐
 │ ExecutionStep  │
@@ -491,14 +450,11 @@ Step 3
 
 ---
 
-### BLOCCO 14 — Execution Flow
-
-```markdown
 # Execution Flow
 
 Una singola `Operation` può produrre un'esecuzione composta da più Step.
 
-```text
+
 Operation
     │
     │ 1:1
@@ -553,9 +509,6 @@ l'Operation rappresenta la richiesta concreta.
 
 ---
 
-### BLOCCO 15 — Cardinalità
-
-```markdown
 # Relationships & Cardinalities
 
 | Relationship | Cardinality | Relationship Entity |
@@ -571,7 +524,6 @@ l'Operation rappresenta la richiesta concreta.
 
 Le relazioni N:N sono rappresentate da entità dedicate:
 
-```text
 ClientOperation
 EndpointOperation
 ExecutionStepRoute
@@ -582,9 +534,6 @@ Questo permette di mantenere le relazioni esplicite ed estendibili.
 
 ---
 
-### BLOCCO 16 — Configuration vs Runtime
-
-```markdown
 # Configuration vs Runtime
 
 Una distinzione fondamentale del Domain Hermes è quella tra **Configuration** e **Runtime**.
@@ -593,7 +542,6 @@ Una distinzione fondamentale del Domain Hermes è quella tra **Configuration** e
 
 La configurazione rappresenta ciò che Hermes è configurato per poter fare.
 
-```text
 Client
    │
    │ N:N
@@ -645,9 +593,6 @@ La runtime execution utilizza quindi la configurazione esistente per realizzare 
 
 ---
 
-### BLOCCO 17 — Domain Responsibilities
-
-```markdown
 # Domain Responsibilities
 
 Il Domain ha la responsabilità di rappresentare:
@@ -665,7 +610,6 @@ Il Domain **non deve invece conoscere il HOW tecnologico**.
 
 Ad esempio, il Domain non deve sapere se un Endpoint viene raggiunto tramite:
 
-```text
 HTTP
 REST
 SOAP
@@ -692,16 +636,12 @@ HOW Hermes deve tecnicamente implementarlo.
 
 ---
 
-### BLOCCO 18 — Domain Principles
-
-```markdown
-# Domain Principles
+### — Domain Principles
 
 ## 1. Configuration is not Runtime
 
 La configurazione del sistema è separata dall'esecuzione concreta.
 
-```text
 Route
    ≠
 Operation
@@ -754,9 +694,6 @@ La tecnologia viene definita nei layer esterni.
 
 ---
 
-### BLOCCO 19 — Summary
-
-```markdown
 # Summary
 
 | Concept | Responsibility |
@@ -773,14 +710,13 @@ La tecnologia viene definita nei layer esterni.
 | **ExecutionType** | Tipo di elaborazione associato a uno Step |
 | **ExecutionStepRoute** | Route utilizzate da uno Step |
 | **ExecutionStepType** | Tipi di elaborazione associati a uno Step |
-BLOCCO 20 — Final Definition
+
 # Final Definition
 
 > **Hermes.Domain definisce il modello concettuale attraverso cui Hermes rappresenta Client, OperationType, Endpoint e Route come configurazione del sistema, e Operation, Execution e ExecutionStep come modello runtime dell'elaborazione.**
 
 In sintesi:
 
-```text
 Client = chi utilizza Hermes
 
 OperationType = cosa viene richiesto
