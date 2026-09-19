@@ -1,0 +1,24 @@
+                    HEPHAESTUS
+                         │
+              "devo eseguire un lavoro"
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+        Job          Scheduling      Dispatching
+          │              │              │
+          └──────────────┼──────────────┘
+                         ▼
+                       Queue
+                         │
+                         ▼
+                       Worker
+                         │
+                         ▼
+                     Execution
+                         │
+              ┌──────────┼──────────┐
+              ▼          ▼          ▼
+            Retry      Failure    Completion
+                         │
+                         ▼
+                       Events

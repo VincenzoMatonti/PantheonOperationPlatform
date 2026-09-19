@@ -1,0 +1,107 @@
+Themis
+│
+├── Authentication
+│   └── "CHI SEI?"
+│
+├── Identity
+│   └── "QUAL È LA TUA IDENTITÀ?"
+│
+├── Authorization
+│   └── "PUOI FARE QUESTA COSA?"
+│
+├── AccessControl
+│   └── "A QUALI RISORSE/CONTESTI PUOI ACCEDERE?"
+│
+├── Policies
+│   └── "QUALI REGOLE DEVONO ESSERE RISPETTATE?"
+│
+├── SecurityContext
+│   └── "QUALI INFORMAZIONI SULLA SICUREZZA PORTIAMO NELLA RICHIESTA?"
+│
+├── Governance
+│   └── "QUALI REGOLE GENERALI GOVERNANO L'USO DI PANTHEON?"
+│
+├── Protection
+│   └── "COME PROTEGGIAMO IL SISTEMA?"
+│
+├── Audit
+│   └── "QUALI EVENTI DI SICUREZZA SONO AVVENUTI?"
+│
+└── Extensions
+    └── "COME COLLEGHIAMO THEMIS AD ASP.NET/PANTHEON?"
+
+1. Authentication
+Domanda: Chi sei?
+Gestisce il meccanismo con cui verifichiamo l'identità.    
+
+2. Identity
+Domanda: Chi è il soggetto che ha effettuato l'accesso?
+Dopo che Authentication ha verificato il token, Identity rappresenta il soggetto.
+
+3. Authorization
+Domanda: Questo soggetto può fare questa operazione?
+Qui controlliamo l'accesso.
+
+4. AccessControl
+Domanda: Non solo "puoi farlo?", ma su cosa puoi farlo?
+All'inizio potrebbe sembrare inutile, ma crescerà molto.
+
+5. Policies
+Domanda: Qual è la regola che dobbiamo applicare?
+Qui definiamo le policy.
+
+6. SecurityContext
+Domanda: Quali informazioni sulla sicurezza sono disponibili durante la richiesta?
+È il ponte tra Themis e il resto di Pantheon.
+
+7. Governance
+Domanda: Quali regole governano l'utilizzo di Pantheon?
+È una responsabilità più ampia.
+
+8. Protection
+Domanda: Come proteggiamo tecnicamente Pantheon?
+Qui potranno finire: RateLimiting,RequestProtection,CredentialProtection,SensitiveDataProtection
+
+9. Audit
+Domanda: Cosa è successo dal punto di vista della sicurezza?
+eventi come: AuthenticationFailed,AuthorizationDenied,PermissionChanged,CredentialCreated,CredentialRevoked,PolicyChanged
+Poi Argus potrà osservare questi eventi.
+
+10. Extensions
+Questa è la parte tecnica che permette di collegare Themis ad ASP.NET Core e agli altri moduli.
+Per esempio Hermes potrà fare qualcosa del genere:
+
+builder.Services.AddThemis(...);
+
+e poi:
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+                         THEMIS
+                           │
+       ┌───────────────────┼───────────────────┐
+       │                   │                   │
+       ▼                   ▼                   ▼
+Authentication          Identity          SecurityContext
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           ▼
+                     Authorization
+                           │
+                           ▼
+                       Policies
+                           │
+                           ▼
+                     AccessControl
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+         Governance                 Protection
+              │                         │
+              └────────────┬────────────┘
+                           ▼
+                         Audit
+                           │
+                           ▼
+                         Argus
