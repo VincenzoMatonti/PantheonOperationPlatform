@@ -15,7 +15,7 @@ public class EndpointQueryHandler(IEndpointRepository endpointRepository)
         {
             Id = endpoint.Id,
             Code = endpoint.Code.Value,
-            Type = endpoint.Type.Code
+            Type = endpoint.Type.Value
         };
     }
 
