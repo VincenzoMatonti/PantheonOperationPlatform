@@ -19,6 +19,17 @@ using Hermes.Application.Operations.UseCases;
 using Hermes.Application.OperationTypes.Commands;
 using Hermes.Application.OperationTypes.Queries;
 using Hermes.Application.OperationTypes.UseCases;
+using Hermes.Api.Endpoints.Mappings.Exceptions;
+using Hermes.Api.Endpoints.Mappings.Commands;
+using Hermes.Application.Endpoints.Commands;
+using Hermes.Application.Endpoints.Queries;
+using Hermes.Application.Endpoints.UseCases;
+using Hermes.Api.Endpoints.Mappings.Queries;
+using Hermes.Api.Routes.Mappings.Exceptions;
+using Hermes.Api.Routes.Mappings.Commands;
+using Hermes.Api.Routes.Mappings.Queries;
+using Hermes.Application.Routes.Handlers;
+using Hermes.Application.Routes.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +48,9 @@ builder.Services.AddScoped<IExceptionMapper, ClientExceptionMapper>();
 builder.Services.AddScoped<IExceptionMapper, ClientOperationExceptionMapper>();
 builder.Services.AddScoped<IExceptionMapper, OperationExceptionMapper>();
 builder.Services.AddScoped<IExceptionMapper, OperationTypeExceptionMapper>();
+builder.Services.AddScoped<IExceptionMapper, EndpointExceptionMapper>();
+builder.Services.AddScoped<IExceptionMapper, EndpointOperationExceptionMapper>();
+builder.Services.AddScoped<IExceptionMapper, RouteExceptionMapper>();
 builder.Services.AddScoped<ExceptionMapperResolver>();
 builder.Services.AddScoped<ExceptionResponseBuilder>();
 
@@ -75,6 +89,33 @@ builder.Services.AddScoped<OperationTypeQueryResponseMapper>();
 builder.Services.AddScoped<OperationTypeCommandHandler>();
 builder.Services.AddScoped<OperationTypeQueryHandler>();
 builder.Services.AddScoped<OperationTypeUseCaseHandler>();
+
+// ENDPOINT 
+builder.Services.AddScoped<EndpointQueryRequestMapper>();
+builder.Services.AddScoped<EndpointQueryResponseMapper>();
+builder.Services.AddScoped<EndpointRequestCommandMapping>();
+builder.Services.AddScoped<EndpointResponseCommandMapping>();
+builder.Services.AddScoped<EndpointCommandHandler>();
+builder.Services.AddScoped<EndpointQueryHandler>();
+builder.Services.AddScoped<EndpointUseCaseHandler>();
+
+// ENDPOINT OPERATION 
+builder.Services.AddScoped<EndpointOperationRequestCommandMapping>();
+builder.Services.AddScoped<EndpointOperationResponseCommandMapping>();
+builder.Services.AddScoped<EndpointOperationQueryResponseMapping>();
+builder.Services.AddScoped<EndpointOperationQueryRequestMapping>();
+builder.Services.AddScoped<EndpointOperationCommandHandler>();
+builder.Services.AddScoped<EndpointOperationQueryHandler>();
+builder.Services.AddScoped<EndpointOperationUseCaseHandler>();
+
+// ROUTE 
+builder.Services.AddScoped<RouteCommandRequestMapper>(); 
+builder.Services.AddScoped<RouteCommandResponseMapper>(); 
+builder.Services.AddScoped<RouteQueryRequestMapper>(); 
+builder.Services.AddScoped<RouteQueryResponseMapper>(); 
+builder.Services.AddScoped<RouteCommandHandler>(); 
+builder.Services.AddScoped<RouteQueryHandler>(); 
+builder.Services.AddScoped<RouteUseCaseHandler>();
 
 var app = builder.Build();
 app.UseExceptionHandler();
