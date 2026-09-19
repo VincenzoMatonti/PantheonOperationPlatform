@@ -4,18 +4,18 @@ namespace Hermes.Domain.Endpoints.ValueObjects;
 
 public class EndpointType
 {
-    public string Code { get; }
+    public string Value { get; }
 
-    private EndpointType(string code)
+    private EndpointType(string value)
     {
-        Code = code;
+        Value = value;
     }
 
-    public static EndpointType Create(string code)
+    public static EndpointType Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(code)) throw new EndpointTypeRequiredException();
-        return new EndpointType(code.Trim());
+        if (string.IsNullOrWhiteSpace(value)) throw new EndpointTypeRequiredException();
+        return new EndpointType(value.Trim());
     }
 
-    public override string ToString() => Code;
+    public override string ToString() => Value;
 }

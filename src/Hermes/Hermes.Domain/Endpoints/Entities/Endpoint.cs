@@ -32,7 +32,7 @@ public class Endpoint
         return new Endpoint(Guid.NewGuid(), code, type);
     }
 
-    public void Rename(EndpointType type)
+    public void ChangeType(EndpointType type)
     {
         if (type is null) throw new EndpointTypeRequiredException(); Type = type; UpdateTimestamp();
     }

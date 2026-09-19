@@ -6,7 +6,7 @@ public class CreateEndpointCommand
     public string Type { get; set; } = null!;
 }
 
-public class RenameEndpointCommand
+public class ChangeEndpointTypeCommand
 {
     public Guid EndpointId { get; set; }
     public string NewType { get; set; } = null!;

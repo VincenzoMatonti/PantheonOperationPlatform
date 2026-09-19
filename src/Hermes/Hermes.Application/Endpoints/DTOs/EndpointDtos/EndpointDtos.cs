@@ -7,16 +7,20 @@ public class EndpointDto
     public string Type { get; set; } = null!;
 }
 
-public class RenameEndpointDto
+public class ChangeEndpointTypeDto
 {
     public Guid Id { get; set; }
+    public string Code { get; set; } = null!;
     public string Type { get; set; } = null!;
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 
 public class RenameCodeEndpointDto
 {
     public Guid Id { get; set; }
     public string Code { get; set; } = null!;
+    public string Type { get; set; } = null!;
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 
 public class EndpointCodeDto

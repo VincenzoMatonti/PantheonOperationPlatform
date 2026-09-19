@@ -23,7 +23,7 @@ namespace Hermes.Application.Endpoints.UseCases
             return newEndpointDto;
         }
 
-        public async Task<RenameEndpointDto> RenameEndpointAsync(RenameEndpointCommand command, CancellationToken cancellationToken = default)
+        public async Task<ChangeEndpointTypeDto> ChangeEndpointTypeAsync(ChangeEndpointTypeCommand command, CancellationToken cancellationToken = default)
         {
             var queryCommand = new GetEndpointByIdQuery { EndpointId = command.EndpointId };
             var endpoint = await _endpointQueryHandler.GetEndpointByIdAsync(queryCommand, cancellationToken);
@@ -32,8 +32,7 @@ namespace Hermes.Application.Endpoints.UseCases
                 var endpointType = new GetEndpointByTypeQuery { Type = command.NewType };
                 var existingEndpointWithNewType = await _endpointQueryHandler.GetEndpointByTypeAsync(endpointType, cancellationToken);
                 if (existingEndpointWithNewType != null) throw new EndpointAlreadyExistsByTypeException(command.NewType);
-                await _endpointCommandHandler.RenameEndpointAsync(endpoint, command.NewType, cancellationToken);
-                await _endpointCommandHandler.RenameEndpointAsync(endpoint, command.NewType, cancellationToken);
+                await _endpointCommandHandler.ChangeEndpointTypeAsync(endpoint, command.NewType, cancellationToken);
                 return EndpointCommandHandler.ConvertEndpointToRenameDto(endpoint);
             }
             throw new EndpointNotFoundException(command.EndpointId);

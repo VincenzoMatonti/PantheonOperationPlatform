@@ -18,10 +18,10 @@ public class EndpointCommandHandler(IEndpointCommandRepository endpointCommandRe
         return endpoint;
     }
 
-    public async Task RenameEndpointAsync(Endpoint endpoint, string newType, CancellationToken cancellationToken = default)
+    public async Task ChangeEndpointTypeAsync(Endpoint endpoint, string newType, CancellationToken cancellationToken = default)
     {
         var type = EndpointType.Create(newType);
-        endpoint.Rename(type);
+        endpoint.ChangeType(type);
         _endpointCommandRepository.Update(endpoint);
         await Task.CompletedTask;
     }
@@ -67,69 +67,77 @@ public class EndpointCommandHandler(IEndpointCommandRepository endpointCommandRe
         {
             Id = endpoint.Id,
             Code = endpoint.Code.Value,
-            Type = endpoint.Type.Code,
+            Type = endpoint.Type.Value,
             IsActive = endpoint.IsActive,
             CreatedAt = endpoint.CreatedAt
         };
     }
 
-    public static RenameEndpointDto ConvertEndpointToRenameDto(Endpoint endpoint)
+    public static ChangeEndpointTypeDto ConvertEndpointToRenameDto(Endpoint endpoint)
     {
-        return new RenameEndpointDto { Id = endpoint.Id, Type = endpoint.Type.Code };
+        return new ChangeEndpointTypeDto
+        {
+            Id = endpoint.Id,
+            Code = endpoint.Code.Value,
+            Type = endpoint.Type.Value,
+            UpdatedAt = endpoint.UpdatedAt
+        };
     }
 
     public static RenameCodeEndpointDto ConvertEndpointToRenameCodeDto(Endpoint endpoint)
     {
-        return new RenameCodeEndpointDto { Id = endpoint.Id, Code = endpoint.Code.Value };
+        return new RenameCodeEndpointDto
+        {
+            Id = endpoint.Id,
+            Code = endpoint.Code.Value,
+            Type = endpoint.Type.Value,
+            UpdatedAt = endpoint.UpdatedAt
+        };
     }
 
-    public static ActivateEndpointDto ConvertEndpointToActivateDto(
-        Endpoint endpoint)
+    public static ActivateEndpointDto ConvertEndpointToActivateDto(Endpoint endpoint)
     {
         return new ActivateEndpointDto
         {
             Id = endpoint.Id,
             Code = endpoint.Code.Value,
-            Type = endpoint.Type.Code,
+            Type = endpoint.Type.Value,
             IsActive = endpoint.IsActive,
             UpdatedAt = endpoint.UpdatedAt
         };
     }
 
-    public static DeactivateEndpointDto ConvertEndpointToDeactivateDto(
-        Endpoint endpoint)
+    public static DeactivateEndpointDto ConvertEndpointToDeactivateDto(Endpoint endpoint)
     {
         return new DeactivateEndpointDto
         {
             Id = endpoint.Id,
             Code = endpoint.Code.Value,
-            Type = endpoint.Type.Code,
+            Type = endpoint.Type.Value,
             IsActive = endpoint.IsActive,
             UpdatedAt = endpoint.UpdatedAt
         };
     }
 
-    public static DeleteEndpointDto ConvertEndpointToDeleteDto(
-        Endpoint endpoint)
+    public static DeleteEndpointDto ConvertEndpointToDeleteDto(Endpoint endpoint)
     {
         return new DeleteEndpointDto
         {
             Id = endpoint.Id,
             Code = endpoint.Code.Value,
-            Type = endpoint.Type.Code,
+            Type = endpoint.Type.Value,
             IsDeleted = endpoint.IsDeleted,
             UpdatedAt = endpoint.UpdatedAt
         };
     }
 
-    public static RestoreEndpointDto ConvertEndpointToRestoreDto(
-        Endpoint endpoint)
+    public static RestoreEndpointDto ConvertEndpointToRestoreDto(Endpoint endpoint)
     {
         return new RestoreEndpointDto
         {
             Id = endpoint.Id,
             Code = endpoint.Code.Value,
-            Type = endpoint.Type.Code,
+            Type = endpoint.Type.Value,
             IsDeleted = endpoint.IsDeleted,
             UpdatedAt = endpoint.UpdatedAt
         };
