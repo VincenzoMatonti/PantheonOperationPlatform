@@ -21,6 +21,7 @@ namespace Hermes.Application.Clients.Commands
         {
             client.Rename(newName);
             _clientCommandRepository.Update(client);
+            await Task.CompletedTask;
         }
 
         public async Task RenameCodeClientAsync(Client client, string newCode)
@@ -28,30 +29,35 @@ namespace Hermes.Application.Clients.Commands
             var code = ClientCode.Create(newCode);
             client.RenameCode(code);
             _clientCommandRepository.Update(client);
+            await Task.CompletedTask;
         }
 
         public async Task ActivateClientAsync(Client client)
         {
             client.Activate();
             _clientCommandRepository.Update(client);
+            await Task.CompletedTask;
         }
 
         public async Task DeactivateClientAsync(Client client)
         {
             client.Deactivate();
             _clientCommandRepository.Update(client);
+            await Task.CompletedTask;
         }
 
         public async Task DeleteClientAsync(Client client)
         {
             client.MarkAsDeleted();
             _clientCommandRepository.Update(client);
+            await Task.CompletedTask;
         }
 
         public async Task RestoreClientAsync(Client client)
         {
             client.Restore();
             _clientCommandRepository.Update(client);
+            await Task.CompletedTask;
         }
 
         public static CreateClientDto ConvertClientEntitesToCreateDto(Client client)
@@ -81,7 +87,7 @@ namespace Hermes.Application.Clients.Commands
             };
         }
 
-         public static List<RenameClientDto> ConvertClientEntitesToRenameDto(List<Client> clients)
+        public static List<RenameClientDto> ConvertClientEntitesToRenameDto(List<Client> clients)
         {
             return [.. clients.Select(ConvertClientEntitesToRenameDto)];
         }
@@ -97,7 +103,7 @@ namespace Hermes.Application.Clients.Commands
             };
         }
 
-         public static List<RenameClientCodeDto> ConvertClientEntitesToRenameCodeDto(List<Client> clients)
+        public static List<RenameClientCodeDto> ConvertClientEntitesToRenameCodeDto(List<Client> clients)
         {
             return [.. clients.Select(ConvertClientEntitesToRenameCodeDto)];
         }
@@ -114,7 +120,7 @@ namespace Hermes.Application.Clients.Commands
             };
         }
 
-         public static List<ActivateClientDto> ConvertClientEntitesToActivateDto(List<Client> clients)
+        public static List<ActivateClientDto> ConvertClientEntitesToActivateDto(List<Client> clients)
         {
             return [.. clients.Select(ConvertClientEntitesToActivateDto)];
         }
@@ -131,7 +137,7 @@ namespace Hermes.Application.Clients.Commands
             };
         }
 
-         public static List<DeactivateClientDto> ConvertClientEntitesToDeactivateDto(List<Client> clients)
+        public static List<DeactivateClientDto> ConvertClientEntitesToDeactivateDto(List<Client> clients)
         {
             return [.. clients.Select(ConvertClientEntitesToDeactivateDto)];
         }
@@ -148,7 +154,7 @@ namespace Hermes.Application.Clients.Commands
             };
         }
 
-         public static List<DeleteClientDto> ConvertClientEntitesToDeleteDto(List<Client> clients)
+        public static List<DeleteClientDto> ConvertClientEntitesToDeleteDto(List<Client> clients)
         {
             return [.. clients.Select(ConvertClientEntitesToDeleteDto)];
         }
@@ -165,7 +171,7 @@ namespace Hermes.Application.Clients.Commands
             };
         }
 
-         public static List<RestoreClientDto> ConvertClientEntitesToRestoreDto(List<Client> clients)
+        public static List<RestoreClientDto> ConvertClientEntitesToRestoreDto(List<Client> clients)
         {
             return [.. clients.Select(ConvertClientEntitesToRestoreDto)];
         }

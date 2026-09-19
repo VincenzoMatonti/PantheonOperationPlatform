@@ -21,6 +21,7 @@ public class OperationTypeCommandHandler(IOperationTypeCommandRepository operati
     {
         operationType.Rename(newName);
         _operationTypeCommandRepository.Update(operationType);
+        await Task.CompletedTask;
     }
 
     public async Task RenameCodeOperationTypeAsync(OperationType operationType, string newCode)
@@ -28,30 +29,35 @@ public class OperationTypeCommandHandler(IOperationTypeCommandRepository operati
         var code = OperationTypeCode.Create(newCode);
         operationType.RenameCode(code);
         _operationTypeCommandRepository.Update(operationType);
+        await Task.CompletedTask;
     }
 
     public async Task ActivateOperationTypeAsync(OperationType operationType)
     {
         operationType.Activate();
         _operationTypeCommandRepository.Update(operationType);
+        await Task.CompletedTask;
     }
 
     public async Task DeactivateOperationTypeAsync(OperationType operationType)
     {
         operationType.Deactivate();
         _operationTypeCommandRepository.Update(operationType);
+        await Task.CompletedTask;
     }
 
     public async Task DeleteOperationTypeAsync(OperationType operationType)
     {
         operationType.MarkAsDeleted();
         _operationTypeCommandRepository.Update(operationType);
+        await Task.CompletedTask;
     }
 
     public async Task RestoreOperationTypeAsync(OperationType operationType)
     {
         operationType.Restore();
         _operationTypeCommandRepository.Update(operationType);
+        await Task.CompletedTask;
     }
 
     public static CreateOperationTypeDto ConvertOperationTypeEntitiesToCreateDto(OperationType operationType)

@@ -1,3 +1,5 @@
+using Hermes.Domain.Endpoints.Exceptions;
+
 namespace Hermes.Domain.Endpoints.ValueObjects;
 
 public class EndpointCode
@@ -11,11 +13,7 @@ public class EndpointCode
 
     public static EndpointCode Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException("Endpoint code cannot be empty.", nameof(value));
-        }
-
+        if (string.IsNullOrWhiteSpace(value)) throw new EndpointCodeRequiredException();
         return new EndpointCode(value.Trim());
     }
 

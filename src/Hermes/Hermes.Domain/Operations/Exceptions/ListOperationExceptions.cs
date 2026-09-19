@@ -1,23 +1,17 @@
 namespace Hermes.Domain.Operations.Exceptions;
 
-public class OperationExecutionIdRequiredException()
-    : OperationException(
-        OperationErrorCode.ExecutionIdRequired,
-        "Execution ID cannot be empty.")
+public class OperationExecutionIdRequiredException() : OperationException(
+        OperationErrorCode.ExecutionIdRequired, "Execution ID cannot be empty.")
 {
 }
 
-public class OperationCorrelationIdRequiredException()
-    : OperationException(
-        OperationErrorCode.CorrelationIdRequired,
-        "Correlation ID cannot be empty.")
+public class OperationCorrelationIdRequiredException() : OperationException(
+        OperationErrorCode.CorrelationIdRequired, "Correlation ID cannot be empty.")
 {
 }
 
-public class OperationExternalIdRequiredException()
-    : OperationException(
-        OperationErrorCode.ExternalIdRequired,
-        "External operation ID cannot be empty.")
+public class OperationExternalIdRequiredException() : OperationException(
+        OperationErrorCode.ExternalIdRequired, "External operation ID cannot be empty.")
 {
 }
 

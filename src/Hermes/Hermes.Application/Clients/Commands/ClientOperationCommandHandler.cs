@@ -17,24 +17,28 @@ namespace Hermes.Application.Clients.Commands
         {
             clientOperation.Enable();
             commandRepository.Update(clientOperation);
+            await Task.CompletedTask;
         }
 
         public async Task Disable(ClientOperation clientOperation)
         {
             clientOperation.Disable();
             commandRepository.Update(clientOperation);
+            await Task.CompletedTask;
         }
 
         public async Task Delete(ClientOperation clientOperation)
         {
             clientOperation.MarkAsDeleted();
             commandRepository.Update(clientOperation);
+            await Task.CompletedTask;
         }
 
         public async Task Restore(ClientOperation clientOperation)
         {
             clientOperation.Restore();
             commandRepository.Update(clientOperation);
+            await Task.CompletedTask;
         }
 
         public static CreateClientOperationDto ConvertClientOperationEntitesToCreateDto(ClientOperation clientOperation)

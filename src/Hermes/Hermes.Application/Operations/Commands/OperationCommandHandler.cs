@@ -30,36 +30,42 @@ public class OperationCommandHandler(
     {
         operation.Send();
         _operationCommandRepository.Update(operation);
+        await Task.CompletedTask;
     }
 
     public async Task ValidateOperationAsync(Operation operation)
     {
         operation.Validate();
         _operationCommandRepository.Update(operation);
+        await Task.CompletedTask;
     }
 
     public async Task AcceptOperationAsync(Operation operation)
     {
         operation.Accept();
         _operationCommandRepository.Update(operation);
+        await Task.CompletedTask;
     }
 
     public async Task RejectOperationAsync(Operation operation)
     {
         operation.Reject();
         _operationCommandRepository.Update(operation);
+        await Task.CompletedTask;
     }
 
     public async Task DeleteOperationAsync(Operation operation)
     {
         operation.MarkAsDeleted();
         _operationCommandRepository.Update(operation);
+        await Task.CompletedTask;
     }
 
     public async Task RestoreOperationAsync(Operation operation)
     {
         operation.Restore();
         _operationCommandRepository.Update(operation);
+        await Task.CompletedTask;
     }
 
     public static CreateOperationDto ConvertOperationEntitiesToCreateDto(Operation operation)
