@@ -3,7 +3,7 @@ services:
   hermes:
     image: pantheon-hermes:local
     build:
-      context: ../../../
+      context: ../..
       dockerfile: infra/local/hermes/Dockerfile
     container_name: pantheon-hermes
     ports:
