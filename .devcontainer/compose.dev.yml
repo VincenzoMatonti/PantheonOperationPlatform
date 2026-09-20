@@ -1,0 +1,24 @@
+services:
+  hermes:
+    build:
+      context: ../..
+      dockerfile: .devcontainer/hermes/Dockerfile
+
+    container_name: pantheon-hermes-dev
+
+    working_dir: /workspace
+
+    volumes:
+      - ../..:/workspace
+
+    env_file:
+      - ./hermes/.env
+
+    networks:
+      - pantheon-local
+
+    command: sleep infinity
+
+networks:
+  pantheon-local:
+    external: true

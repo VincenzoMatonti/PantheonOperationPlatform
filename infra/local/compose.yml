@@ -1,17 +1,14 @@
 services:
-
   hermes:
     image: pantheon-hermes:local
     build:
       context: ../..
       dockerfile: infra/local/hermes/Dockerfile
     container_name: pantheon-hermes
+    env_file:
+      - ./hermes/.env
     ports:
-      - "5080:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_HTTP_PORTS: 8080
-      ConnectionStrings__Hermes: Host=postgres;Port=5432;Database=pantheon;Username=pantheon;Password=pantheon
+      - "${HERMES_HTTP_PORT}:${HERMES_CONTAINER_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,16 +19,14 @@ services:
     image: postgres:18
     container_name: pantheon-postgres
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: pantheon
-      POSTGRES_USER: pantheon
-      POSTGRES_PASSWORD: pantheon
+    env_file:
+      - ./postgres/.env
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_CONTAINER_PORT}"
     volumes:
       - pantheon-postgres-data:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U pantheon -d pantheon" ]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5

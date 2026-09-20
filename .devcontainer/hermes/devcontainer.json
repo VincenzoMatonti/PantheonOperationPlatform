@@ -1,0 +1,19 @@
+{
+    "name": "Pantheon: Hermes Dev Container",
+    "dockerComposeFile": [
+        "../../infra/local/compose.yml",
+        "../compose.dev.yml"
+    ],
+    "service": "hermes",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.csharp"
+            ]
+        }
+    },
+    "remoteUser": "root"
+}

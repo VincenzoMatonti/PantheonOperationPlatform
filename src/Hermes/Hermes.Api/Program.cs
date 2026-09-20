@@ -1,4 +1,6 @@
 using FluentValidation;
+using Hermes.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Hermes.Api.Filters;
 using Hermes.Api.Exceptions.Mappings;
 using Hermes.Api.Exceptions.Builders;
@@ -32,6 +34,10 @@ using Hermes.Application.Routes.Handlers;
 using Hermes.Application.Routes.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<HermesDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Hermes"))
+);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();
@@ -109,12 +115,12 @@ builder.Services.AddScoped<EndpointOperationQueryHandler>();
 builder.Services.AddScoped<EndpointOperationUseCaseHandler>();
 
 // ROUTE 
-builder.Services.AddScoped<RouteCommandRequestMapper>(); 
-builder.Services.AddScoped<RouteCommandResponseMapper>(); 
-builder.Services.AddScoped<RouteQueryRequestMapper>(); 
-builder.Services.AddScoped<RouteQueryResponseMapper>(); 
-builder.Services.AddScoped<RouteCommandHandler>(); 
-builder.Services.AddScoped<RouteQueryHandler>(); 
+builder.Services.AddScoped<RouteCommandRequestMapper>();
+builder.Services.AddScoped<RouteCommandResponseMapper>();
+builder.Services.AddScoped<RouteQueryRequestMapper>();
+builder.Services.AddScoped<RouteQueryResponseMapper>();
+builder.Services.AddScoped<RouteCommandHandler>();
+builder.Services.AddScoped<RouteQueryHandler>();
 builder.Services.AddScoped<RouteUseCaseHandler>();
 
 var app = builder.Build();
