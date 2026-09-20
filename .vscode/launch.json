@@ -7,11 +7,23 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/Hermes/Hermes.Api/bin/Debug/net10.0/Hermes.Api.dll",
             "cwd": "${workspaceFolder}/src/Hermes/Hermes.Api",
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development",
-                "ASPNETCORE_URLS": "http://localhost:5080"
-            },
             "preLaunchTask": "build-hermes-api"
+        },
+        {
+            "name": "Hephaestus.Api",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/Hephaestus/Hephaestus.Api/bin/Debug/net10.0/Hephaestus.Api.dll",
+            "cwd": "${workspaceFolder}/src/Hephaestus/Hephaestus.Api",
+            "preLaunchTask": "build-hephaestus-api"
+        },
+        {
+            "name": "Hephaestus.Worker",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/Hephaestus/Hephaestus.Worker/bin/Debug/net10.0/Hephaestus.Worker.dll",
+            "cwd": "${workspaceFolder}/src/Hephaestus/Hephaestus.Worker",
+            "preLaunchTask": "build-hephaestus-worker"
         }
     ]
 }

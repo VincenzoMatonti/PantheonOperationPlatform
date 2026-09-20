@@ -13,12 +13,16 @@ show_help() {
     echo
     echo "Commands:"
     echo
-    echo "  up       Start all local infrastructure"
-    echo "  db-up    Start only PostgreSQL"
-    echo "  down     Stop local infrastructure"
-    echo "  status   Show local infrastructure status"
-    echo "  logs     Show local infrastructure logs"
-    echo "  help     Show this help"
+    echo "  up         Start all local infrastructure"
+    echo "  down       Stop local infrastructure"
+    echo "  dev-up     Start all development containers"
+    echo "  dev-down   Stop all development containers"
+    echo "  db-up      Start only PostgreSQL"
+    echo "  db-down    Stop only PostgreSQL"
+    echo "  debug-all  Launch all development containers and VS Code debug sessions"    
+    echo "  status     Show local infrastructure status"
+    echo "  logs       Show local infrastructure logs"
+    echo "  help       Show this help"
     echo
 }
 
@@ -40,14 +44,45 @@ case "$environment" in
                 docker compose -f "$COMPOSE_FILE" up -d --build
                 ;;
 
+            down)
+                echo "Stopping Pantheon local infrastructure..."
+                docker compose -f "$COMPOSE_FILE" down
+                ;;
+
+            dev-up)
+                echo "Starting Pantheon development containers..."
+                docker compose \
+                    -f "$COMPOSE_FILE" \
+                    -f "$ROOT_DIR/.devcontainer/compose.dev.yml" \
+                    up -d \
+                    hermes \
+                    hephaestus \
+                    hephaestus-worker
+                ;;
+
+            dev-down)
+                echo "Stopping Pantheon development containers..."
+                docker compose \
+                    -f "$COMPOSE_FILE" \
+                    -f "$ROOT_DIR/.devcontainer/compose.dev.yml" \
+                    stop \
+                    hermes \
+                    hephaestus \
+                    hephaestus-worker
+                ;;
+
             db-up)
                 echo "Starting PostgreSQL..."
                 docker compose -f "$COMPOSE_FILE" up -d postgres
                 ;;
 
-            down)
-                echo "Stopping Pantheon local infrastructure..."
-                docker compose -f "$COMPOSE_FILE" down
+            db-down)
+                echo "Stopping PostgreSQL..."
+                docker compose -f "$COMPOSE_FILE" stop postgres
+                ;;
+
+            debug-all)
+                "$ROOT_DIR/scripts/pantheon-debug-all.sh"
                 ;;
 
             status)
