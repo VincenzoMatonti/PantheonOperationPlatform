@@ -1,5 +1,12 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/Hephaestus/">
+    <Project Path="src/Hephaestus/Hephaestus.Api/Hephaestus.Api.csproj" />
+    <Project Path="src/Hephaestus/Hephaestus.Application/Hephaestus.Application.csproj" />
+    <Project Path="src/Hephaestus/Hephaestus.Core/Hephaestus.Core.csproj" />
+    <Project Path="src/Hephaestus/Hephaestus.Infrastructure/Hephaestus.Infrastructure.csproj" />
+    <Project Path="src/Hephaestus/Hephaestus.Worker/Hephaestus.Worker.csproj" />
+  </Folder>
   <Folder Name="/src/Hermes/">
     <Project Path="src/Hermes/Hermes.Api/Hermes.Api.csproj" />
     <Project Path="src/Hermes/Hermes.Application/Hermes.Application.csproj" />

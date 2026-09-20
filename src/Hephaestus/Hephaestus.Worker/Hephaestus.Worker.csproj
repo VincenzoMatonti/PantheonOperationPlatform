@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Hephaestus.Worker-d3a75c56-d1ff-4bcd-a1eb-38cb1bec1f42</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hephaestus.Application\Hephaestus.Application.csproj" />
+    <ProjectReference Include="..\Hephaestus.Infrastructure\Hephaestus.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
