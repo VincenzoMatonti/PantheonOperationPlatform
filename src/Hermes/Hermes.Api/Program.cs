@@ -81,6 +81,7 @@ builder.Services.AddScoped<    IEndpointOperationQueryRepository,    EndpointOpe
 builder.Services.AddScoped<    IRouteRepository,    RouteRepository>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers(options =>
 {
