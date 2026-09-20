@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Hermes.Infrastructure.Persistence.Migrations
+namespace Hermes.Infrastructure.Migrations
 {
     [DbContext(typeof(HermesDbContext))]
     partial class HermesDbContextModelSnapshot : ModelSnapshot

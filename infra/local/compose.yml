@@ -1,4 +1,23 @@
 services:
+  postgres:
+    image: postgres:18
+    container_name: pantheon-postgres
+    restart: unless-stopped
+    env_file:
+      - ./postgres/.env
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_CONTAINER_PORT}"
+    volumes:
+      - pantheon-postgres-data:/var/lib/postgresql
+      - ./postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pantheon-local
+
   hermes:
     image: pantheon-hermes:local
     build:
@@ -15,21 +34,33 @@ services:
     networks:
       - pantheon-local
 
-  postgres:
-    image: postgres:18
-    container_name: pantheon-postgres
-    restart: unless-stopped
+  hephaestus:
+    image: pantheon-hephaestus:local
+    build:
+      context: ../..
+      dockerfile: infra/local/hephaestus/Dockerfile
+    container_name: pantheon-hephaestus
     env_file:
-      - ./postgres/.env
+      - ./hephaestus/.env
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_CONTAINER_PORT}"
-    volumes:
-      - pantheon-postgres-data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - "${HEPHAESTUS_HTTP_PORT}:${HEPHAESTUS_CONTAINER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pantheon-local
+
+  hephaestus-worker:
+    image: pantheon-hephaestus-worker:local
+    build:
+      context: ../..
+      dockerfile: infra/local/hephaestus-worker/Dockerfile
+    container_name: pantheon-hephaestus-worker
+    env_file:
+      - ./hephaestus-worker/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - pantheon-local
 

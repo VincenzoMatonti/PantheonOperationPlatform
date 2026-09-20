@@ -9,10 +9,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Hermes.Infrastructure.Persistence.Migrations
+namespace Hermes.Infrastructure.Migrations
 {
     [DbContext(typeof(HermesDbContext))]
-    [Migration("20260920122504_InitialCreate")]
+    [Migration("20260920154828_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

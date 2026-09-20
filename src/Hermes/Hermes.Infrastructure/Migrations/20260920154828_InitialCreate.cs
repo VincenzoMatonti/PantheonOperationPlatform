@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Hermes.Infrastructure.Persistence.Migrations
+namespace Hermes.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
