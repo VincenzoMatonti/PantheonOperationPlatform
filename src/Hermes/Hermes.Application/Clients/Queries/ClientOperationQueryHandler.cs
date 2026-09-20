@@ -1,5 +1,5 @@
 using Hermes.Domain.Clients.Entities;
-using Hermes.Domain.Clients.Repositories;
+using Hermes.Domain.Clients.Repositories.ClientOperationRepositories;
 using Hermes.Application.Clients.DTOs.ClientOperationDtos;
 
 namespace Hermes.Application.Clients.Queries
@@ -40,7 +40,7 @@ namespace Hermes.Application.Clients.Queries
 
         public async Task<List<ClientOperation>> GetClientOperationsByOperationTypeIdAsync(GetClientOperationsByOperationTypeIdQuery query, CancellationToken cancellationToken = default)
         {
-            return await _clientOperationQueryRepository.GetByOperationIdAsync(cancellationToken);
+            return await _clientOperationQueryRepository.GetByOperationTypeIdAsync(query.OperationTypeId, cancellationToken);
         }
 
         public async Task<List<ClientOperation>> GetActiveClientOperationsAsync(CancellationToken cancellationToken = default)

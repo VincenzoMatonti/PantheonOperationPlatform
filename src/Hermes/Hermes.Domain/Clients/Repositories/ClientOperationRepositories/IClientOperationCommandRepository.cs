@@ -1,6 +1,6 @@
 using Hermes.Domain.Clients.Entities;
 
-namespace Hermes.Domain.Clients.Repositories;
+namespace Hermes.Domain.Clients.Repositories.ClientOperationRepositories;
 
 public interface IClientOperationCommandRepository
 {

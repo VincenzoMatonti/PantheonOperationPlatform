@@ -1,6 +1,6 @@
 using Hermes.Application.Endpoints.DTOs.EndpointDtos;
 using Hermes.Domain.Endpoints.Entities;
-using Hermes.Domain.Endpoints.Repositories.Endpoints;
+using Hermes.Domain.Endpoints.Repositories.EndpointRepositories;
 using Hermes.Domain.Endpoints.ValueObjects;
 
 namespace Hermes.Application.Endpoints.Commands;

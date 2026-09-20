@@ -32,12 +32,53 @@ using Hermes.Api.Routes.Mappings.Commands;
 using Hermes.Api.Routes.Mappings.Queries;
 using Hermes.Application.Routes.Handlers;
 using Hermes.Application.Routes.UseCases;
+using Hermes.Domain.Clients.Repositories.ClientRepositories;
+using Hermes.Infrastructure.Repositories.Clients.Queries;
+using Hermes.Infrastructure.Repositories.Clients.Commands;
+using Hermes.Domain.Clients.Repositories.ClientOperationRepositories;
+using Hermes.Domain.Endpoints.Repositories.EndpointRepositories;
+using Hermes.Domain.Endpoints.Repositories.EndpointOperationRepositories;
+using Hermes.Domain.Routes.Repositories;
+using Hermes.Infrastructure.Repositories.Routes;
+using Hermes.Infrastructure.Repositories.Endpoints.Queries;
+using Hermes.Infrastructure.Repositories.Endpoints.Commands;
+using Hermes.Domain.Operations.Repositories.OperationRepositories;
+using Hermes.Domain.Operations.Repositories.OperationTypeRepositories;
+using Hermes.Infrastructure.Repositories.Operations.Commands;
+using Hermes.Infrastructure.Repositories.Operations.Queries;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<HermesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Hermes"))
 );
+
+// PERSISTENCE - CLIENT
+builder.Services.AddScoped<    IClientCommandRepository,    ClientCommandRepository>();
+builder.Services.AddScoped<    IClientQueryRepository,    ClientQueryRepository>();
+
+// PERSISTENCE - CLIENT OPERATION
+builder.Services.AddScoped<    IClientOperationCommandRepository,    ClientOperationCommandRepository>();
+builder.Services.AddScoped<    IClientOperationQueryRepository,    ClientOperationQueryRepository>();
+
+// PERSISTENCE - OPERATION
+builder.Services.AddScoped<IOperationCommandRepository, OperationCommandRepository>();
+builder.Services.AddScoped<IOperationQueryRepository, OperationQueryRepository>();
+
+// PERSISTENCE - OPERATION TYPE
+builder.Services.AddScoped<IOperationTypeCommandRepository, OperationTypeCommandRepository>();
+builder.Services.AddScoped<IOperationTypeQueryRepository, OperationTypeQueryRepository>();
+
+// PERSISTENCE - ENDPOINT
+builder.Services.AddScoped<    IEndpointCommandRepository,    EndpointCommandRepository>();
+builder.Services.AddScoped<    IEndpointRepository,    EndpointQueryRepository>();
+
+// PERSISTENCE - ENDPOINT OPERATION
+builder.Services.AddScoped<    IEndpointOperationCommandRepository,    EndpointOperationCommandRepository>();
+builder.Services.AddScoped<    IEndpointOperationQueryRepository,    EndpointOperationQueryRepository>();
+
+// PERSISTENCE - ROUTE
+builder.Services.AddScoped<    IRouteRepository,    RouteRepository>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();
@@ -48,17 +89,17 @@ builder.Services.AddControllers(options =>
 
 //VALIDATION
 builder.Services.AddValidatorsFromAssemblyContaining<CreateClientRequestValidator>();
-builder.Services.AddScoped<IExceptionMapper, ValidationExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, InternalExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, ClientExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, ClientOperationExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, OperationExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, OperationTypeExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, EndpointExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, EndpointOperationExceptionMapper>();
-builder.Services.AddScoped<IExceptionMapper, RouteExceptionMapper>();
-builder.Services.AddScoped<ExceptionMapperResolver>();
-builder.Services.AddScoped<ExceptionResponseBuilder>();
+builder.Services.AddSingleton<IExceptionMapper, ValidationExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, InternalExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, ClientExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, ClientOperationExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, OperationExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, OperationTypeExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, EndpointExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, EndpointOperationExceptionMapper>();
+builder.Services.AddSingleton<IExceptionMapper, RouteExceptionMapper>();
+builder.Services.AddSingleton<ExceptionMapperResolver>();
+builder.Services.AddSingleton<ExceptionResponseBuilder>();
 
 // CLIENT
 builder.Services.AddScoped<ClientCommandRequestMapper>();

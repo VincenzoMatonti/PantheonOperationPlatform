@@ -1,5 +1,5 @@
 using Hermes.Domain.Clients.Entities;
-using Hermes.Domain.Clients.Repositories;
+using Hermes.Domain.Clients.Repositories.ClientOperationRepositories;
 using Hermes.Application.Clients.DTOs.ClientOperationDtos;
 
 namespace Hermes.Application.Clients.Commands

@@ -1,6 +1,6 @@
 using Hermes.Domain.Endpoints.Entities;
 
-namespace Hermes.Domain.Endpoints.Repositories.Endpoints;
+namespace Hermes.Domain.Endpoints.Repositories.EndpointRepositories;
 
 public interface IEndpointCommandRepository
 {
