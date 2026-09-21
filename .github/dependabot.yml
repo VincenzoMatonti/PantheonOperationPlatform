@@ -1,0 +1,22 @@
+version: 2
+
+updates:
+  # .NET / NuGet
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  # Dockerfiles
+  - package-ecosystem: "docker"
+    directories:
+      - "/.devcontainer/hermes"
+      - "/.devcontainer/hephaestus"
+      - "/.devcontainer/hephaestus-worker"
+      - "/infra/local/hermes"
+      - "/infra/local/hephaestus"
+      - "/infra/local/hephaestus-worker"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
