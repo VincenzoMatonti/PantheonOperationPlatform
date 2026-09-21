@@ -19,15 +19,67 @@ I file `.env` reali contengono configurazione locale e non devono essere committ
 ## CLI locale e direnv
 Pantheon utilizza `direnv` per rendere disponibile il comando `pant` all'interno della repository.
 
-Dopo aver installato `direnv` e configurato il relativo hook per Bash:
+### Ubuntu / Debian
+
+```bash
+sudo apt update
+sudo apt install direnv
+
+direnv --version
+
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### macOS
+
+```bash
+brew install direnv
+
+echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Windows
+
+`direnv` è un tool Unix-like. Il modo consigliato su Windows è usare WSL2 con Ubuntu oppure eseguire i comandi all'interno di Git Bash/WSL dove il comportamento di `direnv` è supportato correttamente. In ambiente nativo Windows, il fallback più semplice è usare gli script della repository direttamente da una shell Unix-like.
+
+### Abilitazione del progetto
+
+Da una shell con `direnv` installato:
+
+```bash
+cd ~/wa/solution/PantheonSolution
+```
+
+Il repository contiene un file `.envrc` che aggiunge `scripts/` al `PATH`:
+
+```bash
+export PATH="$PWD/scripts:$PATH"
+```
+
+La prima volta è necessario autorizzare il file:
 
 ```bash
 direnv allow
 ```
 
-Da quel momento il comando `pant` è disponibile dalla root e dalle sottodirectory.
+Dopo l'autorizzazione, ogni volta che si entra nella directory del progetto `direnv` carica automaticamente `.envrc`.
 
-Comandi principali:
+```bash
+direnv: loading ~/wa/solution/PantheonSolution/.envrc
+direnv: export ~PATH
+```
+
+A questo punto la CLI è disponibile:
+
+```bash
+pant help
+```
+
+Da quel momento, entrando nella directory del progetto, `pant` sarà disponibile automaticamente; uscendo dalla cartella, `direnv` rimuove `scripts/` dal `PATH`.
+
+### Comandi principali
 
 ```bash
 pant help
@@ -42,6 +94,8 @@ pant local dev-up
 pant local dev-down
 pant local debug-all
 ```
+
+### Fallback senza direnv
 
 Se non si vuole configurare `direnv`, il fallback equivalente è eseguire gli script dalla root del repository:
 

@@ -370,13 +370,77 @@ Sostituire i valori `changeMe` con porte e credenziali locali prima di avviare l
 ### CLI locale
 Pantheon utilizza `direnv` per rendere disponibile il comando `pant` all'interno della repository.
 
-Dopo aver installato `direnv` e configurato il relativo hook per Bash:
+#### Ubuntu / Debian
+
+```bash
+sudo apt update
+sudo apt install direnv
+
+direnv --version
+
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+#### macOS
+
+Su macOS il metodo più comune è usare Homebrew:
+
+```bash
+brew install direnv
+
+echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+#### Windows
+
+`direnv` è originariamente un tool Unix-like. Il percorso consigliato su Windows è usare WSL2 con Ubuntu, oppure eseguire i comandi all'interno di Git Bash/WSL dove `direnv` è supportato correttamente. In ambiente nativo Windows, il fallback più semplice è usare gli script della repository direttamente da una shell Unix-like.
+
+#### Abilitazione del progetto
+
+Entrare nella root del repository:
+
+```bash
+cd ~/wa/solution/PantheonSolution
+```
+
+Il repository contiene un file `.envrc` che aggiunge `scripts/` al `PATH`:
+
+```bash
+export PATH="$PWD/scripts:$PATH"
+```
+
+La prima volta è necessario autorizzare il file:
 
 ```bash
 direnv allow
 ```
 
-Il comando `pant` sarà disponibile dalla root della repository e dalle relative sottodirectory.
+Dopo l'autorizzazione, ogni volta che si entra nella directory del progetto `direnv` carica automaticamente `.envrc`.
+
+Esempio di output:
+
+```bash
+direnv: loading ~/wa/solution/PantheonSolution/.envrc
+direnv: export ~PATH
+```
+
+A questo punto la CLI è disponibile:
+
+```bash
+pant help
+```
+
+È quindi sufficiente:
+
+```bash
+cd ~/wa/solution/PantheonSolution
+```
+
+per avere automaticamente il comando `pant` disponibile.
+
+Uscendo dalla directory del progetto, `direnv` rimuove automaticamente `scripts/` dal `PATH`.
 
 Per visualizzare i comandi disponibili:
 
