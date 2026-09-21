@@ -17,21 +17,31 @@ Il sistema è organizzato attorno a moduli con responsabilità precise. Ogni mod
 
 ## Indice
 
-- [Obiettivi](#obiettivi)
-- [Architettura della piattaforma](#architettura-della-piattaforma)
-- [I moduli di Pantheon](#i-moduli-di-pantheon)
-- [Hermes: il messaggero](#hermes-il-messaggero)
-- [Hephaestus: background processing](#hephaestus-background-processing)
-- [Argus: observability](#argus-observability)
-- [Themis: security e governance](#themis-security-e-governance)
-- [Flusso end-to-end](#flusso-end-to-end)
-- [Struttura del repository](#struttura-del-repository)
-- [Persistenza e infrastruttura locale](#persistenza-e-infrastruttura-locale)
-- [Principi architetturali](#principi-architetturali)
-- [Stack](#stack)
-- [Sviluppo locale](#sviluppo-locale)
-- [Test](#test)
-- [Roadmap](#roadmap)
+- [Pantheon Operation Platform](#pantheon-operation-platform)
+  - [Indice](#indice)
+  - [Obiettivi](#obiettivi)
+  - [Architettura della piattaforma](#architettura-della-piattaforma)
+  - [I moduli di Pantheon](#i-moduli-di-pantheon)
+    - [Hermes — il messaggero](#hermes--il-messaggero)
+    - [Hephaestus — background processing](#hephaestus--background-processing)
+    - [Argus — observability](#argus--observability)
+    - [Themis — security e governance](#themis--security-e-governance)
+  - [Flusso end-to-end](#flusso-end-to-end)
+  - [Struttura del repository](#struttura-del-repository)
+  - [Persistenza e infrastruttura locale](#persistenza-e-infrastruttura-locale)
+  - [Principi architetturali](#principi-architetturali)
+  - [Stack](#stack)
+  - [Sviluppo locale](#sviluppo-locale)
+    - [Setup iniziale](#setup-iniziale)
+    - [CLI locale](#cli-locale)
+    - [Runtime locale](#runtime-locale)
+    - [Database locale](#database-locale)
+    - [Dev Container e debug locale](#dev-container-e-debug-locale)
+    - [Struttura dei Dev Container](#struttura-dei-dev-container)
+    - [Esecuzione nativa dei servizi](#esecuzione-nativa-dei-servizi)
+    - [Test](#test)
+  - [Roadmap](#roadmap)
+  - [In sintesi](#in-sintesi)
 
 ---
 
@@ -340,6 +350,8 @@ I dettagli dei broker, dei provider di persistenza aggiuntivi, dei sistemi di ob
 
 È necessario avere installato Docker, Docker Compose, VS Code con Dev Containers e, per l'esecuzione nativa, .NET SDK 10. In alternativa è possibile utilizzare i Dev Container del repository.
 
+Il repository include un CLI locale 'pant' per gestire infrastruttura, container, database, log e debug.
+
 ### Setup iniziale
 
 ```bash
@@ -355,30 +367,145 @@ cp infra/local/hephaestus-worker/.env.example infra/local/hephaestus-worker/.env
 
 Sostituire i valori `changeMe` con porte e credenziali locali prima di avviare lo stack.
 
-### Runtime completo da terminale
+### CLI locale
+Pantheon utilizza `direnv` per rendere disponibile il comando `pant` all'interno della repository.
 
-Tutti gli script sono pensati per essere eseguiti dalla root della repository:
+Dopo aver installato `direnv` e configurato il relativo hook per Bash:
 
 ```bash
-./scripts/pantheon.sh local up       # avvia tutto lo stack e costruisce le immagini
-./scripts/pantheon.sh local down     # ferma e rimuove i container runtime
-./scripts/pantheon.sh local status   # mostra lo stato dei servizi
-./scripts/pantheon.sh local logs     # segue i log dello stack
-./scripts/pantheon.sh local db-up    # avvia solo PostgreSQL
-./scripts/pantheon.sh local db-down  # ferma PostgreSQL
+direnv allow
+```
+
+Il comando `pant` sarà disponibile dalla root della repository e dalle relative sottodirectory.
+
+Per visualizzare i comandi disponibili:
+
+```bash
+pant help
+```
+
+L'help principale fornisce i riferimenti agli help specifici:
+
+```bash
+pant local help
+pant local db help
+pant local shell help
+pant local logs help
+```
+
+Se invece non si vuole usare `direnv`, è possibile eseguire direttamente gli script dalla root del repository con il fallback legacy:
+
+```bash
+./scripts/pantheon.sh local help
+./scripts/pantheon.sh local up
+./scripts/pantheon.sh local down
+```
+
+### Runtime locale
+Per avviare l'intero ambiente runtime:
+
+```bash
+pant local up
+```
+
+Per fermare e rimuovere i container runtime:
+
+```bash
+pant local down
+```
+
+Per visualizzare lo stato dell'infrastruttura locale:
+
+```bash
+pant local status
+```
+
+Per seguire i log dei servizi:
+
+```bash
+pant local logs
+```
+
+Per avviare solamente PostgreSQL:
+
+```bash
+pant local db-up
+```
+
+Per fermare PostgreSQL:
+
+```bash
+pant local db-down
+```
+
+### Database locale
+PostgreSQL viene eseguito in un container condiviso e contiene i database applicativi separati di Hermes e Hephaestus.
+
+I comandi relativi al database sono disponibili tramite:
+
+```bash
+pant local db help
 ```
 
 ### Dev Container e debug locale
+Per avviare i container di sviluppo:
 
 ```bash
-./scripts/pantheon.sh local dev-up
-./scripts/pantheon.sh local dev-down
-./scripts/pantheon.sh local debug-all
+pant local dev-up
 ```
 
-`dev-up` avvia i container interattivi per Hermes, Hephaestus e Hephaestus Worker con il repository montato in `/workspace`. `debug-all` avvia anche PostgreSQL, verifica che i container siano attivi e apre le finestre VS Code collegate ai tre Dev Container.
+Per fermarli:
 
-Per aprire manualmente un ambiente, usare VS Code e scegliere **Reopen in Container**. I Dev Container installano il .NET SDK, montano il workspace e condividono la rete locale con PostgreSQL.
+```bash
+pant local dev-down
+```
+
+Per avviare l'ambiente completo di debug:
+
+```bash
+pant local debug-all
+```
+
+`dev-up` avvia i Dev Container di Hermes, Hephaestus e Hephaestus Worker con il repository montato in `/workspace`.
+
+`debug-all` avvia l'infrastruttura PostgreSQL necessaria, avvia i tre Dev Container, verifica che siano attivi e apre tre finestre VS Code collegate ai rispettivi container.
+
+Ogni ambiente può essere eseguito e sottoposto a debug separatamente tramite VS Code. È quindi possibile avviare il debugger con `F5` nei singoli ambienti e impostare breakpoint indipendenti in:
+
+- Hermes API
+- Hephaestus API
+- Hephaestus Worker
+
+I tre container condividono la rete Docker locale `pantheon-local`, permettendo di eseguire e debuggare il flusso completo tra i servizi.
+
+Per aprire manualmente un Dev Container è possibile utilizzare VS Code e scegliere **Reopen in Container** dalla relativa configurazione presente nella directory `.devcontainer`.
+
+### Struttura dei Dev Container
+Il repository utilizza un'unica configurazione Docker Compose condivisa per l'ambiente di sviluppo:
+
+```text
+.devcontainer/
+├── compose.dev.yml
+├── hermes/
+│   ├── devcontainer.json
+│   └── Dockerfile
+├── hephaestus/
+│   ├── devcontainer.json
+│   └── Dockerfile
+└── hephaestus-worker/
+    ├── devcontainer.json
+    └── Dockerfile
+```
+
+I Dev Container utilizzano il .NET SDK 10, montano il repository in `/workspace` e condividono la rete Docker locale con gli altri servizi Pantheon.
+
+Nel caso in cui non si usi `direnv`, il fallback equivalente è:
+
+```bash
+./scripts/pantheon.sh local up
+./scripts/pantheon.sh local dev-up
+./scripts/pantheon.sh local debug-all
+```
 
 ### Esecuzione nativa dei servizi
 

@@ -16,9 +16,59 @@ cp infra/local/hephaestus-worker/.env.example infra/local/hephaestus-worker/.env
 
 I file `.env` reali contengono configurazione locale e non devono essere committati.
 
+## CLI locale e direnv
+Pantheon utilizza `direnv` per rendere disponibile il comando `pant` all'interno della repository.
+
+Dopo aver installato `direnv` e configurato il relativo hook per Bash:
+
+```bash
+direnv allow
+```
+
+Da quel momento il comando `pant` è disponibile dalla root e dalle sottodirectory.
+
+Comandi principali:
+
+```bash
+pant help
+pant local help
+pant local up
+pant local down
+pant local status
+pant local logs
+pant local db-up
+pant local db-down
+pant local dev-up
+pant local dev-down
+pant local debug-all
+```
+
+Se non si vuole configurare `direnv`, il fallback equivalente è eseguire gli script dalla root del repository:
+
+```bash
+./scripts/pantheon.sh local up
+./scripts/pantheon.sh local status
+./scripts/pantheon.sh local logs
+./scripts/pantheon.sh local down
+./scripts/pantheon.sh local db-up
+./scripts/pantheon.sh local db-down
+./scripts/pantheon.sh local dev-up
+./scripts/pantheon.sh local dev-down
+./scripts/pantheon.sh local debug-all
+```
+
 ## Runtime completo
 
-Tutti i comandi sono pensati per essere eseguiti dalla root:
+Con `pant`:
+
+```bash
+pant local up
+pant local status
+pant local logs
+pant local down
+```
+
+Oppure con lo script legacy dalla root:
 
 ```bash
 ./scripts/pantheon.sh local up
@@ -30,6 +80,16 @@ Tutti i comandi sono pensati per essere eseguiti dalla root:
 Lo stack Compose avvia PostgreSQL, Hermes, Hephaestus e Hephaestus Worker nella rete `pantheon-local`. I servizi applicativi dipendono dal health check di PostgreSQL.
 
 ## Dev Container e debug
+
+Con `pant`:
+
+```bash
+pant local dev-up
+pant local dev-down
+pant local debug-all
+```
+
+Oppure con lo script legacy:
 
 ```bash
 ./scripts/pantheon.sh local dev-up
