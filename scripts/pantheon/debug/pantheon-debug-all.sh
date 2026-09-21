@@ -19,7 +19,7 @@ log() {
 }
 
 require_command() {
-    if ! command -v "$1" >/dev/null 2>&1; then
+    if ! command -v "$1" > /dev/null 2>&1; then
         echo "Required command not found: $1"
         exit 1
     fi
@@ -28,15 +28,15 @@ require_command() {
 container_running() {
     local container="$1"
 
-    [[ "$(docker inspect -f '{{.State.Running}}' "$container" 2>/dev/null || true)" == "true" ]]
+    [[ "$(docker inspect -f '{{.State.Running}}' "$container" 2> /dev/null || true)" == "true" ]]
 }
 
 container_hex() {
     local container="$1"
 
-    printf '%s' "$container" |
-        od -An -tx1 |
-        tr -d ' \n'
+    printf '%s' "$container" \
+        | od -An -tx1 \
+        | tr -d ' \n'
 }
 
 open_container() {
@@ -86,8 +86,7 @@ log "Waiting for Dev Containers"
 for container in \
     "$HERMES_CONTAINER" \
     "$HEPHAESTUS_CONTAINER" \
-    "$WORKER_CONTAINER"
-do
+    "$WORKER_CONTAINER"; do
     if ! container_running "$container"; then
         echo "Container is not running: $container"
         show_status
