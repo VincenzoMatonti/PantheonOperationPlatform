@@ -1,0 +1,9 @@
+# Default owner for the repository
+
+* @VincenzoMatonti
+
+# Repository governance and security
+
+/.github/ @VincenzoMatonti
+/SECURITY.md @VincenzoMatonti
+/CONTRIBUTING.md @VincenzoMatonti
