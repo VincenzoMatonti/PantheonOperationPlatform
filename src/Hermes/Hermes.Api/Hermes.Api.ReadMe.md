@@ -1,51 +1,51 @@
 # Hermes.Api
 
-> Il layer HTTP di Hermes: espone i casi d'uso applicativi tramite API REST, valida le richieste, converte request e response e traduce le eccezioni applicative e di dominio in risposte HTTP coerenti.
+> The HTTP layer of Hermes: it exposes the application use cases through a REST API, validates requests, converts request and response models, and translates application and domain exceptions into coherent HTTP responses.
 
-## Indice
+## Table of contents
 
-- [Panoramica](#panoramica)
-- [Mappa dell'API layer](#mappa-dellapi-layer)
-- [Struttura del progetto](#struttura-del-progetto)
+- [Overview](#overview)
+- [API layer map](#api-layer-map)
+- [Project structure](#project-structure)
 - [Controllers](#controllers)
-- [Requests e Responses](#requests-e-responses)
+- [Requests and responses](#requests-and-responses)
 - [Mappings](#mappings)
-- [Validazione con FluentValidation](#validazione-con-fluentvalidation)
-- [Gestione delle eccezioni](#gestione-delle-eccezioni)
-- [Response comuni](#response-comuni)
-- [Configurazione e dependency injection](#configurazione-e-dependency-injection)
-- [Flusso HTTP](#flusso-http)
-- [Dipendenze e responsabilità](#dipendenze-e-responsabilità)
-- [Principi](#principi)
+- [Validation with FluentValidation](#validation-with-fluentvalidation)
+- [Exception handling](#exception-handling)
+- [Common responses](#common-responses)
+- [Configuration and dependency injection](#configuration-and-dependency-injection)
+- [HTTP flow](#http-flow)
+- [Dependencies and responsibilities](#dependencies-and-responsibilities)
+- [Principles](#principles)
 
 ---
 
-## Panoramica
+## Overview
 
-`Hermes.Api` è il layer di ingresso HTTP dell'applicazione. Riceve le richieste REST, applica la validazione degli input, le converte nei command e nelle query di `Hermes.Application`, invoca il relativo use case e converte il risultato in una response API.
+`Hermes.Api` is the HTTP entry layer of the application. It receives REST requests, applies input validation, converts them into commands and queries for `Hermes.Application`, invokes the corresponding use case, and returns a uniform HTTP response.
 
-Il layer non implementa le regole di business e non accede direttamente al database. Le regole applicative restano in `Hermes.Application`, le invarianti e le transizioni restano in `Hermes.Domain`, mentre la persistenza è gestita da `Hermes.Infrastructure`.
+The layer does not implement business rules and does not access the database directly. Application rules remain in `Hermes.Application`, while invariants and state transitions remain in `Hermes.Domain`.
 
-| Area | Responsabilità |
+| Area | Responsibility |
 |---|---|
-| **Controllers** | Espongono gli endpoint HTTP e coordinano mapping e use case |
-| **Requests** | Definiscono i contratti di input dell'API |
-| **Responses** | Definiscono i contratti di output dell'API |
-| **Mappings** | Traducono request in command/query e DTO applicativi in response |
-| **Validations** | Validano le request con FluentValidation |
-| **Exceptions** | Traducono errori applicativi, di dominio e tecnici in errori HTTP |
-| **Filters** | Eseguono la validazione prima dell'action MVC |
-| **Common** | Contiene wrapper e modelli comuni delle risposte API |
+| **Controllers** | Expose HTTP endpoints and coordinate mapping and use cases |
+| **Requests** | Define the API input contracts |
+| **Responses** | Define the API output contracts |
+| **Mappings** | Translate requests into commands/queries and application DTOs into responses |
+| **Validations** | Validate requests with FluentValidation |
+| **Exceptions** | Translate application, domain, and technical errors into HTTP errors |
+| **Filters** | Execute validation before the MVC action |
+| **Common** | Contains shared response wrappers and models |
 
-Il progetto usa `net10.0`, nullable reference types e ASP.NET Core MVC. La documentazione OpenAPI e Swagger UI sono disponibili in ambiente Development.
+The project uses `net10.0`, nullable reference types, and ASP.NET Core MVC. OpenAPI and Swagger UI documentation are available in Development.
 
 ---
 
-## Mappa dell'API layer
+## API layer map
 
 ```mermaid
 flowchart LR
-    Client[Client HTTP] --> Controller[API Controller]
+    Client[HTTP Client] --> Controller[API Controller]
     Controller --> Filter[FluentValidationFilter]
     Filter --> Validator[FluentValidation validators]
     Controller --> RequestMapper[Request mapper]
@@ -63,20 +63,20 @@ flowchart LR
     Handler --> Client
 ```
 
-### Relazioni principali
+### Main relationships
 
-| Relazione | Responsabilità |
+| Relationship | Responsibility |
 |---|---|
-| `Controller` — `RequestMapper` | Converte la request HTTP in command o query applicativa |
-| `Controller` — `UseCaseHandler` | Invoca il caso d'uso corretto con il `CancellationToken` della richiesta |
-| `UseCaseHandler` — `ResponseMapper` | Converte il DTO applicativo in response HTTP |
-| `FluentValidationFilter` — `IValidator<T>` | Individua ed esegue il validator associato al tipo della request |
-| `ExceptionMapperResolver` — `IExceptionMapper` | Seleziona il mapper capace di gestire l'eccezione ricevuta |
-| `GlobalExceptionHandler` — `ExceptionResponseBuilder` | Costruisce la risposta HTTP uniforme per gli errori |
+| `Controller` — `RequestMapper` | Converts the HTTP request into an application command or query |
+| `Controller` — `UseCaseHandler` | Invokes the correct use case with the request `CancellationToken` |
+| `UseCaseHandler` — `ResponseMapper` | Converts the application DTO into the HTTP response |
+| `FluentValidationFilter` — `IValidator<T>` | Finds and executes the validator associated with the request type |
+| `ExceptionMapperResolver` — `IExceptionMapper` | Selects the mapper capable of handling the exception |
+| `GlobalExceptionHandler` — `ExceptionResponseBuilder` | Builds a uniform HTTP response for errors |
 
 ---
 
-## Struttura del progetto
+## Project structure
 
 ```text
 Hermes.Api/
@@ -103,62 +103,62 @@ Hermes.Api/
 └── Hermes.Api.csproj
 ```
 
-Le funzionalità sono organizzate per area applicativa. Attualmente l'API espone le aree `Clients` e `ClientOperation`; la stessa struttura può essere estesa con `Operations` e `OperationTypes` aggiungendo controller, request, response, mapper e validator dedicati.
+The features are organized by application area. Currently, the API exposes the `Clients` and `ClientOperation` areas; the same structure can be extended with `Operations` and `OperationTypes`.
 
 ---
 
 ## Controllers
 
-I controller sono il punto di ingresso HTTP. Non contengono logica di dominio e non costruiscono direttamente le entità applicative: ricevono una request, usano il mapper appropriato, invocano lo use case e incapsulano il risultato in `ApiResponse<T>`.
+Controllers are the HTTP entry point. They do not contain domain logic and do not build application entities directly: they receive a request, use the appropriate mapper, invoke the use case, and return the API response.
 
 ### Client command
 
-`ClientCommandApiController` espone gli endpoint sotto `api/client/command`:
+`ClientCommandApiController` exposes the endpoints under `api/client/command`:
 
-| Metodo | Endpoint | Operazione |
+| Method | Endpoint | Operation |
 |---|---|---|
-| `POST` | `/create` | Crea un client |
-| `PUT` | `/rename` | Rinomina un client |
-| `PUT` | `/renameCode` | Modifica il codice del client |
-| `PUT` | `/activate` | Attiva un client |
-| `PUT` | `/deactivate` | Disattiva un client |
-| `DELETE` | `/delete` | Cancella logicamente un client |
-| `PUT` | `/restore` | Ripristina un client |
+| `POST` | `/create` | Creates a client |
+| `PUT` | `/rename` | Renames a client |
+| `PUT` | `/renameCode` | Changes the client code |
+| `PUT` | `/activate` | Activates a client |
+| `PUT` | `/deactivate` | Deactivates a client |
+| `DELETE` | `/delete` | Logically deletes a client |
+| `PUT` | `/restore` | Restores a client |
 
 ### Client query
 
-`ClientQueryApiController` espone gli endpoint sotto `api/client/query`:
+`ClientQueryApiController` exposes the endpoints under `api/client/query`:
 
-| Metodo | Endpoint | Operazione |
+| Method | Endpoint | Operation |
 |---|---|---|
-| `GET` | `/all` | Recupera tutti i client |
-| `POST` | `/byId` | Recupera un client per id |
-| `POST` | `/byCode` | Recupera un client per codice |
-| `POST` | `/codeById` | Recupera il codice di un client |
-| `GET` | `/allCodes` | Recupera tutti i codici |
-| `GET` | `/active` | Recupera i client attivi |
-| `GET` | `/nonActive` | Recupera i client non attivi |
-| `GET` | `/deleted` | Recupera i client cancellati |
+| `GET` | `/all` | Retrieves all clients |
+| `POST` | `/byId` | Retrieves a client by id |
+| `POST` | `/byCode` | Retrieves a client by code |
+| `POST` | `/codeById` | Retrieves the code of a client |
+| `GET` | `/allCodes` | Retrieves all codes |
+| `GET` | `/active` | Retrieves active clients |
+| `GET` | `/nonActive` | Retrieves inactive clients |
+| `GET` | `/deleted` | Retrieves deleted clients |
 
 ### ClientOperation command
 
-`ClientOperationCommandApiController` espone gli endpoint sotto `api/clientOperation/command` per creare, abilitare, disabilitare, cancellare logicamente e ripristinare l'associazione tra client e operation type.
+`ClientOperationCommandApiController` exposes the endpoints under `api/clientOperation/command` to create, enable, disable, logically delete, and restore the association between client and operation type.
 
 ### ClientOperation query
 
-`ClientOperationQueryApiController` espone gli endpoint sotto `api/clientOperation/query` per cercare un'associazione per id, per client e operation type, per client id, per operation type id e per stato.
+`ClientOperationQueryApiController` exposes the endpoints under `api/clientOperation/query` to find an association by id, client and operation type, client id, operation type id, and status.
 
-Tutte le action asincrone ricevono e propagano il `CancellationToken` della richiesta HTTP verso il layer applicativo.
+All asynchronous actions receive and propagate the HTTP request `CancellationToken` to the application layer.
 
 ---
 
-## Requests e Responses
+## Requests and responses
 
 ### Requests
 
-Le request rappresentano i contratti HTTP in ingresso e sono specifiche dell'API. Non vengono passate direttamente al dominio o all'application layer.
+Requests represent the inbound HTTP contracts and are specific to the API. They are not passed directly to the domain or application layer.
 
-Esempi:
+Examples:
 
 - `CreateClientRequest`;
 - `RenameClientRequest`;
@@ -171,27 +171,27 @@ Esempi:
 
 ### Responses
 
-Le response rappresentano i contratti HTTP in uscita e non espongono direttamente entità o value object del dominio.
+Responses represent the outbound HTTP contracts and do not directly expose domain entities or value objects.
 
-Esempi:
+Examples:
 
-- `ClientResponse` e `ClientCodeResponse`;
-- `CreateClientResponse`, `RenameClientResponse` e `RenameClientCodeResponse`;
-- `ActivateClientResponse`, `DeactivateClientResponse` e `DeleteClientResponse`;
+- `ClientResponse` and `ClientCodeResponse`;
+- `CreateClientResponse`, `RenameClientResponse`, and `RenameClientCodeResponse`;
+- `ActivateClientResponse`, `DeactivateClientResponse`, and `DeleteClientResponse`;
 - `RestoreClientResponse`;
-- `ClientOperationResponse` e le response delle relative operazioni.
+- `ClientOperationResponse` and the responses for related operations.
 
-Il risultato viene normalmente restituito con un wrapper `ApiResponse<T>` per mantenere una forma uniforme tra gli endpoint.
+The result is normally returned with a wrapper `ApiResponse<T>` to keep a uniform shape across endpoints.
 
 ---
 
 ## Mappings
 
-I mapper isolano il confine tra il modello HTTP e quello applicativo. Sono divisi in mapper per command, query ed eccezioni.
+Mappers isolate the boundary between the HTTP model and the application model. They are split into mappers for commands, queries, and exceptions.
 
 ### Request mapper
 
-I request mapper convertono le request API in command o query di `Hermes.Application`:
+Request mappers convert API requests into commands or queries for `Hermes.Application`:
 
 ```text
 CreateClientRequest
@@ -207,11 +207,11 @@ GetClientByIdRequest
   → ClientUseCaseHandler
 ```
 
-Sono presenti mapper distinti per `Client` e `ClientOperation`, così da mantenere separati i contratti delle diverse aree.
+Separate mappers exist for `Client` and `ClientOperation` to keep the contracts of different areas separate.
 
 ### Response mapper
 
-I response mapper convertono i DTO restituiti dall'application layer nelle response HTTP dell'API:
+Response mappers convert the DTOs returned by the application layer into HTTP responses:
 
 ```text
 ClientDto
@@ -220,58 +220,58 @@ ClientDto
   → ApiResponse<ClientResponse>
 ```
 
-Le conversioni supportano sia il singolo risultato sia le liste e impediscono che i DTO applicativi diventino parte del contratto HTTP pubblico.
+Conversions support both single results and lists and prevent application DTOs from becoming part of the public HTTP contract.
 
 ### Exception mapper
 
-Gli exception mapper implementano `IExceptionMapper` e trasformano le eccezioni in `ExceptionMappingResult`, contenente status code e lista di `ApiErrorResponse`.
+Exception mappers implement `IExceptionMapper` and transform exceptions into `ExceptionMappingResult`, containing the status code and a list of `ApiErrorResponse`.
 
-I mapper presenti includono:
+Current mappers include:
 
-- `ValidationExceptionMapper` per gli errori di validazione;
-- `ClientExceptionMapper` per eccezioni applicative e di dominio dei client;
-- `ClientOperationExceptionMapper` per eccezioni applicative e di dominio delle associazioni;
-- `InternalExceptionMapper` per errori tecnici o di configurazione dell'API.
+- `ValidationExceptionMapper` for validation errors;
+- `ClientExceptionMapper` for client application and domain exceptions;
+- `ClientOperationExceptionMapper` for client-operation application and domain exceptions;
+- `InternalExceptionMapper` for technical or configuration errors in the API.
 
 ---
 
-## Validazione con FluentValidation
+## Validation with FluentValidation
 
-La validazione degli input HTTP è realizzata con FluentValidation e viene eseguita da `FluentValidationFilter` prima dell'esecuzione dell'action.
+Input validation in the HTTP layer is implemented with FluentValidation and executed by `FluentValidationFilter` before the action runs.
 
-Il filtro:
+The filter:
 
-1. esamina gli argomenti dell'action;
-2. individua il validator `IValidator<T>` registrato per il tipo concreto della request;
-3. esegue `ValidateAsync` usando `HttpContext.RequestAborted`;
-4. raccoglie tutti gli errori;
-5. legge da `CustomState` il codice enum dell'errore;
-6. solleva `ApiValidationException` se esistono errori.
+1. inspects the action arguments;
+2. finds the registered `IValidator<T>` for the concrete request type;
+3. executes `ValidateAsync` using `HttpContext.RequestAborted`;
+4. collects all errors;
+5. reads the error code enum from `CustomState`;
+6. raises `ApiValidationException` if errors exist.
 
-Le regole usano `WithState(...)` per associare un codice stabile all'errore, oltre al messaggio destinato al chiamante.
+Rules use `WithState(...)` to associate a stable code with the error, in addition to the message intended for the caller.
 
-Esempi di regole presenti:
+Examples of existing rules:
 
-- id obbligatori con `NotEmpty()`;
-- codice client obbligatorio e con lunghezza massima di 100 caratteri;
-- nome client obbligatorio e con lunghezza massima di 200 caratteri;
-- client id e operation type id obbligatori per le associazioni.
+- required ids with `NotEmpty()`;
+- required client code with a maximum length of 100 characters;
+- required client name with a maximum length of 200 characters;
+- required client id and operation type id for associations.
 
-La registrazione avviene tramite:
+Registration is done through:
 
 ```csharp
 builder.Services.AddValidatorsFromAssemblyContaining<CreateClientRequestValidator>();
 ```
 
-Se una regola non definisce un codice enum valido, il filtro solleva `ApiValidationConfigurationException`, che viene trattata come errore interno di configurazione.
+If a rule does not define a valid enum code, the filter raises `ApiValidationConfigurationException`, which is treated as an internal configuration error.
 
 ---
 
-## Gestione delle eccezioni
+## Exception handling
 
-La gestione globale è registrata con `AddExceptionHandler<GlobalExceptionHandler>()` e attivata tramite `app.UseExceptionHandler()`.
+The global exception handler is registered with `AddExceptionHandler<GlobalExceptionHandler>()` and activated via `app.UseExceptionHandler()`.
 
-### Pipeline delle eccezioni
+### Exception pipeline
 
 ```text
 Exception
@@ -283,79 +283,79 @@ Exception
   → HTTP status + ApiErrorResponse[]
 ```
 
-`ExceptionMapperResolver` cerca il primo mapper per cui `CanHandle(exception)` restituisce `true`. Se nessun mapper è disponibile, solleva `ApiExceptionMapperNotFoundException`.
+`ExceptionMapperResolver` looks for the first mapper whose `CanHandle(exception)` returns `true`. If no mapper is available, it raises `ApiExceptionMapperNotFoundException`.
 
-### Errori di validazione
+### Validation errors
 
-`ValidationExceptionMapper` converte `ApiValidationException` in:
+`ValidationExceptionMapper` converts `ApiValidationException` into:
 
 - HTTP `400 Bad Request`;
 - `ApiErrorType.Validation`;
-- un errore per ogni proprietà non valida;
-- codice enum e messaggio definiti dal validator.
+- one error per invalid property;
+- enum code and message defined by the validator.
 
-### Errori applicativi e di dominio
+### Application and domain errors
 
-I mapper di area distinguono gli errori applicativi dagli errori di dominio:
+Area-specific mappers distinguish application errors from domain errors:
 
-| Tipo di errore | Risposta tipica |
+| Error type | Typical response |
 |---|---|
-| Risorsa non trovata | `404 Not Found` |
-| Risorsa già esistente o conflitto applicativo | `409 Conflict` |
-| Regola di dominio non rispettata | `409 Conflict` |
-| Errore interno o configurazione errata | `500 Internal Server Error` |
+| Resource not found | `404 Not Found` |
+| Resource already exists or application conflict | `409 Conflict` |
+| Domain rule not respected | `409 Conflict` |
+| Internal error or wrong configuration | `500 Internal Server Error` |
 
-Gli errori espongono tipo, entità, codice e messaggio tramite `ApiErrorResponse`.
+Errors expose type, entity, code, and message through `ApiErrorResponse`.
 
-### Errori interni
+### Internal errors
 
-`InternalExceptionMapper` tratta gli errori di configurazione e infrastrutturali dell'API, tra cui:
+`InternalExceptionMapper` handles configuration and infrastructure errors in the API, including:
 
 - `ApiInternalException`;
 - `ApiValidationConfigurationException`;
 - `ApiExceptionMapperNotFoundException`;
 - `ApiExceptionMapperConfigurationException`.
 
-Il messaggio restituito al client è generico per non esporre dettagli interni dell'applicazione.
+The message returned to the client is generic so as not to expose internal application details.
 
 ---
 
-## Response comuni
+## Common responses
 
-`ApiResponse<T>` fornisce il wrapper comune delle risposte di successo, mentre `PropertyApiResponse` supporta i dettagli associati a una specifica proprietà.
+`ApiResponse<T>` provides the common wrapper for successful responses, while `PropertyApiResponse` supports details associated with a specific property.
 
-Gli errori sono rappresentati da `ApiErrorResponse` e classificati tramite:
+Errors are represented by `ApiErrorResponse` and classified via:
 
-- `ApiErrorType`, ad esempio `Validation`, `NotFound`, `Conflict` e `Internal`;
-- `ApiErrorEntity`, ad esempio `Client`, `ClientOperation` e `Unknown`.
+- `ApiErrorType`, e.g. `Validation`, `NotFound`, `Conflict`, and `Internal`;
+- `ApiErrorEntity`, e.g. `Client`, `ClientOperation`, and `Unknown`.
 
-Questa struttura consente ai client di interpretare gli errori tramite codice e tipo, senza dipendere esclusivamente dal testo del messaggio.
+This structure allows clients to interpret errors through code and type without depending only on the message text.
 
 ---
 
-## Configurazione e dependency injection
+## Configuration and dependency injection
 
-`Program.cs` configura:
+`Program.cs` configures:
 
-- controller MVC;
-- `FluentValidationFilter` come action filter globale;
-- validator FluentValidation tramite assembly scanning;
+- MVC controllers;
+- `FluentValidationFilter` as a global action filter;
+- FluentValidation validators by assembly scanning;
 - `GlobalExceptionHandler`;
-- exception mapper e `ExceptionMapperResolver`;
+- exception mappers and `ExceptionMapperResolver`;
 - `ExceptionResponseBuilder`;
-- request mapper e response mapper;
-- handler applicativi per `Client` e `ClientOperation`;
-- OpenAPI e Swagger UI in ambiente Development.
+- request and response mappers;
+- application handlers for `Client` and `ClientOperation`;
+- OpenAPI and Swagger UI in Development.
 
-La registrazione dei servizi mantiene i controller sottili e consente di sostituire o estendere mapper, validator e gestori senza modificare il flusso applicativo.
+Service registration keeps controllers thin and allows mapper, validator, and handler replacements or extensions without changing the application flow.
 
 ---
 
-## Flusso HTTP
+## HTTP flow
 
 ```mermaid
 sequenceDiagram
-    participant Client as Client HTTP
+    participant Client as HTTP Client
     participant Controller as Controller
     participant Filter as FluentValidationFilter
     participant Mapper as RequestMapper
@@ -366,32 +366,32 @@ sequenceDiagram
     Client->>Controller: HTTP request
     Controller->>Filter: Action arguments
     Filter->>Filter: ValidateAsync(request)
-    alt Request non valida
+    alt Request invalid
         Filter-->>Handler: ApiValidationException
         Handler-->>Client: 400 ApiErrorResponse[]
-    else Request valida
+    else Request valid
         Controller->>Mapper: ToCommand / ToQuery
         Mapper-->>Controller: Application command/query
-        Controller->>UC: Esegui use case
+        Controller->>UC: Execute use case
         UC-->>Controller: Application DTO
         Controller->>ResponseMapper: ToResponse
         ResponseMapper-->>Controller: API response
         Controller-->>Client: 200 ApiResponse<T>
     end
 
-    alt Eccezione application o domain
+    alt Application or domain exception
         UC-->>Handler: Exception
         Handler-->>Client: 404 / 409 / 500 ApiErrorResponse[]
     end
 ```
 
-Il layer API non esegue il commit della transazione e non gestisce direttamente la persistenza. Il suo compito è adattare il protocollo HTTP ai contratti applicativi.
+The API layer does not commit a transaction and does not handle persistence directly. Its task is to adapt the HTTP protocol to the application contracts.
 
 ---
 
-## Dipendenze e responsabilità
+## Dependencies and responsibilities
 
-### Dipendenze consentite
+### Allowed dependencies
 
 ```text
 Hermes.Api
@@ -399,59 +399,59 @@ Hermes.Api
   → Hermes.Infrastructure
 ```
 
-L'API può usare:
+The API may use:
 
-- command, query, DTO e use case dell'application layer;
-- i servizi infrastrutturali registrati nel container;
-- ASP.NET Core, FluentValidation e OpenAPI;
-- i modelli HTTP propri dell'API.
+- commands, queries, DTOs, and use cases from the application layer;
+- infrastructure services registered in the container;
+- ASP.NET Core, FluentValidation, and OpenAPI;
+- HTTP-specific models from the API itself.
 
-### Responsabilità dell'API
+### Responsibilities of the API
 
-- definire endpoint e verbi HTTP;
-- validare il formato e i dati obbligatori delle request;
-- convertire contratti HTTP e applicativi;
-- propagare la cancellazione della richiesta;
-- uniformare le risposte di successo e di errore;
-- nascondere i dettagli delle eccezioni interne al client.
+- define endpoints and HTTP verbs;
+- validate the format and required data of requests;
+- convert HTTP and application contracts;
+- propagate request cancellation;
+- standardize success and error responses;
+- hide internal exception details from the client.
 
-### Responsabilità non appartenenti all'API
+### Responsibilities that do not belong to the API
 
-L'API non deve:
+The API must not:
 
-- implementare invarianti o transizioni di dominio;
-- duplicare la logica dei use case;
-- accedere direttamente a repository o DbContext;
-- costruire query SQL;
-- contenere mapping Entity Framework;
-- restituire direttamente entità o value object del dominio;
-- gestire manualmente ogni eccezione dentro i controller.
+- implement invariants or domain transitions;
+- duplicate the logic of use cases;
+- access repositories or `DbContext` directly;
+- build SQL queries;
+- contain Entity Framework mapping;
+- return domain entities or value objects directly;
+- manage every exception manually inside controllers.
 
 ---
 
-## Principi
+## Principles
 
-1. **Controller sottili** — il controller coordina mapping e use case, senza contenere logica di business.
-2. **Contratti HTTP separati** — request e response non coincidono con command, query o DTO applicativi.
-3. **Validazione al bordo** — gli input vengono validati prima di raggiungere l'application layer.
-4. **Codici di errore stabili** — gli errori usano enum e codici leggibili dai client.
-5. **Eccezioni centralizzate** — la risposta agli errori passa da resolver, mapper, builder e handler globali.
-6. **Mapping esplicito** — request, response ed eccezioni vengono convertite da componenti dedicati.
-7. **Asincronia e cancellazione** — le action propagano il `CancellationToken` fino al caso d'uso.
-8. **Risposte uniformi** — successi ed errori seguono modelli API comuni.
-9. **Nessuna logica di dominio nell'API** — invarianti e transizioni appartengono a Domain e Application.
-10. **Estendibilità per area** — ogni nuova area può aggiungere controller, mapper, validator ed exception mapper senza alterare quelle esistenti.
+1. **Thin controllers** — the controller coordinates mapping and use cases without containing business logic.
+2. **Separate HTTP contracts** — requests and responses are not the same as application commands, queries, or DTOs.
+3. **Validation at the boundary** — inputs are validated before reaching the application layer.
+4. **Stable error codes** — errors use enum-based, readable codes for clients.
+5. **Centralized exceptions** — error handling passes through the resolver, mapper, builder, and global handler.
+6. **Explicit mapping** — requests, responses, and exceptions are converted by dedicated components.
+7. **Asynchrony and cancellation** — action methods propagate the `CancellationToken` to the use case.
+8. **Uniform responses** — both successes and errors follow common API models.
+9. **No domain logic in the API** — invariants and transitions belong to the domain and application layers.
+10. **Extensibility by area** — each new area can add controllers, mappers, validators, and exception mappers without altering existing ones.
 
-## In sintesi
+## Summary
 
 ```text
-Controller             = ingresso HTTP e coordinamento
-Request                = contratto HTTP in ingresso
-Response               = contratto HTTP in uscita
-RequestMapper          = HTTP request → command/query
+Controller             = HTTP entry and coordination
+Request                = inbound HTTP contract
+Response               = outbound HTTP contract
+RequestMapper          = HTTP request → application command/query
 ResponseMapper         = application DTO → HTTP response
-FluentValidation       = validazione degli input al bordo
-IExceptionMapper       = exception → status code e ApiErrorResponse
-GlobalExceptionHandler = gestione uniforme degli errori
-ApiResponse            = wrapper comune delle risposte
+FluentValidation       = validation at the edge
+IExceptionMapper       = exception → status code and ApiErrorResponse
+GlobalExceptionHandler = uniform error handling
+ApiResponse            = common wrapper for all responses
 ```
