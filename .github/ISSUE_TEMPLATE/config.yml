@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/VincenzoMatonti/PantheonOperationPlatform/security/advisories/new
+    about: Report security vulnerabilities privately through GitHub Security Advisories.
+
+  - name: General discussion
+    url: https://github.com/VincenzoMatonti/PantheonOperationPlatform/discussions
+    about: Ask questions, share ideas, and discuss Pantheon with the community.
