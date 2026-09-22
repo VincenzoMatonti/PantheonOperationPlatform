@@ -648,3 +648,11 @@ Themis      = authentication, authorization, policies, and middleware
 ```
 
 Pantheon coordinates the journey of an operation: Themis controls access, Hermes understands it, routes it, and persists its state, Hephaestus executes it when work is asynchronous, and Argus makes the flow visible and traceable.
+
+## Documentation
+
+- [Contributing](CONTRIBUTING.md)
+- [Governance](GOVERNANCE.md)
+- [Support](SUPPORT.md)
+- [Security](SECURITY.md)
+- [Trademarks](TRADEMARKS.md)
