@@ -17,7 +17,7 @@
 
 ## Overview
 
-Hermes is the module that represents the operational boundary between Pantheon and clients or external systems. It receives HTTP requests, validates inbound contracts, identifies clients, operation types, and endpoints, resolves the configured route, and coordinates the execution lifecycle.
+Hermes is the module that represents the operational boundary between Pantheon and clients or external systems. It receives HTTP requests, validates inbound contracts, identifies clients, operation types, endpoints, resolves configured routes, and coordinates the execution lifecycle.
 
 The module deliberately separates protocol, application, domain, and technology. Each layer has a precise responsibility and communicates through explicit contracts and abstractions.
 
@@ -129,9 +129,9 @@ For a command, the application layer retrieves the required resources, invokes t
 
 Hermes uses Entity Framework Core with PostgreSQL via Npgsql. The connection string is configured with the `ConnectionStrings__Hermes` key, and the context is registered at startup in `Hermes.Api`.
 
-Migrations are versioned in `Hermes.Infrastructure/Migrations`; entity configurations are in `Hermes.Infrastructure/Persistence/Configurations`. In local environments, PostgreSQL is started by the Docker Compose stack, and data is stored in the `pantheon-postgres-data` volume.
+Migrations are versioned in `Hermes.Infrastructure/Migrations`; entity configurations are in `Hermes.Infrastructure/Persistence/Configurations`. In local environments, PostgreSQL is started by the Docker Compose stack and data is stored in the `pantheon-postgres-data` volume.
 
-For configuration and stack startup, consult [`infra/local/README.md`](../infra/local/README.md).
+For configuration and stack startup, consult [`infra/local/README.md`](../../infra/local/README.md).
 
 ## Local development and debugging
 
