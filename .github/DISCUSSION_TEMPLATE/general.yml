@@ -1,0 +1,28 @@
+name: General discussion
+description: Ask questions, share knowledge, or discuss topics related to Pantheon.
+title: "[Discussion]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## General Discussion
+
+        Use this discussion for questions, ideas, experiences, and topics that do not fit into another discussion category.
+
+  - type: textarea
+    id: topic
+    attributes:
+      label: Topic
+      description: Describe the topic or question you would like to discuss.
+      placeholder: What would you like to discuss?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant background, examples, references, or additional information.
+      placeholder: Add any useful context here.
+    validations:
+      required: false
