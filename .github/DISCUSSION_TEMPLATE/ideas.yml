@@ -1,0 +1,38 @@
+name: Idea
+description: Share an idea or possible direction for Pantheon.
+title: "[Idea]: "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Idea
+
+        Use this discussion to explore an idea before turning it into a formal feature request or technical proposal.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: Describe your idea and what you would like Pantheon to achieve.
+      placeholder: Describe the idea.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Explain the problem, opportunity, or use case behind the idea.
+      placeholder: Why would this be useful?
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Add examples, references, diagrams, or related discussions.
+      placeholder: Add any additional context.
+    validations:
+      required: false
