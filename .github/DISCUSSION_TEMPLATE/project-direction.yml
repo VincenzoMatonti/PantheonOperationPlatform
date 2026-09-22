@@ -1,0 +1,47 @@
+name: Project direction
+description: Discuss the future direction, architecture, or evolution of Pantheon.
+title: "[Direction]: "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Project Direction
+
+        Use this discussion to explore the future direction, architecture, ecosystem, or evolution of Pantheon.
+
+  - type: textarea
+    id: topic
+    attributes:
+      label: Topic
+      description: Describe the direction, change, or question you would like to discuss.
+      placeholder: What aspect of Pantheon's future would you like to discuss?
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Explain why this direction or change may be valuable.
+      placeholder: Why should this direction be considered?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Describe other directions or approaches that could be considered.
+      placeholder: What other approaches could be considered?
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Add relevant technical context, references, diagrams, or examples.
+      placeholder: Add any additional context.
+    validations:
+      required: false
