@@ -1,0 +1,94 @@
+name: Technical proposal
+description: Propose an architectural, technical, or infrastructure change.
+title: "[Technical]: "
+labels:
+
+* technical
+  body:
+
+* type: markdown
+  attributes:
+  value: |
+  ## Technical Proposal
+
+  ```
+  Use this template for architectural, technical, or infrastructure changes that require discussion before implementation.
+  ```
+
+* type: textarea
+  id: problem
+  attributes:
+  label: Problem
+  description: Describe the technical problem, limitation, or architectural concern.
+  placeholder: Explain what problem needs to be solved and why it matters.
+  validations:
+  required: true
+
+* type: textarea
+  id: proposed-solution
+  attributes:
+  label: Proposed Solution
+  description: Describe the proposed technical solution or change.
+  placeholder: Explain how you propose to solve the problem.
+  validations:
+  required: true
+
+* type: textarea
+  id: alternatives
+  attributes:
+  label: Alternatives Considered
+  description: Describe alternative approaches that were considered and their main differences.
+  placeholder: Describe the alternatives and why they were not selected.
+  validations:
+  required: false
+
+* type: dropdown
+  id: area
+  attributes:
+  label: Area
+  description: Which area of Pantheon is primarily affected?
+  options:
+  - Application
+  - Architecture
+  - Infrastructure
+  - Security
+  - Database
+  - DevOps
+  - Observability
+  - Integration
+  - Other
+  validations:
+  required: true
+
+* type: checkboxes
+  id: impact
+  attributes:
+  label: Potential Impact
+  description: Select the areas that may be affected by this proposal.
+  options:
+  - label: Existing functionality
+  - label: Architecture
+  - label: Infrastructure
+  - label: Performance
+  - label: Security
+  - label: Maintainability
+  - label: Deployment
+  - label: Data or persistence
+
+* type: textarea
+  id: implementation
+  attributes:
+  label: Implementation Considerations
+  description: Describe relevant implementation details, constraints, dependencies, or migration requirements.
+  placeholder: Include technical constraints, dependencies, migration steps, or other considerations.
+  validations:
+  required: false
+
+* type: textarea
+  id: context
+  attributes:
+  label: Context
+  description: Add technical context, diagrams, references, examples, or related issues.
+  placeholder: Add any additional context that helps evaluate the proposal.
+  validations:
+  required: false
