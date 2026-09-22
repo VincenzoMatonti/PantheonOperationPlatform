@@ -1,0 +1,107 @@
+name: Bug report
+description: Report a reproducible problem in Pantheon.
+title: "[Bug]: "
+labels:
+  - bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+
+        Please provide enough information to reproduce and investigate the problem.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clearly describe the problem.
+      placeholder: What is happening?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide the exact steps needed to reproduce the problem.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: Describe what you expected to happen.
+      placeholder: What should happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: Describe what actually happens.
+      placeholder: What happens instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which Pantheon component is affected?
+      options:
+        - Hermes
+        - Hephaestus
+        - Hephaestus Worker
+        - API
+        - Infrastructure
+        - Database
+        - Dev Container
+        - CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Pantheon Version
+      description: Which version or commit are you using?
+      placeholder: e.g. v0.1.0 or commit SHA
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Provide the relevant environment information.
+      placeholder: OS, Docker, .NET version, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Provide relevant logs, stack traces, or error messages.
+      placeholder: Paste relevant logs here.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other information that may help investigate the problem.
+      placeholder: Add screenshots, references, or additional details.
+    validations:
+      required: false
