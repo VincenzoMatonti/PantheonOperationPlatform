@@ -18,9 +18,13 @@ Describe what this pull request changes and why.
 
 ## Target Branch
 
-This pull request targets the `community` branch.
+This pull request targets:
 
 - [ ] `community`
+- [ ] `feature`
+- [ ] `dev`
+- [ ] `stage`
+- [ ] `main`
 
 ## Testing
 
