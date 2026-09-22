@@ -1,34 +1,34 @@
 # Hermes.Domain
 
-> Il cuore del dominio di Hermes: definisce **cosa** il sistema rappresenta e quali regole deve rispettare, senza conoscere **come** raggiungere i sistemi esterni.
+> The heart of Hermes: it defines what the system represents and which rules it must respect, without knowing how external systems are reached.
 
-## Indice
+## Table of contents
 
-- [Panoramica](#panoramica)
-- [Mappa del dominio](#mappa-del-dominio)
-- [Entità](#entità)
-- [Value object ed enumerazioni](#value-object-ed-enumerazioni)
-- [Ciclo di vita](#ciclo-di-vita)
+- [Overview](#overview)
+- [Domain map](#domain-map)
+- [Entities](#entities)
+- [Value objects and enumerations](#value-objects-and-enumerations)
+- [Lifecycle](#lifecycle)
 - [Repository](#repository)
-- [Eccezioni](#eccezioni)
-- [Principi](#principi)
+- [Exceptions](#exceptions)
+- [Principles](#principles)
 
 ---
 
-## Panoramica
+## Overview
 
-Hermes gestisce operazioni provenienti da diversi client, le valida e le indirizza verso endpoint configurati. Una richiesta può essere composta da più step e ogni step può utilizzare più route, tipi di elaborazione e package di dati.
+Hermes manages operations coming from different clients, validates them, and routes them to configured endpoints. A request can be composed of multiple steps, and each step can use several routes. A step can also carry packages with structured metadata.
 
-| Area | Responsabilità |
+| Area | Responsibility |
 |---|---|
-| **Configuration** | Definisce client, operazioni, endpoint e route disponibili |
-| **Runtime** | Rappresenta operation, execution e relativi step |
-| **Payload** | Organizza package, dati, header e metadati |
-| **Regole di dominio** | Protegge transizioni di stato e dati obbligatori |
+| **Configuration** | Defines available clients, operations, endpoints, and routes |
+| **Runtime** | Represents operations, executions, and related steps |
+| **Payload** | Organizes packages, data, headers, and metadata |
+| **Domain rules** | Protects state transitions and required data |
 
 ---
 
-## Mappa del dominio
+## Domain map
 
 ```mermaid
 flowchart LR
@@ -54,9 +54,9 @@ flowchart LR
     Data --> Metadata
 ```
 
-### Relazioni principali
+### Main relationships
 
-| Relazione | Cardinalità | Entità di relazione |
+| Relationship | Cardinality | Relationship entity |
 |---|:---:|---|
 | `Client` — `OperationType` | N:N | `ClientOperation` |
 | `Endpoint` — `OperationType` | N:N | `EndpointOperation` |
@@ -71,79 +71,79 @@ flowchart LR
 
 ---
 
-## Entità
+## Entities
 
-Tutte le entità usano un `Guid` come identificativo e gestiscono, dove previsto, `CreatedAt` e `UpdatedAt` in UTC. La creazione avviene tramite metodi statici `Create(...)`, così le invarianti vengono controllate dal dominio.
+All entities use a `Guid` as identifier and manage `CreatedAt` and `UpdatedAt` in UTC where applicable. Creation occurs through static `Create(...)` methods, so invariants are enforced at the moment of creation.
 
-### Configurazione
+### Configuration
 
-| Entità | Scopo | Proprietà principali | Comportamento |
+| Entity | Purpose | Main properties | Behavior |
 |---|---|---|---|
-| `Client` | Sistema o soggetto che utilizza Hermes | `Code`, `Name`, `IsActive`, `IsDeleted` | Attivazione, disattivazione, rinomina, soft delete e ripristino |
-| `ClientOperation` | Abilita un `OperationType` per un client | `ClientId`, `OperationTypeId`, `IsEnabled`, `IsDeleted` | Abilitazione, disabilitazione, soft delete e ripristino |
-| `OperationType` | Catalogo delle operazioni gestite | `Code`, `Name`, `IsActive`, `IsDeleted` | Attivazione, disattivazione, rinomina, soft delete e ripristino |
-| `Endpoint` | Destinazione logica raggiungibile | `Code`, `Type`, `IsActive` | Attivazione e disattivazione |
-| `EndpointOperation` | Abilita un `OperationType` per un endpoint | `EndpointId`, `OperationTypeId`, `IsEnabled` | Abilitazione e disabilitazione |
-| `Route` | Percorso configurato `Client → OperationType → Endpoint` | `ClientId`, `OperationTypeId`, `EndpointId`, `IsActive` | Attivazione e disattivazione |
-| `ExecutionType` | Categoria di elaborazione di uno step | `Code`, `Name`, `IsActive` | Attivazione, disattivazione e rinomina |
+| `Client` | System or subject using Hermes | `Code`, `Name`, `IsActive`, `IsDeleted` | Activation, deactivation, rename, soft delete, and restore |
+| `ClientOperation` | Enables an `OperationType` for a client | `ClientId`, `OperationTypeId`, `IsEnabled`, `IsDeleted` | Enable, disable, soft delete, and restore |
+| `OperationType` | Catalog of managed operations | `Code`, `Name`, `IsActive`, `IsDeleted` | Activation, deactivation, rename, soft delete, and restore |
+| `Endpoint` | Logical destination reachable by Hermes | `Code`, `Type`, `IsActive` | Activation and deactivation |
+| `EndpointOperation` | Enables an `OperationType` for an endpoint | `EndpointId`, `OperationTypeId`, `IsEnabled` | Enable and disable |
+| `Route` | Configured path `Client → OperationType → Endpoint` | `ClientId`, `OperationTypeId`, `EndpointId`, `IsActive` | Activation and deactivation |
+| `ExecutionType` | Category for processing a step | `Code`, `Name`, `IsActive` | Activation, deactivation, and rename |
 
-> `OperationType` ed `ExecutionType` sono entità configurabili: non sono enum, perché il loro catalogo può evolvere nel tempo.
+> `OperationType` and `ExecutionType` are configurable entities, not enums, because their catalog can evolve over time.
 
 ### Runtime
 
-| Entità | Scopo | Proprietà principali | Comportamento |
+| Entity | Purpose | Main properties | Behavior |
 |---|---|---|---|
-| `Operation` | Richiesta concreta ricevuta da Hermes | `ExecutionId`, `CorrelationId`, `ExternalId`, `Status`, `IsDeleted` | `Send`, `Validate`, `Accept`, `Reject`, soft delete e ripristino |
-| `Execution` | Elaborazione complessiva di una operation | `Status`, `StartedAt`, `CompletedAt` | Avvio, completamento, fallimento e cancellazione |
-| `ExecutionStep` | Singola fase ordinata di un’esecuzione | `ExecutionId`, `Sequence`, `Status`, date di avvio/fine | Avvio, completamento, fallimento, skip e cancellazione |
-| `ExecutionStepRoute` | Associa uno step a una route | `ExecutionStepId`, `RouteId`, `IsEnabled` | Abilitazione e disabilitazione |
-| `ExecutionStepType` | Associa uno step a un tipo di elaborazione | `ExecutionStepId`, `ExecutionTypeId`, `IsEnabled` | Abilitazione e disabilitazione |
+| `Operation` | Concrete request received by Hermes | `ExecutionId`, `CorrelationId`, `ExternalId`, `Status`, `IsDeleted` | `Send`, `Validate`, `Accept`, `Reject`, soft delete, and restore |
+| `Execution` | Full processing of an operation | `Status`, `StartedAt`, `CompletedAt` | Start, completion, failure, and cancellation |
+| `ExecutionStep` | One ordered phase of an execution | `ExecutionId`, `Sequence`, `Status`, start/end dates | Start, completion, failure, skip, and cancellation |
+| `ExecutionStepRoute` | Associates a step with a route | `ExecutionStepId`, `RouteId`, `IsEnabled` | Enable and disable |
+| `ExecutionStepType` | Associates a step with a processing type | `ExecutionStepId`, `ExecutionTypeId`, `IsEnabled` | Enable and disable |
 
-### Package e contenuti
+### Package and content
 
-Un `Package` contiene i dati trasportati durante una `Operation`. Header e metadati possono descrivere il package; i metadati possono anche appartenere a uno specifico `Data`.
+A `Package` contains the data transported during an `Operation`. Headers and metadata may describe the package; metadata may also belong to a specific `Data` item.
 
-| Entità | Scopo | Proprietà principali | Comportamento |
+| Entity | Purpose | Main properties | Behavior |
 |---|---|---|---|
-| `Package` | Contenitore versionato associato a un’operation | `OperationId`, `Type`, `Status`, `ContentType`, `Version`, `Sequence` | Preparazione, avvio, completamento, fallimento, cancellazione e modifica dei dati descrittivi |
-| `Data` | Contenuto binario ordinato del package | `PackageId`, `Type`, `ContentType`, `Content`, `Sequence` | Cambio tipo, cambio content type e sostituzione del contenuto |
-| `Header` | Coppia chiave/valore del package | `PackageId`, `Key`, `Value` | Modifica della chiave e del valore |
-| `Metadata` | Informazione descrittiva del package o del data | `PackageId`, `DataId?`, `Key`, `Value` | Identifica il proprietario e modifica chiave/valore |
+| `Package` | Versioned container associated with an operation | `OperationId`, `Type`, `Status`, `ContentType`, `Version`, `Sequence` | Prepare, start, complete, fail, cancel, and recover |
+| `Data` | Ordered binary content of the package | `PackageId`, `Type`, `ContentType`, `Content`, `Sequence` | Change type, content type, and replace content |
+| `Header` | Key/value pair of the package | `PackageId`, `Key`, `Value` | Modify key and value |
+| `Metadata` | Descriptive information for the package or data | `PackageId`, `DataId?`, `Key`, `Value` | Identify owner and modify key/value |
 
-`Metadata` può essere creato in due modi:
+`Metadata` can be created in two ways:
 
 ```text
-CreateForPackage(packageId, key, value)  → metadato del Package
-CreateForData(packageId, dataId, key, value) → metadato di uno specifico Data
+CreateForPackage(packageId, key, value)  → package metadata
+CreateForData(packageId, dataId, key, value) → metadata for a specific data item
 ```
 
 ---
 
-## Value object ed enumerazioni
+## Value objects and enumerations
 
-I value object incapsulano valori con significato di dominio e vengono creati tramite `Create(...)` (o `From(...)` per `CorrelationId`). Le implementazioni attuali validano il valore non vuoto e lo normalizzano con `Trim()`.
+Value objects encapsulate domain-relevant values and are created via `Create(...)` (or `From(...)` for `CorrelationId`). The current implementations validate that the value is not empty and enforce domain constraints.
 
-### Value object
+### Value objects
 
-| Area | Value object | Valore |
+| Area | Value object | Value |
 |---|---|---|
-| Client | `ClientCode` | Codice del client |
-| Endpoint | `EndpointCode` | Codice dell’endpoint |
-| Endpoint | `EndpointType` | Tipo logico dell’endpoint (`Code`) |
-| Operations | `OperationTypeCode` | Codice dell’operazione |
-| Operations | `CorrelationId` | `Guid` di correlazione; generabile o ricostruibile con `From(Guid)` |
-| Operations | `ExternalOperationId` | Identificativo dell’operazione nel sistema esterno |
-| Executions | `ExecutionTypeCode` | Codice del tipo di elaborazione |
-| Packages | `PackageType` | Tipo del package |
-| Packages | `PackageVersion` | Versione del package |
-| Packages | `DataType` | Tipo del contenuto dati |
-| Packages | `ContentType` | Formato/content type del contenuto |
-| Packages | `HeaderKey` / `HeaderValue` | Chiave e valore di un header |
-| Packages | `MetadataKey` / `MetadataValue` | Chiave e valore di un metadato |
+| Client | `ClientCode` | Client code |
+| Endpoint | `EndpointCode` | Endpoint code |
+| Endpoint | `EndpointType` | Logical endpoint type (`Code`) |
+| Operations | `OperationTypeCode` | Operation code |
+| Operations | `CorrelationId` | Correlation `Guid`; generated or reconstructed with `From(Guid)` |
+| Operations | `ExternalOperationId` | Operation identifier in the external system |
+| Executions | `ExecutionTypeCode` | Processing type code |
+| Packages | `PackageType` | Package type |
+| Packages | `PackageVersion` | Package version |
+| Packages | `DataType` | Data content type |
+| Packages | `ContentType` | Format/content type of the content |
+| Packages | `HeaderKey` / `HeaderValue` | Header key and value |
+| Packages | `MetadataKey` / `MetadataValue` | Metadata key and value |
 
-### Enumerazioni di stato
+### State enumerations
 
-| Enum | Valori |
+| Enum | Values |
 |---|---|
 | `OperationStatus` | `Initialized`, `Sent`, `Validated`, `Accepted`, `Rejected` |
 | `ExecutionStatus` | `Pending`, `Running`, `Completed`, `Failed`, `Cancelled` |
@@ -152,7 +152,7 @@ I value object incapsulano valori con significato di dominio e vengono creati tr
 
 ---
 
-## Ciclo di vita
+## Lifecycle
 
 ### Operation
 
@@ -166,7 +166,7 @@ stateDiagram-v2
     Validated --> Rejected: Reject()
 ```
 
-### Execution e ExecutionStep
+### Execution and ExecutionStep
 
 ```mermaid
 stateDiagram-v2
@@ -178,7 +178,7 @@ stateDiagram-v2
     Running --> Cancelled: Cancel()
 ```
 
-Per uno `ExecutionStep` è inoltre possibile passare da `Pending` a `Skipped`.
+An `ExecutionStep` may also transition from `Pending` to `Skipped`.
 
 ### Package
 
@@ -194,13 +194,13 @@ stateDiagram-v2
     Processing --> Cancelled: Cancel()
 ```
 
-Le transizioni non previste dallo stato corrente generano un `InvalidOperationException`.
+Unexpected transitions from the current state raise an `InvalidOperationException`.
 
 ---
 
 ## Repository
 
-I repository sono **astrazioni del dominio**: espongono operazioni di lettura e scrittura senza legare Hermes a Entity Framework, SQL o altre tecnologie infrastrutturali.
+Repositories are **domain abstractions**: they expose read and write operations without binding Hermes to Entity Framework, SQL, or other infrastructure technologies.
 
 | Area | Repository |
 |---|---|
@@ -213,57 +213,57 @@ I repository sono **astrazioni del dominio**: espongono operazioni di lettura e 
 | Executions | `IExecutionRepository`, `IExecutionStepRepository`, `IExecutionStepRouteRepository`, `IExecutionStepTypeRepository`, `IExecutionTypeRepository` |
 | Packages | `IPackageRepository`, `IDataRepository`, `IHeaderRepository`, `IMetadataRepository` |
 
-### Convenzioni
+### Conventions
 
-- Le query sono asincrone e accettano un `CancellationToken`.
-- I metodi `Get...` restituiscono `null` quando si cerca una singola risorsa non trovata e una lista per le ricerche multiple.
-- `AddAsync(...)` persiste una nuova entità.
-- `Update(...)` segnala la modifica di un’entità già esistente.
-- Il salvataggio della transazione resta responsabilità del layer applicativo/infrastrutturale.
+- Queries are asynchronous and accept a `CancellationToken`.
+- `Get...` methods return `null` when a single resource is not found and a list for multi-resource searches.
+- `AddAsync(...)` persists a new entity.
+- `Update(...)` signals that an existing entity has changed.
+- Transaction saving remains the responsibility of the application or infrastructure layer.
 
 ---
 
-## Eccezioni
+## Exceptions
 
-### Base comune
+### Common base
 
-`DomainException<TCode>` estende `Exception` e aggiunge un `Code` tipizzato come enum. Le eccezioni specifiche del dominio derivano da questa classe per rendere gli errori identificabili e mappabili dall’Application/API.
+`DomainException<TCode>` extends `Exception` and adds a `Code` typed as an enum. Specific domain exceptions derive from this class to make errors identifiable and mappable.
 
-### Eccezioni tipizzate presenti
+### Existing typed exceptions
 
-| Famiglia | Codici principali |
+| Family | Main codes |
 |---|---|
 | `ClientException` | `CodeRequired`, `NameRequired`, `AlreadyActive`, `AlreadyInactive`, `AlreadyDeleted`, `NotDeleted` |
 | `ClientOperationException` | `ClientIdRequired`, `OperationTypeIdRequired`, `AlreadyEnabled`, `AlreadyDisabled`, `AlreadyDeleted`, `NotDeleted` |
-| `OperationException` | `ExecutionIdRequired`, `CorrelationIdRequired`, `ExternalIdRequired`, stati non validi per `Send`, `Validate`, `Accept`, `Reject`, `AlreadyDeleted`, `NotDeleted` |
+| `OperationException` | `ExecutionIdRequired`, `CorrelationIdRequired`, `ExternalIdRequired`, invalid states for `Send`, `Validate`, `Accept`, `Reject`, `AlreadyDeleted`, `NotDeleted` |
 | `OperationTypeException` | `CodeRequired`, `NameRequired`, `AlreadyActive`, `AlreadyInactive`, `AlreadyDeleted`, `NotDeleted` |
 
-Le entità di Endpoint, Route, Execution, ExecutionStep e Package usano invece principalmente `ArgumentException`, `ArgumentNullException`, `ArgumentOutOfRangeException` e `InvalidOperationException` per le invarianti locali.
+The `Endpoint`, `Route`, `Execution`, `ExecutionStep`, and `Package` entities instead mainly use `ArgumentException`, `ArgumentNullException`, `ArgumentOutOfRangeException`, and `InvalidOperationException`.
 
 ---
 
-## Principi
+## Principles
 
-1. **Configuration ≠ Runtime** — una `Route` descrive un percorso configurato; una `Operation` è una richiesta concreta.
-2. **Stati protetti** — le entità cambiano stato solo attraverso metodi di dominio, non tramite setter pubblici.
-3. **Relazioni N:N esplicite** — `ClientOperation`, `EndpointOperation`, `ExecutionStepRoute` ed `ExecutionStepType` sono entità dedicate ed estendibili.
-4. **Soft delete dove previsto** — `Client`, `ClientOperation`, `OperationType` e `Operation` supportano cancellazione logica e ripristino.
-5. **Tecnologia indipendente** — il Domain conosce `Endpoint`, non HTTP, REST, SOAP, Kafka, RabbitMQ, database o SDK.
-6. **Package separati dall’esecuzione** — `Package`, `Data`, `Header` e `Metadata` modellano il contenuto trasportato senza introdurre dettagli di integrazione.
+1. **Configuration ≠ Runtime** — a `Route` describes a configured path; an `Operation` is a concrete request.
+2. **Protected states** — entities change state only through domain methods, not through public setters.
+3. **Explicit N:N relationships** — `ClientOperation`, `EndpointOperation`, `ExecutionStepRoute`, and `ExecutionStepType` are dedicated, extensible entities.
+4. **Soft delete where appropriate** — `Client`, `ClientOperation`, `OperationType`, and `Operation` support logical deletion and restoration.
+5. **Technology independence** — the domain knows `Endpoint`, not HTTP, REST, SOAP, Kafka, RabbitMQ, databases, or SDKs.
+6. **Package separate from execution** — `Package`, `Data`, `Header`, and `Metadata` model the transported content without introducing integration details.
 
-## In sintesi
+## Summary
 
 ```text
-Client          = chi utilizza Hermes
-OperationType   = quale operazione è disponibile
-Endpoint        = quale destinazione può essere raggiunta
+Client          = who uses Hermes
+OperationType   = which operation is available
+Endpoint        = which destination can be reached
 Route           = Client → OperationType → Endpoint
-Operation       = richiesta concreta
-Execution       = elaborazione complessiva
-ExecutionStep   = singola fase dell’elaborazione
-ExecutionType   = categoria dello step
-Package         = contenitore dei dati dell’operation
-Data            = contenuto del package
-Header          = informazione tecnica chiave/valore
-Metadata        = informazione descrittiva del package o del data
+Operation       = concrete request
+Execution       = overall processing
+ExecutionStep   = one processing phase
+ExecutionType   = step category
+Package         = operation data container
+Data            = package content
+Header          = technical key/value information
+Metadata        = descriptive information for the package or data
 ```

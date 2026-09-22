@@ -1,78 +1,78 @@
 # Pantheon Operation Platform
 
-> Piattaforma modulare per governare, instradare, eseguire e osservare operazioni tra sistemi interni, servizi esterni e processi distribuiti.
+> Modular platform to govern, route, execute, and observe operations across internal systems, external services, and distributed processes.
 
-Pantheon è progettato come un gateway operativo estendibile: riceve richieste e messaggi, valida e protegge l'accesso, determina come eseguire un'operazione, coordina i processi sincroni e asincroni e rende osservabile ogni passaggio del ciclo di vita.
+Pantheon is designed as an extensible operational gateway: it receives requests and messages, validates and protects access, determines how to execute an operation, coordinates synchronous and asynchronous processes, and provides visibility throughout the lifecycle.
 
-Il sistema è organizzato attorno a moduli con responsabilità precise. Ogni modulo prende il nome da una figura mitologica e rappresenta una capacità distinta della piattaforma:
+The system is organized around modules with precise responsibilities. Each module takes the name of a mythological figure and represents a distinct capability of the platform:
 
-| Modulo | Ruolo | Responsabilità principale |
+| Module | Role | Primary responsibility |
 |---|---|---|
-| **Hermes** | Il messaggero | Ingresso, messaggistica, routing e gestione delle operazioni |
-| **Hephaestus** | Il costruttore | Job background, elaborazioni asincrone e processi di esecuzione |
-| **Argus** | Il vigilante | Observability, logging, metriche, tracing e controllo operativo |
-| **Themis** | La legge | Authentication, authorization, policy, middleware e protezione trasversale |
+| **Hermes** | The messenger | Entry, messaging, routing, and operation management |
+| **Hephaestus** | The builder | Background jobs, asynchronous processing, and execution workflows |
+| **Argus** | The watcher | Observability, logging, metrics, tracing, and operational control |
+| **Themis** | The law | Authentication, authorization, policies, middleware, and cross-cutting protection |
 
-> **Stato del repository:** Hermes è il modulo più avanzato ed è organizzato in `Api`, `Application`, `Domain` e `Infrastructure`, con persistenza PostgreSQL tramite Entity Framework Core. Hephaestus dispone ora di un'API ASP.NET Core e di un worker .NET separato, predisposti per l'evoluzione verso job e background processing. Argus e Themis rappresentano i moduli architetturali successivi e vengono integrati progressivamente.
+> **Repository status:** Hermes is the most advanced module and is organized into `Api`, `Application`, `Domain`, and `Infrastructure`, with persistence in PostgreSQL via Entity Framework Core. Hephaestus is the next stage of the platform, while Argus and Themis are still in the conceptual and design phases.
 
-## Indice
+## Table of contents
 
 - [Pantheon Operation Platform](#pantheon-operation-platform)
-  - [Indice](#indice)
-  - [Obiettivi](#obiettivi)
-  - [Architettura della piattaforma](#architettura-della-piattaforma)
-  - [I moduli di Pantheon](#i-moduli-di-pantheon)
-    - [Hermes — il messaggero](#hermes--il-messaggero)
+  - [Table of contents](#table-of-contents)
+  - [Objectives](#objectives)
+  - [Platform architecture](#platform-architecture)
+  - [Pantheon modules](#pantheon-modules)
+    - [Hermes — the messenger](#hermes--the-messenger)
     - [Hephaestus — background processing](#hephaestus--background-processing)
     - [Argus — observability](#argus--observability)
-    - [Themis — security e governance](#themis--security-e-governance)
-  - [Flusso end-to-end](#flusso-end-to-end)
-  - [Struttura del repository](#struttura-del-repository)
-  - [Persistenza e infrastruttura locale](#persistenza-e-infrastruttura-locale)
-  - [Principi architetturali](#principi-architetturali)
+    - [Themis — security and governance](#themis--security-and-governance)
+  - [End-to-end flow](#end-to-end-flow)
+  - [Repository structure](#repository-structure)
+  - [Persistence and local infrastructure](#persistence-and-local-infrastructure)
+  - [Architectural principles](#architectural-principles)
   - [Stack](#stack)
-  - [Sviluppo locale](#sviluppo-locale)
-    - [Setup iniziale](#setup-iniziale)
-    - [CLI locale](#cli-locale)
-    - [Runtime locale](#runtime-locale)
-    - [Database locale](#database-locale)
-    - [Dev Container e debug locale](#dev-container-e-debug-locale)
-    - [Struttura dei Dev Container](#struttura-dei-dev-container)
-    - [Esecuzione nativa dei servizi](#esecuzione-nativa-dei-servizi)
-    - [Test](#test)
+  - [Local development](#local-development)
+    - [Initial setup](#initial-setup)
+    - [Local CLI](#local-cli)
+    - [Local runtime](#local-runtime)
+    - [Local database](#local-database)
+    - [Dev Container and local debugging](#dev-container-and-local-debugging)
+    - [Structure of the Dev Containers](#structure-of-the-dev-containers)
+    - [Native execution of services](#native-execution-of-services)
+    - [Tests](#tests)
   - [Roadmap](#roadmap)
-  - [In sintesi](#in-sintesi)
+  - [Summary](#summary)
 
 ---
 
-## Obiettivi
+## Objectives
 
-Pantheon nasce per fornire un punto di coordinamento unico per operazioni distribuite e integrazioni eterogenee.
+Pantheon was created to provide a single coordination point for distributed operations and heterogeneous integrations.
 
-Gli obiettivi principali sono:
+The main objectives are:
 
-- esporre contratti HTTP e messaggistici coerenti;
-- separare la definizione di un'operazione dalla sua esecuzione;
-- instradare le operazioni verso endpoint e sistemi configurati;
-- supportare esecuzioni composte da più step ordinati;
-- spostare i processi lunghi o ripetibili su job background;
-- mantenere correlazione e tracciabilità dall'ingresso alla conclusione;
-- applicare autenticazione, autorizzazione e policy in modo uniforme;
-- raccogliere log, metriche e trace senza duplicare codice nei moduli applicativi;
-- mantenere il dominio indipendente da HTTP, broker, database e SDK esterni.
+- expose consistent HTTP and messaging contracts;
+- separate the definition of an operation from its execution;
+- route operations to configured endpoints and systems;
+- support executions composed of multiple ordered steps;
+- move long-running or repeatable processes to background jobs;
+- maintain correlation and traceability from entry to completion;
+- apply authentication, authorization, and policies uniformly;
+- collect logs, metrics, and traces without duplicating code in the application modules;
+- keep the domain independent from HTTP, brokers, databases, and external SDKs.
 
 ---
 
-## Architettura della piattaforma
+## Platform architecture
 
 ```mermaid
 flowchart LR
-    Consumer[Client o sistema esterno] --> Themis[Themis\nSecurity & Policies]
+    Consumer[Client or external system] --> Themis[Themis\nSecurity & Policies]
     Themis --> Hermes[Hermes\nMessaging & Operations]
-    Hermes --> Sync[Elaborazione sincrona]
-    Hermes --> Queue[Messaggio / coda di lavoro]
+    Hermes --> Sync[Synchronous processing]
+    Hermes --> Queue[Message / work queue]
     Queue --> Hephaestus[Hephaestus\nBackground Jobs]
-    Hephaestus --> Target[Sistemi interni ed esterni]
+    Hephaestus --> Target[Internal and external systems]
     Sync --> Target
 
     Hermes --> Persistence[(PostgreSQL)]
@@ -83,276 +83,277 @@ flowchart LR
     Target --> Argus
 ```
 
-Pantheon non è pensato come un singolo blocco applicativo. È un insieme di moduli cooperanti con confini chiari:
+Pantheon is not intended to be a single application block. It is a set of cooperating modules with clear boundaries:
 
-1. **Themis** protegge la richiesta e applica le policy prima che raggiunga i casi d'uso.
-2. **Hermes** riceve il messaggio o la richiesta, identifica l'operazione e determina il percorso configurato.
-3. **Hephaestus** esegue i lavori differibili, lunghi o affidati a retry e scheduling.
-4. **Argus** osserva il comportamento della piattaforma e collega gli eventi tramite correlation ID e operation ID.
-5. I moduli condividono contratti e contesto, ma non trasferiscono la responsabilità delle proprie regole agli altri moduli.
+1. **Themis** protects the request and applies policies before it reaches the use cases.
+2. **Hermes** receives the message or request, identifies the operation, and determines the configured route.
+3. **Hephaestus** executes deferrable, long-running, or retry-based jobs.
+4. **Argus** observes the behavior of the platform and connects events through correlation IDs and operation IDs.
+5. The modules share contracts and context, but they do not transfer responsibility for their own rules to each other.
 
 ---
 
-## I moduli di Pantheon
+## Pantheon modules
 
-### Hermes — il messaggero
+### Hermes — the messenger
 
-Hermes è il modulo di ingresso e coordinamento delle operazioni. Rappresenta il confine tra Pantheon e i client, i sistemi esterni e i canali di messaggistica.
+Hermes is the entry and coordination module for operations. It represents the boundary between Pantheon and clients, external systems, and messaging channels.
 
-Le sue responsabilità comprendono:
+Its responsibilities include:
 
-- ricevere richieste e messaggi;
-- validare i contratti in ingresso;
-- identificare client, operation type ed endpoint;
-- risolvere le route configurate;
-- creare e gestire le operation;
-- rappresentare execution, step e package;
-- convertire i contratti esterni in command/query applicative;
-- restituire risposte ed errori uniformi;
-- persistere configurazione e stato operativo.
+- receiving requests and messages;
+- validating inbound contracts;
+- identifying client, operation type, and endpoint;
+- resolving configured routes;
+- creating and managing operations;
+- representing execution, steps, and data packages;
+- converting external contracts into application commands/queries;
+- returning uniform responses and errors;
+- persisting configuration and operational state.
 
-Nel repository Hermes è suddiviso in:
+Within the repository, Hermes is divided into:
 
 ```text
 Hermes
-├── Hermes.Api             # HTTP, controller, request/response e gestione errori
-├── Hermes.Application     # use case, command/query handler e DTO
-├── Hermes.Domain          # entità, value object, stati e repository astratti
-└── Hermes.Infrastructure  # EF Core, PostgreSQL, migration e repository concreti
+├── Hermes.Api             # HTTP entry, controllers, request/response models, and error handling
+├── Hermes.Application     # use case orchestration, command/query handlers, and DTOs
+├── Hermes.Domain          # domain model, value objects, states, and abstract repositories
+├── Hermes.Infrastructure  # EF Core, PostgreSQL, migrations, and concrete repositories
+└── README.md               # overview of the Hermes module
 ```
 
-Il dominio di Hermes distingue chiaramente:
+The Hermes domain clearly distinguishes:
 
-- **Configuration:** `Client`, `OperationType`, `Endpoint`, `Route` e associazioni;
-- **Runtime:** `Operation`, `Execution`, `ExecutionStep` e relativi tipi;
-- **Payload:** `Package`, `Data`, `Header` e `Metadata`.
+- **Configuration:** `Client`, `OperationType`, `Endpoint`, `Route`, and associated relationships;
+- **Runtime:** `Operation`, `Execution`, `ExecutionStep`, and related types;
+- **Payload:** `Package`, `Data`, `Header`, and `Metadata`.
 
-Una `Route` descrive un percorso configurato `Client → OperationType → Endpoint`; una `Operation` rappresenta invece una richiesta concreta ricevuta dalla piattaforma.
+A `Route` describes a configured path `Client → OperationType → Endpoint`; an `Operation` instead represents a concrete request received by the platform.
 
-Per maggiori dettagli:
+For more details:
 
-- [`Hermes`](src/Hermes/README.md) — visione generale del modulo e relazione tra i layer;
-- [`Hermes.Api`](src/Hermes/Hermes.Api/Hermes.Api.ReadMe.md) — API HTTP, mapping, validazione ed error handling;
-- [`Hermes.Application`](src/Hermes/Hermes.Application/Hermes.Application.ReadMe.md) — use case, command, query e DTO;
-- [`Hermes.Domain`](src/Hermes/Hermes.Domain/Hermes.Domain.ReadMe.md) — entità, stati, invarianti e repository;
-- [`Hermes.Infrastructure`](src/Hermes/Hermes.Infrastructure/Hermes.Infrastructure.ReadMe.md) — persistenza, EF Core, PostgreSQL e migration.
+- [`Hermes`](src/Hermes/README.md) — overview of the module and the relationship between layers;
+- [`Hermes.Api`](src/Hermes/Hermes.Api/Hermes.Api.ReadMe.md) — HTTP API, mapping, validation, and error handling;
+- [`Hermes.Application`](src/Hermes/Hermes.Application/Hermes.Application.ReadMe.md) — use cases, command/query handlers, and DTOs;
+- [`Hermes.Domain`](src/Hermes/Hermes.Domain/Hermes.Domain.ReadMe.md) — entities, states, invariants, and repositories;
+- [`Hermes.Infrastructure`](src/Hermes/Hermes.Infrastructure/Hermes.Infrastructure.ReadMe.md) — persistence, EF Core, PostgreSQL, and migrations.
 
 ### Hephaestus — background processing
 
-Hephaestus è il modulo destinato all'esecuzione in background di Pantheon. Prende in carico i lavori che non devono essere completati durante la richiesta HTTP o che richiedono controllo, retry, scheduling e gestione indipendente del ciclo di vita.
+Hephaestus is the module responsible for background execution within Pantheon. It takes on jobs that must not be completed during the HTTP request or that require control, retry, scheduling, and independent lifecycle management.
 
-Nel repository sono già presenti:
+The repository already contains:
 
-- `Hephaestus.Api`, un servizio ASP.NET Core predisposto per esporre le capacità del modulo;
-- `Hephaestus.Worker`, un processo `BackgroundService` separato dal layer HTTP;
-- `Hephaestus.Application`, destinato all'orchestrazione dei casi d'uso del modulo;
-- `Hephaestus.Core`, destinato ai contratti e alle astrazioni condivise;
-- `Hephaestus.Infrastructure`, destinato alle implementazioni tecniche future;
-- container runtime e Dev Container dedicati nell'infrastruttura locale.
+- `Hephaestus.Api`, an ASP.NET Core service prepared to expose the module's capabilities;
+- `Hephaestus.Worker`, a `BackgroundService` process separate from the HTTP layer;
+- `Hephaestus.Application`, intended for orchestrating the module's use cases;
+- `Hephaestus.Core`, intended for shared contracts and abstractions;
+- `Hephaestus.Infrastructure`, intended for future technical implementations;
+- dedicated container runtime and Dev Container in the local infrastructure.
 
-L'API e il worker sono attualmente lo scheletro operativo del modulo: l'API espone ancora endpoint dimostrativi e il worker esegue un ciclo di background con logging periodico. Questa base consente di sviluppare il modulo senza confondere il processo HTTP con quello worker.
+The API and the worker are currently the operational skeleton of the module: the API still exposes demo endpoints and the worker runs a background loop with periodic logging. This base enables the development of the module without mixing the HTTP process with the worker process.
 
-Il modulo è destinato a gestire:
+The module is intended to handle:
 
-- job asincroni derivati da operation ed execution step;
-- code e messaggi di lavoro;
-- retry e backoff;
-- timeout e cancellazione;
-- scheduling e differimento dell'esecuzione;
-- isolamento dei processi lunghi;
-- aggiornamento dello stato di execution e step;
-- gestione degli errori e dei dead-letter flow;
-- coordinamento con gli endpoint esterni.
+- asynchronous jobs derived from operations and execution steps;
+- work queues and messages;
+- retry and backoff;
+- timeouts and cancellation;
+- scheduling and deferred execution;
+- isolation of long-running processes;
+- updating execution and step status;
+- error handling and dead-letter flows;
+- coordination with external endpoints.
 
-Hephaestus non deve diventare il proprietario delle regole di dominio di Hermes: esegue il lavoro assegnato e comunica l'esito attraverso contratti e stati espliciti.
+Hephaestus must not become the owner of Hermes domain rules: it executes the assigned work and communicates the outcome through explicit contracts and states.
 
-In Development l'API Hephaestus è configurata sui profili `http://localhost:5056` e `https://localhost:7059`. Nel runtime Docker le porte vengono invece definite negli `.env` di `infra/local`.
+In Development, the Hephaestus API is configured on the profiles `http://localhost:5056` and `https://localhost:7059`. In Docker runtime, ports are instead defined in the `.env` files under `infra/local`.
 
 ### Argus — observability
 
-Argus è il sistema di osservabilità della piattaforma. Il suo scopo è rendere visibili il comportamento, le prestazioni e gli errori di Pantheon senza introdurre logica di business nei moduli osservati.
+Argus is the observability system of the platform. Its purpose is to make the behavior, performance, and errors of Pantheon visible without introducing business logic into the observed modules.
 
-Le capacità previste includono:
+The expected capabilities include:
 
-- logging strutturato;
-- correlation ID, operation ID ed execution ID;
-- metriche tecniche e applicative;
+- structured logging;
+- correlation ID, operation ID, and execution ID;
+- technical and application metrics;
 - distributed tracing;
-- durata e risultato degli step;
-- conteggio di retry, errori e timeout;
-- health check e readiness/liveness;
-- audit degli eventi rilevanti;
-- integrazione con sistemi centralizzati di monitoraggio e alerting.
+- step duration and result;
+- retry, error, and timeout counts;
+- health checks and readiness/liveness;
+- audit of relevant events;
+- integration with centralized monitoring and alerting systems.
 
-Argus deve permettere di seguire una singola operazione attraverso Themis, Hermes, Hephaestus e i sistemi destinatari.
+Argus must allow a single operation to be followed across Themis, Hermes, Hephaestus, and the target systems.
 
-### Themis — security e governance
+### Themis — security and governance
 
-Themis è il modulo trasversale di protezione e governo degli accessi. Centralizza i meccanismi comuni che non devono essere implementati singolarmente nei controller o nei worker.
+Themis is the cross-cutting module for access protection and governance. It centralizes mechanisms that should not be implemented separately in controllers or workers.
 
-Le sue responsabilità comprendono:
+Its responsibilities include:
 
-- authentication e verifica dell'identità;
-- authorization e valutazione dei permessi;
-- policy applicative e tecniche;
-- middleware di sicurezza;
-- gestione del contesto dell'utente o del servizio chiamante;
-- protezione degli endpoint HTTP e dei messaggi;
-- validazione di tenant, client, scope e claim quando applicabile;
-- gestione coerente degli errori di accesso;
-- sicurezza dei dati sensibili e minimizzazione delle informazioni esposte.
+- authentication and identity verification;
+- authorization and permission evaluation;
+- application and technical policies;
+- security middleware;
+- management of the caller or service context;
+- protection of HTTP endpoints and messages;
+- validation of tenants, clients, scopes, and claims when applicable;
+- consistent handling of access errors;
+- sensitive data protection and minimization of exposed information.
 
-Themis deve operare come una protezione comune della pipeline, lasciando ai singoli moduli soltanto le verifiche specifiche del proprio caso d'uso.
+Themis must operate as a common protection layer, leaving only use-case-specific checks to the individual modules.
 
 ---
 
-## Flusso end-to-end
+## End-to-end flow
 
 ```mermaid
 sequenceDiagram
-    participant Caller as Client / Sistema esterno
+    participant Caller as Client / external system
     participant Themis as Themis
     participant Hermes as Hermes
     participant DB as PostgreSQL
     participant Argus as Argus
     participant Hephaestus as Hephaestus
-    participant Target as Sistema destinatario
+    participant Target as Target system
 
-    Caller->>Themis: Richiesta o messaggio
-    Themis->>Themis: Authentication, authorization e policy
+    Caller->>Themis: Authorized request or message
+    Themis->>Themis: Authentication, authorization, and policies
     Themis->>Argus: Security event / trace context
-    Themis->>Hermes: Richiesta autorizzata
-    Hermes->>Hermes: Validazione e risoluzione della route
-    Hermes->>DB: Persistenza operation / execution
-    Hermes->>Argus: Operation ed execution context
+    Themis->>Hermes: Authorized request
+    Hermes->>Hermes: Validation and route resolution
+    Hermes->>DB: Persist operation / execution
+    Hermes->>Argus: Operation and execution context
 
-    alt Elaborazione immediata
-        Hermes->>Target: Invocazione endpoint
-        Target-->>Hermes: Risultato
-    else Elaborazione asincrona
-        Hermes->>Hephaestus: Job o messaggio di lavoro
-        Hephaestus->>Target: Esecuzione dello step
-        Target-->>Hephaestus: Risultato
-        Hephaestus-->>Hermes: Stato aggiornato / evento
-        Hephaestus->>Argus: Metriche, log e trace
+    alt Immediate processing
+        Hermes->>Target: Endpoint invocation
+        Target-->>Hermes: Result
+    else Asynchronous processing
+        Hermes->>Hephaestus: Job or work message
+        Hephaestus->>Target: Step execution
+        Target-->>Hephaestus: Result
+        Hephaestus-->>Hermes: Status update / event
+        Hephaestus->>Argus: Metrics, logs, and traces
     end
 
-    Hermes-->>Caller: Risposta o stato dell'operation
+    Hermes-->>Caller: Response or operation status
 ```
 
-La correlazione deve essere mantenuta in ogni passaggio. Gli identificativi di riferimento principali sono:
+Correlation must be maintained at every step. The main reference identifiers are:
 
-- **Correlation ID:** collega i messaggi e le richieste appartenenti allo stesso flusso;
-- **Operation ID:** identifica l'operazione di business;
-- **Execution ID:** identifica una specifica elaborazione;
-- **Step ID:** identifica una fase dell'elaborazione.
+- **Correlation ID:** links messages and requests belonging to the same flow;
+- **Operation ID:** identifies the business operation;
+- **Execution ID:** identifies a specific processing run;
+- **Step ID:** identifies a processing phase.
 
 ---
 
-## Struttura del repository
+## Repository structure
 
 ```text
 PantheonOperationPlatform/
 ├── Pantheon.slnx
 ├── src/
 │   ├── Hermes/
-│   │   ├── Hermes.Api/             # ingresso HTTP e contratti REST
-│   │   ├── Hermes.Application/     # orchestrazione dei casi d'uso
-│   │   ├── Hermes.Domain/          # modello e regole di dominio
-│   │   ├── Hermes.Infrastructure/  # implementazioni tecniche e persistenza
-│   │   └── README.md               # panoramica del modulo Hermes
+│   │   ├── Hermes.Api/             # HTTP entry and REST contracts
+│   │   ├── Hermes.Application/     # use case orchestration
+│   │   ├── Hermes.Domain/          # domain model and business rules
+│   │   ├── Hermes.Infrastructure/  # technical implementations and persistence
+│   │   └── README.md               # overview of the Hermes module
 │   ├── Hephaestus/
-│   │   ├── Hephaestus.Api/         # API HTTP del modulo
-│   │   ├── Hephaestus.Application/ # applicazione e use case
-│   │   ├── Hephaestus.Core/        # contratti e astrazioni condivise
-│   │   ├── Hephaestus.Infrastructure/ # dettagli tecnici
-│   │   └── Hephaestus.Worker/      # processo background
-│   └── Themis/                     # security e governance in evoluzione
+│   │   ├── Hephaestus.Api/         # HTTP API for the module
+│   │   ├── Hephaestus.Application/ # application and use cases
+│   │   ├── Hephaestus.Core/        # shared contracts and abstractions
+│   │   ├── Hephaestus.Infrastructure/ # technical details
+│   │   └── Hephaestus.Worker/      # background processing service
+│   └── Themis/                     # security and governance in evolution
 ├── infra/
-│   └── local/                      # Compose, PostgreSQL, Dockerfile e .env.example
+│   └── local/                      # Compose, PostgreSQL, Dockerfile, and .env.example
 ├── scripts/
-│   ├── pantheon.sh                 # comandi operativi dalla root
-│   └── pantheon-debug-all.sh       # avvio e collegamento dei Dev Container
+│   ├── pantheon.sh                 # operational commands from the root
+│   └── pantheon-debug-all.sh       # startup and Dev Container attachment
 ├── tests/
-│   ├── Hermes.Api.Tests/           # test del layer API
-│   ├── Hermes.IntegrationTests/    # test di integrazione
-│   └── Hermes.UnitTests/           # test unitari
-├── .devcontainer/                  # ambienti di sviluppo interattivi
-└── .vscode/                        # launch e task di sviluppo locali
+│   ├── Hermes.Api.Tests/           # API layer tests
+│   ├── Hermes.IntegrationTests/    # integration tests
+│   └── Hermes.UnitTests/           # unit tests
+├── .devcontainer/                  # interactive development environments
+└── .vscode/                        # local launch and task settings
 ```
 
-La struttura prevista per l'estensione della piattaforma è:
+The expected structure for platform extension is:
 
 ```text
 src/
-├── Hermes/       # messaggistica, routing e operazioni
-├── Hephaestus/   # API, worker e background processing
-├── Argus/        # logging, metriche, tracing e audit
-└── Themis/       # authentication, authorization, policy e middleware
+├── Hermes/       # messaging, routing, and operations
+├── Hephaestus/   # API, worker, and background processing
+├── Argus/        # logging, metrics, tracing, and audit
+└── Themis/       # authentication, authorization, policies, and middleware
 ```
 
-Ogni modulo potrà mantenere i propri layer interni, senza perdere la separazione tra API, Application, Domain/Core e Infrastructure quando applicabile.
+Each module can keep its own internal layers without losing separation between API, Application, Domain/Core, and Infrastructure when applicable.
 
 ---
 
-## Persistenza e infrastruttura locale
+## Persistence and local infrastructure
 
-La persistenza attuale di Hermes usa Entity Framework Core e PostgreSQL. `Hermes.Infrastructure` contiene `HermesDbContext`, le configurazioni Fluent API, i repository concreti e le migration dello schema.
+The current persistence of Hermes uses Entity Framework Core and PostgreSQL. `Hermes.Infrastructure` contains `HermesDbContext`, Fluent API configurations, concrete repositories, and schema migrations.
 
-L'ambiente locale è definito in [`infra/local/README.md`](infra/local/README.md) e include:
+The local environment is defined in [`infra/local/README.md`](infra/local/README.md) and includes:
 
 - PostgreSQL;
 - Hermes runtime;
 - Hephaestus API;
 - Hephaestus Worker;
-- rete Docker condivisa `pantheon-local`;
-- volume persistente `pantheon-postgres-data`.
+- shared Docker network `pantheon-local`;
+- persistent volume `pantheon-postgres-data`.
 
-La configurazione parte dagli `.env.example` e le credenziali reali restano locali. Il volume PostgreSQL mantiene i dati tra i riavvii; per un reset completo è possibile eseguire `docker compose -f infra/local/compose.yml down -v`.
+Configuration starts from `.env.example` files and the real credentials remain local. The PostgreSQL volume keeps data across restarts; for a complete reset, it is possible to run `docker compose -f infra/local/compose.yml down -v`.
 
 ---
 
-## Principi architetturali
+## Architectural principles
 
-1. **Modularità per capacità** — ogni divinità rappresenta una responsabilità tecnica e funzionale distinta.
-2. **Clean Architecture** — il dominio non dipende da framework, database, broker o sistemi esterni.
-3. **Domain-first** — invarianti e transizioni appartengono alle entità e ai value object.
-4. **Controller e worker sottili** — l'ingresso HTTP e l'esecuzione background coordinano, ma non duplicano la logica applicativa.
-5. **Contratti espliciti** — request, response, command, query, eventi e messaggi sono modelli distinti.
-6. **Configuration ≠ Runtime** — ciò che è configurato, come route ed endpoint, è distinto da ciò che viene eseguito.
-7. **Sincrono quando serve, asincrono quando conviene** — le operazioni lunghe o affidate a retry passano a Hephaestus.
-8. **Security by default** — Themis applica protezioni comuni prima dell'accesso ai casi d'uso.
-9. **Observability by default** — Argus riceve il contesto di correlazione e gli eventi dei moduli.
-10. **Errori tipizzati e uniformi** — gli errori devono essere identificabili tramite codice, tipo e contesto.
-11. **Cancellazione e resilienza** — le operazioni asincrone propagano cancellation token, timeout e segnali di stop.
-12. **Nessun accoppiamento inutile** — un modulo comunica con gli altri tramite astrazioni e contratti stabili.
+1. **Modularity by capability** — each deity represents a distinct technical and functional responsibility.
+2. **Clean Architecture** — the domain does not depend on frameworks, databases, brokers, or external systems.
+3. **Domain-first** — invariants and transitions belong to entities and value objects.
+4. **Thin controllers and workers** — HTTP ingress and background execution coordinate, but do not duplicate application logic.
+5. **Explicit contracts** — requests, responses, commands, queries, events, and messages are distinct models.
+6. **Configuration ≠ Runtime** — what is configured, such as routes and endpoints, is distinct from what is executed.
+7. **Synchronous when needed, asynchronous when appropriate** — long-running or retry-based operations move to Hephaestus.
+8. **Security by default** — Themis applies common protections before access to use cases.
+9. **Observability by default** — Argus receives correlation context and events from the modules.
+10. **Typed and uniform errors** — errors must be identifiable through code, type, and context.
+11. **Cancellation and resilience** — asynchronous operations propagate cancellation tokens, timeouts, and stop signals.
+12. **No unnecessary coupling** — a module communicates with others through abstractions and stable contracts.
 
 ---
 
 ## Stack
 
-- **Linguaggio:** C#
+- **Language:** C#
 - **Runtime:** .NET 10 (`net10.0`)
 - **Web:** ASP.NET Core MVC
 - **Worker:** .NET `BackgroundService`
-- **Validazione:** FluentValidation
-- **API documentation:** OpenAPI e Swagger UI in Development
-- **Persistenza:** Entity Framework Core, Npgsql e PostgreSQL
-- **Architettura:** Clean Architecture con separazione Domain, Application, API e Infrastructure
-- **Container:** Docker Compose per il runtime locale
-- **Ambiente di sviluppo:** Dev Container basato su `mcr.microsoft.com/dotnet/sdk:10.0`
+- **Validation:** FluentValidation
+- **API documentation:** OpenAPI and Swagger UI in Development
+- **Persistence:** Entity Framework Core, Npgsql, and PostgreSQL
+- **Architecture:** Clean Architecture with separation of Domain, Application, API, and Infrastructure
+- **Container:** Docker Compose for local runtime
+- **Development environment:** Dev Container based on `mcr.microsoft.com/dotnet/sdk:10.0`
 
-I dettagli dei broker, dei provider di persistenza aggiuntivi, dei sistemi di observability e dei meccanismi di identity verranno introdotti nei rispettivi moduli senza contaminare il dominio.
+Details about brokers, additional persistence providers, observability systems, and identity mechanisms will be introduced in the respective modules without polluting the domain.
 
 ---
 
-## Sviluppo locale
+## Local development
 
-È necessario avere installato Docker, Docker Compose, VS Code con Dev Containers e, per l'esecuzione nativa, .NET SDK 10. In alternativa è possibile utilizzare i Dev Container del repository.
+You need Docker, Docker Compose, VS Code with Dev Containers, and the .NET SDK 10 for native execution. Alternatively, you can use the repository's Dev Containers.
 
-Il repository include un CLI locale 'pant' per gestire infrastruttura, container, database, log e debug.
+The repository includes a local CLI named `pant` to manage infrastructure, containers, database, logs, and debugging.
 
-### Setup iniziale
+### Initial setup
 
 ```bash
 git clone https://github.com/VincenzoMatonti/PantheonOperationPlatform.git
@@ -365,10 +366,11 @@ cp infra/local/hephaestus/.env.example infra/local/hephaestus/.env
 cp infra/local/hephaestus-worker/.env.example infra/local/hephaestus-worker/.env
 ```
 
-Sostituire i valori `changeMe` con porte e credenziali locali prima di avviare lo stack.
+Replace the `changeMe` values with local ports and credentials before starting the stack.
 
-### CLI locale
-Pantheon utilizza `direnv` per rendere disponibile il comando `pant` all'interno della repository.
+### Local CLI
+
+Pantheon uses `direnv` to make the `pant` command available inside the repository.
 
 #### Ubuntu / Debian
 
@@ -384,7 +386,7 @@ source ~/.bashrc
 
 #### macOS
 
-Su macOS il metodo più comune è usare Homebrew:
+On macOS the most common approach is to use Homebrew:
 
 ```bash
 brew install direnv
@@ -395,60 +397,60 @@ source ~/.zshrc
 
 #### Windows
 
-`direnv` è originariamente un tool Unix-like. Il percorso consigliato su Windows è usare WSL2 con Ubuntu, oppure eseguire i comandi all'interno di Git Bash/WSL dove `direnv` è supportato correttamente. In ambiente nativo Windows, il fallback più semplice è usare gli script della repository direttamente da una shell Unix-like.
+`direnv` is originally a Unix-like tool. The recommended path on Windows is to use WSL2 with Ubuntu, or run commands inside Git Bash/WSL where `direnv` is supported correctly.
 
-#### Abilitazione del progetto
+#### Enabling the project
 
-Entrare nella root del repository:
+Enter the repository root:
 
 ```bash
 cd ~/wa/solution/PantheonSolution
 ```
 
-Il repository contiene un file `.envrc` che aggiunge `scripts/` al `PATH`:
+The repository contains an `.envrc` file that adds `scripts/` to the `PATH`:
 
 ```bash
 export PATH="$PWD/scripts:$PATH"
 ```
 
-La prima volta è necessario autorizzare il file:
+The first time, authorize the file:
 
 ```bash
 direnv allow
 ```
 
-Dopo l'autorizzazione, ogni volta che si entra nella directory del progetto `direnv` carica automaticamente `.envrc`.
+After that, every time you enter the project directory, `direnv` automatically loads `.envrc`.
 
-Esempio di output:
+Example output:
 
 ```bash
 direnv: loading ~/wa/solution/PantheonSolution/.envrc
 direnv: export ~PATH
 ```
 
-A questo punto la CLI è disponibile:
+At this point the CLI is available:
 
 ```bash
 pant help
 ```
 
-È quindi sufficiente:
+It is therefore enough to:
 
 ```bash
 cd ~/wa/solution/PantheonSolution
 ```
 
-per avere automaticamente il comando `pant` disponibile.
+to have the `pant` command available automatically.
 
-Uscendo dalla directory del progetto, `direnv` rimuove automaticamente `scripts/` dal `PATH`.
+Leaving the project directory automatically removes `scripts/` from the `PATH`.
 
-Per visualizzare i comandi disponibili:
+To display the available commands:
 
 ```bash
 pant help
 ```
 
-L'help principale fornisce i riferimenti agli help specifici:
+The main help provides references to the specific help:
 
 ```bash
 pant local help
@@ -457,7 +459,7 @@ pant local shell help
 pant local logs help
 ```
 
-Se invece non si vuole usare `direnv`, è possibile eseguire direttamente gli script dalla root del repository con il fallback legacy:
+If you do not want to use `direnv`, you can run the scripts directly from the repository root with the legacy fallback:
 
 ```bash
 ./scripts/pantheon.sh local help
@@ -465,87 +467,91 @@ Se invece non si vuole usare `direnv`, è possibile eseguire direttamente gli sc
 ./scripts/pantheon.sh local down
 ```
 
-### Runtime locale
-Per avviare l'intero ambiente runtime:
+### Local runtime
+
+To start the entire runtime environment:
 
 ```bash
 pant local up
 ```
 
-Per fermare e rimuovere i container runtime:
+To stop and remove the runtime containers:
 
 ```bash
 pant local down
 ```
 
-Per visualizzare lo stato dell'infrastruttura locale:
+To display the local infrastructure status:
 
 ```bash
 pant local status
 ```
 
-Per seguire i log dei servizi:
+To follow the logs of the services:
 
 ```bash
 pant local logs
 ```
 
-Per avviare solamente PostgreSQL:
+To start only PostgreSQL:
 
 ```bash
 pant local db-up
 ```
 
-Per fermare PostgreSQL:
+To stop PostgreSQL:
 
 ```bash
 pant local db-down
 ```
 
-### Database locale
-PostgreSQL viene eseguito in un container condiviso e contiene i database applicativi separati di Hermes e Hephaestus.
+### Local database
 
-I comandi relativi al database sono disponibili tramite:
+PostgreSQL runs in a shared container and contains the separate application databases for Hermes and Hephaestus.
+
+The database-related commands are available via:
 
 ```bash
 pant local db help
 ```
 
-### Dev Container e debug locale
-Per avviare i container di sviluppo:
+### Dev Container and local debugging
+
+To start the development containers:
 
 ```bash
 pant local dev-up
 ```
 
-Per fermarli:
+To stop them:
 
 ```bash
 pant local dev-down
 ```
 
-Per avviare l'ambiente completo di debug:
+To start the full debug environment:
 
 ```bash
 pant local debug-all
 ```
 
-`dev-up` avvia i Dev Container di Hermes, Hephaestus e Hephaestus Worker con il repository montato in `/workspace`.
+`dev-up` starts the Dev Containers for Hermes, Hephaestus, and Hephaestus Worker with the repository mounted at `/workspace`.
 
-`debug-all` avvia l'infrastruttura PostgreSQL necessaria, avvia i tre Dev Container, verifica che siano attivi e apre tre finestre VS Code collegate ai rispettivi container.
+`debug-all` starts the required PostgreSQL infrastructure, launches the three Dev Containers, verifies they are active, and opens three VS Code windows connected to the respective containers.
 
-Ogni ambiente può essere eseguito e sottoposto a debug separatamente tramite VS Code. È quindi possibile avviare il debugger con `F5` nei singoli ambienti e impostare breakpoint indipendenti in:
+Each environment can be run and debugged separately via VS Code. It is therefore possible to start the debugger with `F5` in each environment and set independent breakpoints in:
 
 - Hermes API
 - Hephaestus API
 - Hephaestus Worker
 
-I tre container condividono la rete Docker locale `pantheon-local`, permettendo di eseguire e debuggare il flusso completo tra i servizi.
+The three containers share the local Docker network `pantheon-local`, allowing the full flow between services to run and be debugged.
 
-Per aprire manualmente un Dev Container è possibile utilizzare VS Code e scegliere **Reopen in Container** dalla relativa configurazione presente nella directory `.devcontainer`.
+To open a Dev Container manually, use VS Code and choose **Reopen in Container** from the relevant configuration in the `.devcontainer` directory.
 
-### Struttura dei Dev Container
-Il repository utilizza un'unica configurazione Docker Compose condivisa per l'ambiente di sviluppo:
+### Structure of the Dev Containers
+
+The repository uses a single shared Docker Compose configuration for the development environment:
 
 ```text
 .devcontainer/
@@ -561,9 +567,9 @@ Il repository utilizza un'unica configurazione Docker Compose condivisa per l'am
     └── Dockerfile
 ```
 
-I Dev Container utilizzano il .NET SDK 10, montano il repository in `/workspace` e condividono la rete Docker locale con gli altri servizi Pantheon.
+The Dev Containers use the .NET SDK 10, mount the repository in `/workspace`, and share the local Docker network with the other Pantheon services.
 
-Nel caso in cui non si usi `direnv`, il fallback equivalente è:
+If `direnv` is not used, the equivalent fallback is:
 
 ```bash
 ./scripts/pantheon.sh local up
@@ -571,9 +577,9 @@ Nel caso in cui non si usi `direnv`, il fallback equivalente è:
 ./scripts/pantheon.sh local debug-all
 ```
 
-### Esecuzione nativa dei servizi
+### Native execution of services
 
-Per Hermes:
+For Hermes:
 
 ```bash
 dotnet restore Pantheon.slnx
@@ -581,64 +587,64 @@ dotnet build Pantheon.slnx
 dotnet run --project src/Hermes/Hermes.Api/Hermes.Api.csproj
 ```
 
-In Development Hermes usa gli URL configurati nei launch settings:
+In Development, Hermes uses the URLs configured in the launch settings:
 
 - `http://localhost:5080`;
 - `https://localhost:7138`;
-- OpenAPI e Swagger UI sono disponibili in Development.
+- OpenAPI and Swagger UI are available in Development.
 
-Per Hephaestus API:
+For the Hephaestus API:
 
 ```bash
 dotnet run --project src/Hephaestus/Hephaestus.Api/Hephaestus.Api.csproj
 ```
 
-L'API Hephaestus usa `http://localhost:5056` e `https://localhost:7059`. Per avviare il worker separatamente:
+The Hephaestus API uses `http://localhost:5056` and `https://localhost:7059`. To start the worker separately:
 
 ```bash
 dotnet run --project src/Hephaestus/Hephaestus.Worker/Hephaestus.Worker.csproj
 ```
 
-### Test
+### Tests
 
-La solution include i progetti di test dedicati a Hermes:
+The solution includes test projects dedicated to Hermes:
 
 ```bash
 dotnet test Pantheon.slnx
 ```
 
-I test sono separati per responsabilità:
+The tests are separated by responsibility:
 
-- `Hermes.UnitTests` per il comportamento isolato del dominio e dell'application layer;
-- `Hermes.Api.Tests` per il layer HTTP;
-- `Hermes.IntegrationTests` per verificare l'integrazione tra più componenti.
+- `Hermes.UnitTests` for isolated domain and application-layer behavior;
+- `Hermes.Api.Tests` for the HTTP layer;
+- `Hermes.IntegrationTests` to verify integration between multiple components.
 
 ---
 
 ## Roadmap
 
-L'evoluzione della piattaforma può procedere per incrementi:
+The platform can evolve incrementally:
 
-1. completare le implementazioni di persistenza e integrazione di Hermes;
-2. estendere Hermes a endpoint, route, execution e package oltre ai casi d'uso già esposti;
-3. trasformare Hephaestus da skeleton operativo in modulo completo con job, code, retry, scheduling e gestione dei fallimenti;
-4. collegare Hephaestus al ciclo di vita persistito di Hermes;
-5. introdurre Argus con logging strutturato, metriche, tracing e audit correlati;
-6. introdurre Themis con identity, authentication, authorization, policy e middleware;
-7. definire contratti condivisi tra moduli senza condividere dettagli interni;
-8. aggiungere test end-to-end sull'intero flusso di un'operation;
-9. aggiungere deployment, health check, configurazione per ambiente e telemetria operativa.
+1. complete the persistence and integration implementations of Hermes;
+2. extend Hermes to endpoints, routes, execution, and packages beyond the use cases already exposed;
+3. transform Hephaestus from an operational skeleton into a complete module with jobs, queues, retry, scheduling, and failure handling;
+4. connect Hephaestus to the persisted lifecycle of Hermes;
+5. introduce Argus with structured logging, metrics, tracing, and related audit;
+6. introduce Themis with identity, authentication, authorization, policies, and middleware;
+7. define shared contracts between modules without sharing internal details;
+8. add end-to-end tests for the entire flow of an operation;
+9. add deployment, health checks, environment configuration, and operational telemetry.
 
 ---
 
-## In sintesi
+## Summary
 
 ```text
-Pantheon    = piattaforma complessiva
-Hermes      = messaggi, routing, operation e persistenza operativa
-Hephaestus  = API, worker, job e background processing
-Argus       = observability e controllo operativo
-Themis      = authentication, authorization, policy e middleware
+Pantheon    = overall platform
+Hermes      = messages, routing, operation handling, and operational persistence
+Hephaestus  = API, worker, jobs, and background processing
+Argus       = observability and operational control
+Themis      = authentication, authorization, policies, and middleware
 ```
 
-Pantheon coordina il viaggio di un'operazione: Themis ne controlla l'accesso, Hermes la comprende, la instrada e ne persiste lo stato, Hephaestus la esegue quando il lavoro è asincrono e Argus rende ogni passaggio osservabile.
+Pantheon coordinates the journey of an operation: Themis controls access, Hermes understands it, routes it, and persists its state, Hephaestus executes it when work is asynchronous, and Argus makes the flow visible and traceable.
