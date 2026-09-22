@@ -1,0 +1,46 @@
+name: PR Governance
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-policy:
+    name: PR Governance / validate-pr-policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate pull request policy
+        env:
+          BASE_REPOSITORY: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          echo "Base repository:  $BASE_REPOSITORY"
+          echo "Base branch:      $BASE_BRANCH"
+          echo "Head repository:  $HEAD_REPOSITORY"
+          echo "Head branch:      $HEAD_BRANCH"
+
+          if [ "$HEAD_REPOSITORY" != "$BASE_REPOSITORY" ]; then
+            echo "External pull request detected."
+
+            if [ "$BASE_BRANCH" != "community" ]; then
+              echo "::error::External pull requests must target the community branch."
+              echo "::error::Target branch: $BASE_BRANCH"
+              exit 1
+            fi
+
+            echo "External pull request correctly targets community."
+            exit 0
+          fi
+
+          echo "Internal pull request detected."
+          echo "Internal pull requests are allowed to follow the repository branch flow."
