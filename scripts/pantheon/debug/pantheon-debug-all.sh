@@ -10,7 +10,7 @@ DEV_COMPOSE_FILE="$ROOT_DIR/.devcontainer/compose.dev.yml"
 HERMES_CONTAINER="pantheon-hermes-dev"
 HEPHAESTUS_CONTAINER="pantheon-hephaestus-dev"
 WORKER_CONTAINER="pantheon-hephaestus-worker-dev"
-
+ATHENA_CONTAINER="pantheon-athena-dev"
 WORKSPACE="/workspace"
 
 log() {
@@ -76,6 +76,7 @@ docker compose \
     -f "$COMPOSE_FILE" \
     -f "$DEV_COMPOSE_FILE" \
     up -d \
+    athena \
     postgres \
     hermes \
     hephaestus \
@@ -84,6 +85,7 @@ docker compose \
 log "Waiting for Dev Containers"
 
 for container in \
+    "$ATHENA_CONTAINER" \
     "$HERMES_CONTAINER" \
     "$HEPHAESTUS_CONTAINER" \
     "$WORKER_CONTAINER"; do
@@ -97,6 +99,12 @@ done
 log "All Dev Containers are running"
 
 show_status
+
+log "Opening Athena Dev Container"
+
+open_container "$ATHENA_CONTAINER"
+
+sleep 2
 
 log "Opening Hermes Dev Container"
 
@@ -117,8 +125,9 @@ open_container "$WORKER_CONTAINER"
 log "Pantheon Debug All started"
 
 echo
-echo "Three VS Code Dev Container windows have been requested."
+echo "Four  VS Code Dev Container windows have been requested."
 echo
+echo "  Athena.Cli"
 echo "  Hermes.Api"
 echo "  Hephaestus.Api"
 echo "  Hephaestus.Worker"
