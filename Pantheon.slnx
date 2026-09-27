@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/src/" />
+  <Folder Name="/src/">
+    <Project Path="src/Athena/Athena.csproj" />
+  </Folder>
   <Folder Name="/src/Hephaestus/">
     <Project Path="src/Hephaestus/Hephaestus.Api/Hephaestus.Api.csproj" />
     <Project Path="src/Hephaestus/Hephaestus.Application/Hephaestus.Application.csproj" />
