@@ -10,11 +10,13 @@ show_help() {
     echo
     echo "Containers:"
     echo
+    echo "  athena             Athena runtime container"
     echo "  hermes             Hermes runtime container"
     echo "  hephaestus         Hephaestus API runtime container"
     echo "  worker             Hephaestus Worker runtime container"
     echo "  postgres           PostgreSQL container"
     echo
+    echo "  athena-dev         Athena development container"
     echo "  hermes-dev         Hermes development container"
     echo "  hephaestus-dev     Hephaestus API development container"
     echo "  worker-dev         Hephaestus Worker development container"
@@ -33,6 +35,10 @@ get_container() {
 
     case "$name" in
 
+        athena)
+            echo "pantheon-athena"
+            ;;
+
         hermes)
             echo "pantheon-hermes"
             ;;
@@ -47,6 +53,10 @@ get_container() {
 
         postgres)
             echo "pantheon-postgres"
+            ;;
+
+        athena-dev)
+            echo "pantheon-athena-dev"
             ;;
 
         hermes-dev)
@@ -90,7 +100,7 @@ fi
 
 case "$1" in
 
-    hermes | hephaestus | worker | postgres | hermes-dev | hephaestus-dev | worker-dev)
+    athena | hermes | hephaestus | worker | postgres | athena-dev | hermes-dev | hephaestus-dev | worker-dev)
         shell "$1"
         ;;
 

@@ -2,9 +2,10 @@
 
 set -Eeuo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/infra/local/compose.yml"
 DEV_COMPOSE_FILE="$ROOT_DIR/.devcontainer/compose.dev.yml"
+ATHENA_SERVICE="athena"
 HERMES_SERVICE="hermes"
 HEPHAESTUS_SERVICE="hephaestus"
 WORKER_SERVICE="hephaestus-worker"
@@ -58,6 +59,7 @@ dev_up() {
         -f "$COMPOSE_FILE" \
         -f "$DEV_COMPOSE_FILE" \
         up -d \
+        "$ATHENA_SERVICE" \
         "$HERMES_SERVICE" \
         "$HEPHAESTUS_SERVICE" \
         "$WORKER_SERVICE"
@@ -69,6 +71,7 @@ dev_down() {
         -f "$COMPOSE_FILE" \
         -f "$DEV_COMPOSE_FILE" \
         stop \
+        "$ATHENA_SERVICE" \
         "$HERMES_SERVICE" \
         "$HEPHAESTUS_SERVICE" \
         "$WORKER_SERVICE"
