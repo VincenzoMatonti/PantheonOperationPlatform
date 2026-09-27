@@ -1,4 +1,14 @@
 services:
+  athena:
+    image: pantheon-athena:local
+    build:
+      context: ../..
+      dockerfile: infra/local/athena/Dockerfile
+    container_name: pantheon-athena
+    restart: unless-stopped
+    networks:
+      - pantheon-local
+
   postgres:
     image: postgres:18
     container_name: pantheon-postgres

@@ -34,6 +34,9 @@ get_service() {
     local name="$1"
 
     case "$name" in
+        athena)
+            echo "athena"
+            ;;
 
         hermes)
             echo "hermes"
@@ -82,7 +85,7 @@ command="${1:-all}"
 
 case "$command" in
 
-    all | hermes | hephaestus | worker | postgres)
+    all | athena | hermes | hephaestus | worker | postgres)
         logs "$command"
         ;;
 

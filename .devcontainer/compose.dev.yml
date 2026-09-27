@@ -1,4 +1,16 @@
 services:
+  athena:
+    build:
+      context: ../..
+      dockerfile: .devcontainer/athena/Dockerfile
+    container_name: pantheon-athena-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
   hermes:
     build:
       context: ../..
