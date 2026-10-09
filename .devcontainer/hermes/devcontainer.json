@@ -1,12 +1,11 @@
 {
-    "name": "Pantheon: Hephaestus Dev Container",
+    "name": "Pantheon: Hermes Dev Container",
     "dockerComposeFile": [
-        "../../../infra/.local/environment/compose.yml",
-        "../compose.dev.yml"
+        "../environment/compose.dev.yml"
     ],
-    "service": "hephaestus",
+    "service": "hermes-dev",
     "workspaceFolder": "/workspace",
-    "shutdownAction": "stopCompose",
+    "shutdownAction": "none",
     "customizations": {
         "vscode": {
             "extensions": [

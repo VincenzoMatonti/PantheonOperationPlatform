@@ -3,7 +3,7 @@ services:
     image: pantheon-hermes-dev:local
     build:
       context: ../..
-      dockerfile: .devcontainer/environment/hermes/Dockerfile
+      dockerfile: .devcontainer/hermes/Dockerfile
     container_name: pantheon-hermes-dev
     working_dir: /workspace
     volumes:
@@ -18,7 +18,7 @@ services:
     image: pantheon-hephaestus-dev:local
     build:
       context: ../..
-      dockerfile: .devcontainer/environment/hephaestus/Dockerfile
+      dockerfile: .devcontainer/hephaestus/Dockerfile
     container_name: pantheon-hephaestus-dev
     working_dir: /workspace
     volumes:
@@ -33,7 +33,7 @@ services:
     image: pantheon-hephaestus-worker-dev:local
     build:
       context: ../..
-      dockerfile: .devcontainer/environment/hephaestus-worker/Dockerfile
+      dockerfile: .devcontainer/hephaestus-worker/Dockerfile
     container_name: pantheon-hephaestus-worker-dev
     working_dir: /workspace
     volumes:

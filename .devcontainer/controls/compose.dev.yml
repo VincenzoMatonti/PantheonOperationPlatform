@@ -2,12 +2,12 @@ services:
   athena-dev:
     image: pantheon-athena-dev:local
     build:
-      context: ../../..
+      context: ../..
       dockerfile: .devcontainer/athena/Dockerfile
     container_name: pantheon-athena-dev
     working_dir: /workspace
     volumes:
-      - ../../../:/workspace
+      - ../..:/workspace
     networks:
       - pantheon-local
     command: sleep infinity
