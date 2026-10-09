@@ -1,1 +1,2 @@
+CREATE DATABASE hermes;
 CREATE DATABASE hephaestus;

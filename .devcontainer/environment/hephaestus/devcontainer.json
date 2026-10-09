@@ -1,10 +1,10 @@
 {
-    "name": "Pantheon: Hephaestus Worker Dev Container",
+    "name": "Pantheon: Hephaestus Dev Container",
     "dockerComposeFile": [
-        "../../infra/local/compose.yml",
+        "../../../infra/.local/environment/compose.yml",
         "../compose.dev.yml"
     ],
-    "service": "hephaestus-worker",
+    "service": "hephaestus",
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
     "customizations": {

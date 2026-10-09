@@ -1,7 +1,13 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Athena/Athena.csproj" />
-  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Athena/">
+    <Project Path="src/Athena/Athena.Api/Athena.Api.csproj" />
+    <Project Path="src/Athena/Athena.Application/Athena.Application.csproj" />
+    <Project Path="src/Athena/Athena.Cli/Athena.Cli.csproj" />
+    <Project Path="src/Athena/Athena.Domain/Athena.Domain.csproj" />
+    <Project Path="src/Athena/Athena.Infrastructure/Athena.Infrastructure.csproj" />
+    <Project Path="src/Athena/Athena.Runtime/Athena.Runtime.csproj" />
+  </Folder>  
   <Folder Name="/src/Hephaestus/">
     <Project Path="src/Hephaestus/Hephaestus.Api/Hephaestus.Api.csproj" />
     <Project Path="src/Hephaestus/Hephaestus.Application/Hephaestus.Application.csproj" />

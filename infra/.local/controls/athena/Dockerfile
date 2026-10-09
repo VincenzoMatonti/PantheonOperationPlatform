@@ -4,10 +4,9 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore src/Athena/Athena.csproj
+RUN dotnet restore src/Athena/Athena.Runtime/Athena.Runtime.csproj
 
-RUN dotnet publish \
-    src/Athena/Athena.csproj \
+RUN dotnet publish src/Athena/Athena.Runtime/Athena.Runtime.csproj \
     -c Release \
     -o /app/publish \
     --no-restore
@@ -18,4 +17,4 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "Athena.dll"]
+ENTRYPOINT ["dotnet", "Athena.Runtime.dll"]

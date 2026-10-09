@@ -1,0 +1,45 @@
+services:
+  hermes:
+    image: pantheon-hermes:local
+    build:
+      context: ../../..
+      dockerfile: infra/.local/environment/hermes/Dockerfile
+    container_name: pantheon-hermes
+    restart: unless-stopped
+    env_file:
+      - ./hermes/.env
+    ports:
+      - "${HERMES_HTTP_PORT}:${HERMES_CONTAINER_PORT}"
+    networks:
+      - pantheon-local
+
+  hephaestus:
+    image: pantheon-hephaestus:local
+    build:
+      context: ../../..
+      dockerfile: infra/.local/environment/hephaestus/Dockerfile
+    container_name: pantheon-hephaestus
+    restart: unless-stopped
+    env_file:
+      - ./hephaestus/.env
+    ports:
+      - "${HEPHAESTUS_HTTP_PORT}:${HEPHAESTUS_CONTAINER_PORT}"
+    networks:
+      - pantheon-local
+
+  hephaestus-worker:
+    image: pantheon-hephaestus-worker:local
+    build:
+      context: ../../..
+      dockerfile: infra/.local/environment/hephaestus-worker/Dockerfile
+    container_name: pantheon-hephaestus-worker
+    restart: unless-stopped
+    env_file:
+      - ./hephaestus-worker/.env
+    networks:
+      - pantheon-local
+
+networks:
+  pantheon-local:
+    external: true
+    name: pantheon-local
