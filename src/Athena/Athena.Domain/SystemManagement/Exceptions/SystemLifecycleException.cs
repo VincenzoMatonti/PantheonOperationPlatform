@@ -20,6 +20,9 @@ public enum SystemLifecycleErrorCode
     AlreadyStopped = 13,
     AlreadyFailed = 14,
     AlreadyUnknown = 15,
+    InvalidOperationalTransition = 16,
     AlreadyDeleted = 20,
-    DeletedLifecycleCannotBeModified = 21
+    DeletedLifecycleCannotBeModified = 21,
+    OperationInProgress = 22
+
 }

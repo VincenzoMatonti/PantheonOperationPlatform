@@ -40,3 +40,30 @@ public class SystemLifecycleOperationAlreadyCancelledException(Guid operationId)
 {
 }
 
+public class SystemLifecycleOperationErrorMessageRequiredException()
+    : SystemLifecycleOperationException(
+        SystemLifecycleOperationErrorCode.ErrorMessageRequired,
+        "An error message is required when a lifecycle operation fails.")
+{
+}
+
+public class SystemLifecycleOperationAlreadyDeletedException(Guid operationId)
+    : SystemLifecycleOperationException(
+        SystemLifecycleOperationErrorCode.OperationAlreadyDeleted,
+        $"Operation '{operationId}' has already been deleted.")
+{
+}
+
+public class SystemLifecycleOperationDeletedCannotBeModifiedException(Guid operationId)
+    : SystemLifecycleOperationException(
+        SystemLifecycleOperationErrorCode.DeletedOperationCannotBeModified,
+        $"Operation '{operationId}' cannot be modified because it has been deleted.")
+{
+}
+
+public class SystemLifecycleOperationInProgressException(Guid operationId)
+    : SystemLifecycleOperationException(
+        SystemLifecycleOperationErrorCode.OperationInProgress,
+        $"Operation '{operationId}' cannot be deleted while it is running.")
+{
+}

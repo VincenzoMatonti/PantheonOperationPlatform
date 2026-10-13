@@ -16,16 +16,25 @@ public enum SystemRegistryErrorCode
     SystemNameRequired = 2,
     SystemNameTooLong = 3,
     SystemNameAlreadyExists = 4,
+
     SystemEndpointRequired = 10,
     SystemEndpointInvalid = 11,
     SystemEndpointAlreadyExists = 12,
+
     SystemCapabilityRequired = 20,
     SystemCapabilityAlreadyExists = 21,
+
     SystemAlreadyEnabled = 30,
     SystemAlreadyDisabled = 31,
+
     SystemNotFound = 40,
     SystemAlreadyRegistered = 41,
     SystemAlreadyUnregistered = 42,
-    SystemNotRegistered = 43
+    SystemNotRegistered = 43,
+
+    SystemAlreadyAvailable = 50,
+    SystemAlreadyUnavailable = 51,
+    SystemAlreadyAvailabilityUnknown = 52,
+    SystemDisabledCannotBeModified = 53
 
 }

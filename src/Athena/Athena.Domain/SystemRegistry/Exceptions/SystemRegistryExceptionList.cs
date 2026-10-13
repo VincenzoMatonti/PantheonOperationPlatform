@@ -76,3 +76,23 @@ public class SystemNameAlreadyExistsException(string systemName) : SystemRegistr
         SystemRegistryErrorCode.SystemNameAlreadyExists, $"System '{systemName}' already exists.")
 {
 }
+
+public class SystemAlreadyAvailableException(Guid systemId) : SystemRegistryException(
+        SystemRegistryErrorCode.SystemAlreadyAvailable, $"System with ID '{systemId}' is already available.")
+{
+}
+
+public class SystemAlreadyUnavailableException(Guid systemId) : SystemRegistryException(
+        SystemRegistryErrorCode.SystemAlreadyUnavailable, $"System with ID '{systemId}' is already unavailable.")
+{
+}
+
+public class SystemAlreadyAvailabilityUnknownException(Guid systemId) : SystemRegistryException(
+        SystemRegistryErrorCode.SystemAlreadyAvailabilityUnknown, $"Availability status of system with ID '{systemId}' is already unknown.")
+{
+}
+
+public class SystemDisabledCannotBeModifiedException(Guid systemId) : SystemRegistryException(
+        SystemRegistryErrorCode.SystemDisabledCannotBeModified, $"System with ID '{systemId}' is disabled and cannot be modified.")
+{
+}

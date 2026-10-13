@@ -30,38 +30,32 @@ public class System
 
     public void Register()
     {
-        if (RegistrationStatus != SystemRegistrationStatus.Unregistered)
-            throw new SystemAlreadyRegisteredException(Name.Value);
-
+        if (RegistrationStatus != SystemRegistrationStatus.Unregistered) throw new SystemAlreadyRegisteredException(Name.Value);
         RegistrationStatus = SystemRegistrationStatus.Registered;
         AvailabilityStatus = SystemAvailabilityStatus.Unknown;
     }
 
     public void Unregister()
     {
-        if (RegistrationStatus == SystemRegistrationStatus.Unregistered)
-            throw new SystemAlreadyUnregisteredException(Id.Value);
-
+        if (RegistrationStatus == SystemRegistrationStatus.Unregistered) throw new SystemAlreadyUnregisteredException(Id.Value);
         RegistrationStatus = SystemRegistrationStatus.Unregistered;
         AvailabilityStatus = SystemAvailabilityStatus.Unknown;
     }
 
     public void Enable()
     {
-        EnsureRegistered();
-        if (RegistrationStatus == SystemRegistrationStatus.Registered)
-            throw new SystemAlreadyEnabledException(Id.Value);
-
+        if (RegistrationStatus == SystemRegistrationStatus.Unregistered) throw new SystemNotRegisteredException(Id.Value);
+        if (RegistrationStatus == SystemRegistrationStatus.Registered) throw new SystemAlreadyEnabledException(Id.Value);
         RegistrationStatus = SystemRegistrationStatus.Registered;
+        AvailabilityStatus = SystemAvailabilityStatus.Unknown;
     }
 
     public void Disable()
     {
         EnsureRegistered();
-        if (RegistrationStatus == SystemRegistrationStatus.Disabled)
-            throw new SystemAlreadyDisabledException(Id.Value);
-
+        if (RegistrationStatus == SystemRegistrationStatus.Disabled) throw new SystemAlreadyDisabledException(Id.Value);
         RegistrationStatus = SystemRegistrationStatus.Disabled;
+        AvailabilityStatus = SystemAvailabilityStatus.Unknown;
     }
 
     public void Rename(SystemName name)
@@ -74,9 +68,7 @@ public class System
     {
         EnsureRegistered();
         if (endpoint == null) throw new SystemEndpointRequiredException();
-        if (_endpoints.Any(existing => existing.Equals(endpoint)))
-            throw new SystemEndpointAlreadyExistsException(endpoint.Name);
-
+        if (_endpoints.Any(existing => existing.Equals(endpoint))) throw new SystemEndpointAlreadyExistsException(endpoint.Name);
         _endpoints.Add(endpoint);
     }
 
@@ -84,8 +76,7 @@ public class System
     {
         EnsureRegistered();
         if (string.IsNullOrWhiteSpace(endpointName)) throw new SystemEndpointRequiredException();
-        var endpoint = _endpoints.FirstOrDefault(existing =>
-            string.Equals(existing.Name, endpointName.Trim(), StringComparison.OrdinalIgnoreCase));
+        var endpoint = _endpoints.FirstOrDefault(existing => string.Equals(existing.Name, endpointName.Trim(), StringComparison.OrdinalIgnoreCase));
         if (endpoint != null) _endpoints.Remove(endpoint);
     }
 
@@ -93,46 +84,42 @@ public class System
     {
         EnsureRegistered();
         if (capability == null) throw new SystemCapabilityRequiredException();
-
-        if (_capabilities.Any(existing => existing.Equals(capability)))
-            throw new SystemCapabilityAlreadyExistsException(capability.Name);
-
+        if (_capabilities.Any(existing => existing.Equals(capability))) throw new SystemCapabilityAlreadyExistsException(capability.Name);
         _capabilities.Add(capability);
     }
 
     public void RemoveCapability(string capabilityName)
     {
         EnsureRegistered();
-        if (string.IsNullOrWhiteSpace(capabilityName))
-            throw new SystemCapabilityRequiredException();
-
-        var capability = _capabilities.FirstOrDefault(existing =>
-            string.Equals(existing.Name, capabilityName.Trim(), StringComparison.OrdinalIgnoreCase));
-
+        if (string.IsNullOrWhiteSpace(capabilityName)) throw new SystemCapabilityRequiredException();
+        var capability = _capabilities.FirstOrDefault(existing => string.Equals(existing.Name, capabilityName.Trim(), StringComparison.OrdinalIgnoreCase));
         if (capability != null) _capabilities.Remove(capability);
     }
 
     public void MarkAvailable()
     {
         EnsureRegistered();
+        if (AvailabilityStatus == SystemAvailabilityStatus.Available) throw new SystemAlreadyAvailableException(Id.Value);
         AvailabilityStatus = SystemAvailabilityStatus.Available;
     }
 
     public void MarkUnavailable()
     {
         EnsureRegistered();
+        if (AvailabilityStatus == SystemAvailabilityStatus.Unavailable) throw new SystemAlreadyUnavailableException(Id.Value);
         AvailabilityStatus = SystemAvailabilityStatus.Unavailable;
     }
 
     public void MarkAvailabilityUnknown()
     {
         EnsureRegistered();
+        if (AvailabilityStatus == SystemAvailabilityStatus.Unknown) throw new SystemAlreadyAvailabilityUnknownException(Id.Value);
         AvailabilityStatus = SystemAvailabilityStatus.Unknown;
     }
 
     private void EnsureRegistered()
     {
-        if (RegistrationStatus == SystemRegistrationStatus.Unregistered)
-            throw new SystemNotRegisteredException(Id.Value);
+        if (RegistrationStatus == SystemRegistrationStatus.Unregistered) throw new SystemNotRegisteredException(Id.Value);
+        if (RegistrationStatus == SystemRegistrationStatus.Disabled) throw new SystemDisabledCannotBeModifiedException(Id.Value);
     }
 }

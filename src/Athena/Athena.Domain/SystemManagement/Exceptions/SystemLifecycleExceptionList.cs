@@ -1,3 +1,5 @@
+using Athena.Domain.SystemManagement.Enums;
+
 namespace Athena.Domain.SystemManagement.Exceptions;
 
 public class SystemLifecycleSystemIdRequiredException() : SystemLifecycleException(
@@ -52,5 +54,17 @@ public class SystemLifecycleAlreadyDeletedException(Guid systemId) : SystemLifec
 
 public class SystemLifecycleDeletedCannotBeModifiedException(Guid systemId) : SystemLifecycleException(
         SystemLifecycleErrorCode.DeletedLifecycleCannotBeModified, $"The lifecycle for system '{systemId}' cannot be modified because it has been deleted.")
+{
+}
+
+public class SystemLifecycleInvalidOperationalTransitionException(Guid systemId, SystemOperationalStatus currentStatus, SystemOperationalStatus requiredStatus)
+        : SystemLifecycleException(SystemLifecycleErrorCode.InvalidOperationalTransition,
+        $"System '{systemId}' cannot perform the requested transition from status '{currentStatus}'. Required status: '{requiredStatus}'.")
+{
+}
+
+public class SystemLifecycleCannotBeDeletedWhileTransitioningException(Guid systemId, SystemOperationalStatus operationalStatus)
+        : SystemLifecycleException(SystemLifecycleErrorCode.OperationInProgress,
+        $"The lifecycle for system '{systemId}' cannot be deleted while its operational status is '{operationalStatus}'.")
 {
 }

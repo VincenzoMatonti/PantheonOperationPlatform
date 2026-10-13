@@ -15,6 +15,7 @@ public class SystemLifecycleOperation
     public DateTime? StartedAtUtc { get; private set; }
     public DateTime? CompletedAtUtc { get; private set; }
     public string? ErrorMessage { get; private set; }
+    public bool IsDeleted { get; private set; }
 
     public static SystemLifecycleOperation Create(SystemId systemId, SystemLifecycleOperationType type)
     {
@@ -26,12 +27,14 @@ public class SystemLifecycleOperation
             SystemId = systemId,
             Type = type,
             Status = SystemLifecycleOperationStatus.Pending,
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = DateTime.UtcNow,
+            IsDeleted = false
         };
     }
 
     public void Start()
     {
+        EnsureNotDeleted();
         EnsurePending();
         Status = SystemLifecycleOperationStatus.Running;
         StartedAtUtc = DateTime.UtcNow;
@@ -40,6 +43,7 @@ public class SystemLifecycleOperation
 
     public void Complete()
     {
+        EnsureNotDeleted();
         EnsureRunning();
         Status = SystemLifecycleOperationStatus.Completed;
         CompletedAtUtc = DateTime.UtcNow;
@@ -47,20 +51,31 @@ public class SystemLifecycleOperation
         Touch();
     }
 
-    public void Fail(string? errorMessage = null)
+    public void Fail(string errorMessage)
     {
+        EnsureNotDeleted();
         EnsureRunning();
+        if (string.IsNullOrWhiteSpace(errorMessage)) throw new SystemLifecycleOperationErrorMessageRequiredException();
         Status = SystemLifecycleOperationStatus.Failed;
         CompletedAtUtc = DateTime.UtcNow;
-        ErrorMessage = string.IsNullOrWhiteSpace(errorMessage) ? null : errorMessage.Trim();
+        ErrorMessage = errorMessage.Trim();
         Touch();
     }
 
     public void Cancel()
     {
+        EnsureNotDeleted();
         EnsurePending();
         Status = SystemLifecycleOperationStatus.Cancelled;
         CompletedAtUtc = DateTime.UtcNow;
+        Touch();
+    }
+
+    public void Delete()
+    {
+        if (IsDeleted) throw new SystemLifecycleOperationAlreadyDeletedException(Id);
+        if (Status == SystemLifecycleOperationStatus.Running) throw new SystemLifecycleOperationInProgressException(Id);
+        IsDeleted = true;
         Touch();
     }
 
@@ -107,6 +122,11 @@ public class SystemLifecycleOperation
             default:
                 throw new SystemLifecycleOperationNotRunningException(Id, Status.ToString());
         }
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted) throw new SystemLifecycleOperationDeletedCannotBeModifiedException(Id);
     }
 
     private void Touch()
