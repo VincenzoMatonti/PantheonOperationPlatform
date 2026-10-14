@@ -35,6 +35,7 @@ public enum SystemRegistryErrorCode
     SystemAlreadyAvailable = 50,
     SystemAlreadyUnavailable = 51,
     SystemAlreadyAvailabilityUnknown = 52,
-    SystemDisabledCannotBeModified = 53
+    SystemDisabledCannotBeModified = 53,
+    SystemDeletedCannotBeModified = 54
 
 }

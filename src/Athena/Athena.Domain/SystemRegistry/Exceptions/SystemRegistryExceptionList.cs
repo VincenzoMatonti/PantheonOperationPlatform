@@ -96,3 +96,8 @@ public class SystemDisabledCannotBeModifiedException(Guid systemId) : SystemRegi
         SystemRegistryErrorCode.SystemDisabledCannotBeModified, $"System with ID '{systemId}' is disabled and cannot be modified.")
 {
 }
+
+public class SystemDeletedCannotBeModifiedException(Guid systemId) : SystemRegistryException(
+        SystemRegistryErrorCode.SystemDeletedCannotBeModified, $"System with ID '{systemId}' has been deleted and cannot be modified.")
+{
+}
