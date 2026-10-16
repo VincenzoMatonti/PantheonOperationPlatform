@@ -5,14 +5,12 @@ using Athena.Api.Common.mappers.application;
 using Athena.Api.Common.mappers.domain;
 using Athena.Api.Common.resolvers;
 using Athena.Api.Common.services;
-using FluentValidation;
 
 namespace Athena.Api.Common.extensions;
 
 public static class ApiCommonServiceCollectionExtensions
 {
-    public static IServiceCollection AddAthenaApiCommonServices(
-        this IServiceCollection services)
+    public static IServiceCollection AddAthenaApiCommonServices(this IServiceCollection services)
     {
         // Exception handling
         services.AddSingleton<ExceptionMapperResolver>();
@@ -34,10 +32,6 @@ public static class ApiCommonServiceCollectionExtensions
 
         // API common exception mappers
         services.AddSingleton<IExceptionMapper, ApiCommonExceptionMapper>();
-
-        // Request validation
-        services.AddValidatorsFromAssemblyContaining<Program>();
-        services.AddScoped<RequestValidationService>();
 
         return services;
     }

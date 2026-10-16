@@ -1,4 +1,4 @@
-using Athena.Domain.SystemRegistry.Enums;
+using Athena.Application.SystemRegistry.Enums;
 
 namespace Athena.Application.SystemRegistry.Queries;
 
@@ -18,12 +18,12 @@ public class GetAllSystemsQuery
 
 public class GetSystemsByRegistrationStatusQuery
 {
-    public SystemRegistrationStatus Status { get; set; }
+    public SystemRegistrationStatusFilter Status { get; set; }
 }
 
 public class GetSystemsByAvailabilityStatusQuery
 {
-    public SystemAvailabilityStatus Status { get; set; }
+    public SystemAvailabilityStatusFilter Status { get; set; }
 }
 
 public class GetSystemsByCapabilityQuery

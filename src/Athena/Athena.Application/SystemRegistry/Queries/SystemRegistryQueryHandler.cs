@@ -1,9 +1,11 @@
 
 using Athena.Application.SystemRegistry.Dtos;
-using Athena.Domain.SystemRegistry.Enums;
+using Athena.Application.SystemRegistry.Enums;
 using Athena.Domain.SystemRegistry.Repositories;
 using Athena.Domain.SystemRegistry.ValueObjects;
 using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
+using DomainRegistrationStatus = Athena.Domain.SystemRegistry.Enums.SystemRegistrationStatus;
+using DomainAvailabilityStatus = Athena.Domain.SystemRegistry.Enums.SystemAvailabilityStatus;
 
 namespace Athena.Application.SystemRegistry.Queries;
 
@@ -77,14 +79,34 @@ public class SystemRegistryQueryHandler(ISystemRepository systemRepository)
         return await _systemRepository.GetAllAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<RegisteredSystem>> GetSystemsByRegistrationStatusAsync(GetSystemsByRegistrationStatusQuery query, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<RegisteredSystem>> GetSystemsByRegistrationStatusAsync(
+        GetSystemsByRegistrationStatusQuery query,
+        CancellationToken cancellationToken = default)
     {
-        return await _systemRepository.GetByRegistrationStatusAsync(query.Status, cancellationToken);
+        var status = query.Status switch
+        {
+            SystemRegistrationStatusFilter.Registered => DomainRegistrationStatus.Registered,
+            SystemRegistrationStatusFilter.Unregistered => DomainRegistrationStatus.Unregistered,
+            SystemRegistrationStatusFilter.Disabled => DomainRegistrationStatus.Disabled,
+            _ => throw new ArgumentOutOfRangeException(nameof(query), query.Status, "Invalid status value.")
+        };
+
+        return await _systemRepository.GetByRegistrationStatusAsync(status, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<RegisteredSystem>> GetSystemsByAvailabilityStatusAsync(GetSystemsByAvailabilityStatusQuery query, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<RegisteredSystem>> GetSystemsByAvailabilityStatusAsync(
+        GetSystemsByAvailabilityStatusQuery query,
+        CancellationToken cancellationToken = default)
     {
-        return await _systemRepository.GetByAvailabilityStatusAsync(query.Status, cancellationToken);
+        var status = query.Status switch
+        {
+            SystemAvailabilityStatusFilter.Available => DomainAvailabilityStatus.Available,
+            SystemAvailabilityStatusFilter.Unavailable => DomainAvailabilityStatus.Unavailable,
+            SystemAvailabilityStatusFilter.Unknown => DomainAvailabilityStatus.Unknown,
+            _ => throw new ArgumentOutOfRangeException(nameof(query), query.Status, "Invalid status value.")
+        };
+
+        return await _systemRepository.GetByAvailabilityStatusAsync(status, cancellationToken);
     }
 
     public async Task<IReadOnlyList<RegisteredSystem>> GetSystemsByCapabilityAsync(GetSystemsByCapabilityQuery query, CancellationToken cancellationToken = default)
@@ -116,6 +138,6 @@ public class SystemRegistryQueryHandler(ISystemRepository systemRepository)
 
     public static bool IsUnregistered(SystemDto system)
     {
-        return Enum.TryParse<SystemRegistrationStatus>(system.RegistrationStatus, out var status) && status == SystemRegistrationStatus.Unregistered;
+        return Enum.TryParse<SystemRegistrationStatusFilter>(system.RegistrationStatus, out var status) && status == SystemRegistrationStatusFilter.Unregistered;
     }
 }
