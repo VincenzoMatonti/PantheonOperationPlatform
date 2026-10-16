@@ -54,12 +54,12 @@ builder.Services.AddDbContext<HermesDbContext>(options =>
 );
 
 // PERSISTENCE - CLIENT
-builder.Services.AddScoped<    IClientCommandRepository,    ClientCommandRepository>();
-builder.Services.AddScoped<    IClientQueryRepository,    ClientQueryRepository>();
+builder.Services.AddScoped<IClientCommandRepository, ClientCommandRepository>();
+builder.Services.AddScoped<IClientQueryRepository, ClientQueryRepository>();
 
 // PERSISTENCE - CLIENT OPERATION
-builder.Services.AddScoped<    IClientOperationCommandRepository,    ClientOperationCommandRepository>();
-builder.Services.AddScoped<    IClientOperationQueryRepository,    ClientOperationQueryRepository>();
+builder.Services.AddScoped<IClientOperationCommandRepository, ClientOperationCommandRepository>();
+builder.Services.AddScoped<IClientOperationQueryRepository, ClientOperationQueryRepository>();
 
 // PERSISTENCE - OPERATION
 builder.Services.AddScoped<IOperationCommandRepository, OperationCommandRepository>();
@@ -70,15 +70,15 @@ builder.Services.AddScoped<IOperationTypeCommandRepository, OperationTypeCommand
 builder.Services.AddScoped<IOperationTypeQueryRepository, OperationTypeQueryRepository>();
 
 // PERSISTENCE - ENDPOINT
-builder.Services.AddScoped<    IEndpointCommandRepository,    EndpointCommandRepository>();
-builder.Services.AddScoped<    IEndpointRepository,    EndpointQueryRepository>();
+builder.Services.AddScoped<IEndpointCommandRepository, EndpointCommandRepository>();
+builder.Services.AddScoped<IEndpointRepository, EndpointQueryRepository>();
 
 // PERSISTENCE - ENDPOINT OPERATION
-builder.Services.AddScoped<    IEndpointOperationCommandRepository,    EndpointOperationCommandRepository>();
-builder.Services.AddScoped<    IEndpointOperationQueryRepository,    EndpointOperationQueryRepository>();
+builder.Services.AddScoped<IEndpointOperationCommandRepository, EndpointOperationCommandRepository>();
+builder.Services.AddScoped<IEndpointOperationQueryRepository, EndpointOperationQueryRepository>();
 
 // PERSISTENCE - ROUTE
-builder.Services.AddScoped<    IRouteRepository,    RouteRepository>();
+builder.Services.AddScoped<IRouteRepository, RouteRepository>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
