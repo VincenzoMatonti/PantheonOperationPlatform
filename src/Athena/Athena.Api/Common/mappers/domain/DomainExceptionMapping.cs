@@ -1,5 +1,6 @@
 using Athena.Api.Common.contracts;
 using Athena.Api.Common.enums;
+using Microsoft.AspNetCore.Http;
 
 namespace Athena.Api.Common.mappers.domain;
 

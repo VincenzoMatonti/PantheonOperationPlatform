@@ -2,6 +2,7 @@ using Athena.Api.Common.contracts;
 using Athena.Api.Common.enums;
 using Athena.Api.Common.exceptions;
 using Athena.Api.Common.interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace Athena.Api.Common.mappers;
 

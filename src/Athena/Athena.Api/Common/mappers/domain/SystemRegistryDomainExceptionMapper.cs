@@ -3,6 +3,7 @@ using Athena.Api.Common.contracts;
 using Athena.Api.Common.enums;
 using Athena.Api.Common.interfaces;
 using Athena.Domain.SystemRegistry.Exceptions;
+using Microsoft.AspNetCore.Http;
 
 namespace Athena.Api.Common.mappers.domain;
 

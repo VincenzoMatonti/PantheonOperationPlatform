@@ -5,6 +5,7 @@ using Athena.Api.Common.mappers.application;
 using Athena.Api.Common.mappers.domain;
 using Athena.Api.Common.resolvers;
 using Athena.Api.Common.services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Athena.Api.Common.extensions;
 

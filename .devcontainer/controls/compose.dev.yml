@@ -8,6 +8,8 @@ services:
     working_dir: /workspace
     volumes:
       - ../..:/workspace
+    env_file:
+      - ../../infra/.local/controls/athena/.env
     networks:
       - pantheon-local
     command: sleep infinity

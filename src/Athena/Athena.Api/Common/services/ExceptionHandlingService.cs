@@ -4,6 +4,8 @@ using Athena.Api.Common.enums;
 using Athena.Api.Common.exceptions;
 using Athena.Api.Common.exceptions.parent;
 using Athena.Api.Common.resolvers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Athena.Api.Common.services;
 

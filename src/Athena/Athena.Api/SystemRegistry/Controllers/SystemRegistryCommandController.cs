@@ -2,6 +2,7 @@ using Athena.Api.SystemRegistry.Mappings;
 using Athena.Api.SystemRegistry.Requests;
 using Athena.Api.SystemRegistry.Responses;
 using Athena.Application.SystemRegistry.UseCases;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Athena.Api.SystemRegistry.Controllers;
