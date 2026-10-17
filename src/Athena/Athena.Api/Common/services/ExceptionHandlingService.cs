@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Athena.Api.Common.services;
 
-public sealed class ExceptionHandlingService(
+public class ExceptionHandlingService(
     ExceptionMapperResolver resolver,
     ExceptionResponseBuilder responseBuilder,
     ILogger<ExceptionHandlingService> logger)

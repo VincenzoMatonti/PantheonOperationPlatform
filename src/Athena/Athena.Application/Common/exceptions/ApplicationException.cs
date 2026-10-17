@@ -1,4 +1,4 @@
-namespace Athena.Application.Common;
+namespace Athena.Application.Common.exceptions;
 
 public abstract class ApplicationException<TErrorCode>(
     TErrorCode code,

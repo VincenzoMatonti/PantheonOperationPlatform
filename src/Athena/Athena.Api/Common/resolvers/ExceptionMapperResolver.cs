@@ -4,7 +4,7 @@ using Athena.Api.Common.interfaces;
 
 namespace Athena.Api.Common.resolvers;
 
-public sealed class ExceptionMapperResolver
+public class ExceptionMapperResolver
 {
     private readonly IReadOnlyList<IExceptionMapper> _mappers;
 

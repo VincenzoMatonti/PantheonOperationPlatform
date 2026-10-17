@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Athena.Api.Common.middleware;
 
-public sealed class RequestValidationFilter(RequestValidationService requestValidationService) : IAsyncActionFilter
+public class RequestValidationFilter(RequestValidationService requestValidationService) : IAsyncActionFilter
 {
     private readonly RequestValidationService _requestValidationService = requestValidationService;
 

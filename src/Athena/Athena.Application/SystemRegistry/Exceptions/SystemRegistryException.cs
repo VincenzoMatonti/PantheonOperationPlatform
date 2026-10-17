@@ -1,4 +1,4 @@
-using Athena.Application.Common;
+using Athena.Application.Common.exceptions;
 
 namespace Athena.Application.SystemRegistry.Exceptions;
 

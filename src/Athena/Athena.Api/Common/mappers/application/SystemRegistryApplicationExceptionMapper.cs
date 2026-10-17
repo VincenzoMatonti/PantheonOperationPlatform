@@ -34,9 +34,4 @@ public class SystemRegistryApplicationExceptionMapper : IExceptionMapper
 
         return ApplicationExceptionMapping.Create(statusCode, ApiErrorEntity.System, applicationException.Code.ToString(), message);
     }
-
-    ExceptionMappingResult IExceptionMapper.Map(Exception exception)
-    {
-        throw new NotImplementedException();
-    }
 }
