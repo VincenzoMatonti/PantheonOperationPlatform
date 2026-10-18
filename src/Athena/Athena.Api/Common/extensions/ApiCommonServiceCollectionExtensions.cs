@@ -15,8 +15,9 @@ public static class ApiCommonServiceCollectionExtensions
         services.AddSingleton<ExceptionResponseBuilder>();
         services.AddSingleton<ExceptionHandlingService>();
         services.AddSingleton<IExceptionMapper, ApiApplicationCoreExceptionMapper>();
-        services.AddSingleton<IExceptionMapper, ApiCommonExceptionMapper>();
         services.AddSingleton<IExceptionMapper, ApiValidationExceptionMapper>();
+        services.AddSingleton<IExceptionMapper, ApiCommonExceptionMapper>();
+
 
         return services;
     }
