@@ -1,3 +1,4 @@
+using Athena.Application.Common.Services;
 using Athena.Application.SystemManagement.Commands;
 using Athena.Application.SystemManagement.Dtos;
 using Athena.Application.SystemManagement.Exceptions;
@@ -7,168 +8,190 @@ namespace Athena.Application.SystemManagement.UseCases;
 
 public class SystemManagementUseCaseHandler(
     SystemManagementCommandHandler systemCommandHandler,
-    SystemManagementQueryHandler systemQueryHandler)
+    SystemManagementQueryHandler systemQueryHandler,
+    ApplicationExceptionService exceptionService)
 {
     private readonly SystemManagementCommandHandler _systemManagementCommandHandler = systemCommandHandler;
     private readonly SystemManagementQueryHandler _systemManagementQueryHandler = systemQueryHandler;
+    private readonly ApplicationExceptionService _exceptionService = exceptionService;
+
+    private Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => _exceptionService.ExecuteAsync(operation);
 
     // =================================================================================================================
     // USE CASE COMMANDS - SYSTEM LIFECYCLE
-    public async Task<SystemLifecycleDto> CreateSystemLifecycleAsync(
-        CreateSystemLifecycleCommand command,
-        CancellationToken cancellationToken = default)
-    {
-        var query = new GetSystemLifecycleBySystemIdQuery { SystemId = command.SystemId };
-        var existing = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(query, cancellationToken);
-        if (existing is not null) throw new SystemLifecycleAlreadyExistsException(command.SystemId);
-        return await _systemManagementCommandHandler.CreateSystemLifecycleAsync(command, cancellationToken);
-    }
+    public Task<SystemLifecycleDto> CreateSystemLifecycleAsync(
+        CreateSystemLifecycleCommand command, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            var query = new GetSystemLifecycleBySystemIdQuery { SystemId = command.SystemId };
+            var existing = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(query, cancellationToken);
+            if (existing is not null) throw new SystemLifecycleAlreadyExistsException(command.SystemId);
+            return await _systemManagementCommandHandler.CreateSystemLifecycleAsync(command, cancellationToken);
+        });
 
-    public async Task<SystemLifecycleDto> SetSystemDesiredStateAsync(
-        SetSystemDesiredStateCommand command,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Enum.IsDefined(command.DesiredState)) throw new InvalidDesiredStateException(command.DesiredState.ToString());
-        return await _systemManagementCommandHandler.SetSystemDesiredStateAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
-    }
+    public Task<SystemLifecycleDto> SetSystemDesiredStateAsync(
+        SetSystemDesiredStateCommand command, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            if (!Enum.IsDefined(command.DesiredState)) throw new InvalidDesiredStateException(command.DesiredState.ToString());
 
-    public async Task<SystemLifecycleDto> MarkSystemStartingAsync(
+            return await _systemManagementCommandHandler.SetSystemDesiredStateAsync(command, cancellationToken)
+                ?? throw new SystemLifecycleNotFoundException(command.SystemId);
+        });
+
+    public Task<SystemLifecycleDto> MarkSystemStartingAsync(
         MarkSystemStartingCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.MarkSystemStartingAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.MarkSystemStartingAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
-    public async Task<SystemLifecycleDto> MarkSystemRunningAsync(
+    public Task<SystemLifecycleDto> MarkSystemRunningAsync(
         MarkSystemRunningCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.MarkSystemRunningAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.MarkSystemRunningAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
-    public async Task<SystemLifecycleDto> MarkSystemStoppingAsync(
+    public Task<SystemLifecycleDto> MarkSystemStoppingAsync(
         MarkSystemStoppingCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.MarkSystemStoppingAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.MarkSystemStoppingAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
-    public async Task<SystemLifecycleDto> MarkSystemStoppedAsync(
+    public Task<SystemLifecycleDto> MarkSystemStoppedAsync(
         MarkSystemStoppedCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.MarkSystemStoppedAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.MarkSystemStoppedAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
-    public async Task<SystemLifecycleDto> MarkSystemFailedAsync(
+    public Task<SystemLifecycleDto> MarkSystemFailedAsync(
         MarkSystemFailedCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.MarkSystemFailedAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.MarkSystemFailedAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
-    public async Task<SystemLifecycleDto> MarkSystemUnknownAsync(
+    public Task<SystemLifecycleDto> MarkSystemUnknownAsync(
         MarkSystemUnknownCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.MarkSystemUnknownAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.MarkSystemUnknownAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
-    public async Task<SystemLifecycleDto> DeleteSystemLifecycleAsync(
+    public Task<SystemLifecycleDto> DeleteSystemLifecycleAsync(
         DeleteSystemLifecycleCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.DeleteSystemLifecycleAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.DeleteSystemLifecycleAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(command.SystemId));
 
     // =================================================================================================================
     // USE CASE COMMANDS - SYSTEM LIFECYCLE OPERATIONS
-    public async Task<SystemLifecycleOperationDto> CreateSystemLifecycleOperationAsync(
-        CreateSystemLifecycleOperationCommand command,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Enum.IsDefined(command.Type)) throw new InvalidOperationTypeException(command.Type.ToString());
-        var lifecycleQuery = new GetSystemLifecycleBySystemIdQuery { SystemId = command.SystemId };
-        _ = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(lifecycleQuery, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
-        return await _systemManagementCommandHandler.CreateSystemLifecycleOperationAsync(command, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(command.SystemId);
-    }
+    public Task<SystemLifecycleOperationDto> CreateSystemLifecycleOperationAsync(
+        CreateSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            if (!Enum.IsDefined(command.Type)) throw new InvalidOperationTypeException(command.Type.ToString());
+            var lifecycleQuery = new GetSystemLifecycleBySystemIdQuery { SystemId = command.SystemId };
+            _ = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(lifecycleQuery, cancellationToken)
+                ?? throw new SystemLifecycleNotFoundException(command.SystemId);
 
-    public async Task<SystemLifecycleOperationDto> StartSystemLifecycleOperationAsync(
+            return await _systemManagementCommandHandler.CreateSystemLifecycleOperationAsync(command, cancellationToken)
+                ?? throw new SystemLifecycleNotFoundException(command.SystemId);
+        });
+
+    public Task<SystemLifecycleOperationDto> StartSystemLifecycleOperationAsync(
         StartSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.StartSystemLifecycleOperationAsync(command, cancellationToken) ??
-        throw new SystemLifecycleOperationNotFoundException(command.OperationId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.StartSystemLifecycleOperationAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleOperationNotFoundException(command.OperationId));
 
-    public async Task<SystemLifecycleOperationDto> CompleteSystemLifecycleOperationAsync(
+    public Task<SystemLifecycleOperationDto> CompleteSystemLifecycleOperationAsync(
         CompleteSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.CompleteSystemLifecycleOperationAsync(command, cancellationToken) ??
-        throw new SystemLifecycleOperationNotFoundException(command.OperationId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.CompleteSystemLifecycleOperationAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleOperationNotFoundException(command.OperationId));
 
-    public async Task<SystemLifecycleOperationDto> FailSystemLifecycleOperationAsync(
+    public Task<SystemLifecycleOperationDto> FailSystemLifecycleOperationAsync(
         FailSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.FailSystemLifecycleOperationAsync(command, cancellationToken) ??
-        throw new SystemLifecycleOperationNotFoundException(command.OperationId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.FailSystemLifecycleOperationAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleOperationNotFoundException(command.OperationId));
 
-    public async Task<SystemLifecycleOperationDto> CancelSystemLifecycleOperationAsync(
+    public Task<SystemLifecycleOperationDto> CancelSystemLifecycleOperationAsync(
         CancelSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.CancelSystemLifecycleOperationAsync(command, cancellationToken) ??
-        throw new SystemLifecycleOperationNotFoundException(command.OperationId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.CancelSystemLifecycleOperationAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleOperationNotFoundException(command.OperationId));
 
-    public async Task<SystemLifecycleOperationDto> DeleteSystemLifecycleOperationAsync(
+    public Task<SystemLifecycleOperationDto> DeleteSystemLifecycleOperationAsync(
         DeleteSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        await _systemManagementCommandHandler.DeleteSystemLifecycleOperationAsync(command, cancellationToken) ??
-        throw new SystemLifecycleOperationNotFoundException(command.OperationId);
+        ExecuteAsync(async () =>
+            await _systemManagementCommandHandler.DeleteSystemLifecycleOperationAsync(command, cancellationToken)
+            ?? throw new SystemLifecycleOperationNotFoundException(command.OperationId));
 
     // =================================================================================================================
     // USE CASE QUERIES - SYSTEM LIFECYCLE
-    public async Task<SystemLifecycleDto> GetSystemLifecycleBySystemIdAsync(
+    public Task<SystemLifecycleDto> GetSystemLifecycleBySystemIdAsync(
         GetSystemLifecycleBySystemIdQuery query, CancellationToken cancellationToken = default) =>
-        await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(query, cancellationToken) ??
-        throw new SystemLifecycleNotFoundException(query.SystemId);
+        ExecuteAsync(async () =>
+            await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(query, cancellationToken)
+            ?? throw new SystemLifecycleNotFoundException(query.SystemId));
 
     public Task<List<SystemLifecycleDto>> GetAllSystemLifecyclesAsync(CancellationToken cancellationToken = default) =>
-        _systemManagementQueryHandler.GetAllSystemLifecyclesAsync(cancellationToken);
+        ExecuteAsync(() => _systemManagementQueryHandler.GetAllSystemLifecyclesAsync(cancellationToken));
 
-    public async Task<List<SystemLifecycleDto>> GetSystemLifecyclesByDesiredStateAsync(
-        GetSystemLifecyclesByDesiredStateQuery query, CancellationToken cancellationToken = default)
-    {
-        if (!Enum.IsDefined(query.DesiredState)) throw new InvalidDesiredStateException(query.DesiredState.ToString());
-        return await _systemManagementQueryHandler.GetSystemLifecyclesByDesiredStateAsync(query, cancellationToken);
-    }
+    public Task<List<SystemLifecycleDto>> GetSystemLifecyclesByDesiredStateAsync(
+        GetSystemLifecyclesByDesiredStateQuery query, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            if (!Enum.IsDefined(query.DesiredState)) throw new InvalidDesiredStateException(query.DesiredState.ToString());
+            return await _systemManagementQueryHandler.GetSystemLifecyclesByDesiredStateAsync(query, cancellationToken);
+        });
 
-    public async Task<List<SystemLifecycleDto>> GetSystemLifecyclesByOperationalStatusAsync(
-        GetSystemLifecyclesByOperationalStatusQuery query, CancellationToken cancellationToken = default)
-    {
-        if (!Enum.IsDefined(query.OperationalStatus)) throw new InvalidOperationalStatusException(query.OperationalStatus.ToString());
-        return await _systemManagementQueryHandler.GetSystemLifecyclesByOperationalStatusAsync(query, cancellationToken);
-    }
+    public Task<List<SystemLifecycleDto>> GetSystemLifecyclesByOperationalStatusAsync(
+        GetSystemLifecyclesByOperationalStatusQuery query, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            if (!Enum.IsDefined(query.OperationalStatus)) throw new InvalidOperationalStatusException(query.OperationalStatus.ToString());
+            return await _systemManagementQueryHandler.GetSystemLifecyclesByOperationalStatusAsync(query, cancellationToken);
+        });
 
     public Task<List<SystemLifecycleDto>> GetSystemLifecyclesByDeletionStatusAsync(
         GetSystemLifecyclesByDeletionStatusQuery query, CancellationToken cancellationToken = default) =>
-        _systemManagementQueryHandler.GetSystemLifecyclesByDeletionStatusAsync(query, cancellationToken);
+        ExecuteAsync(() => _systemManagementQueryHandler.GetSystemLifecyclesByDeletionStatusAsync(query, cancellationToken));
 
     public Task<List<SystemLifecycleDto>> GetDeletedSystemLifecyclesAsync(CancellationToken cancellationToken = default) =>
-        _systemManagementQueryHandler.GetDeletedSystemLifecyclesAsync(cancellationToken);
+        ExecuteAsync(() => _systemManagementQueryHandler.GetDeletedSystemLifecyclesAsync(cancellationToken));
 
     // =================================================================================================================
     // USE CASE QUERIES - SYSTEM LIFECYCLE OPERATIONS
-    public async Task<SystemLifecycleOperationDto> GetSystemLifecycleOperationByIdAsync(
+    public Task<SystemLifecycleOperationDto> GetSystemLifecycleOperationByIdAsync(
         GetSystemLifecycleOperationByIdQuery query, CancellationToken cancellationToken = default) =>
-        await _systemManagementQueryHandler.GetSystemLifecycleOperationByIdAsync(query, cancellationToken) ??
-        throw new SystemLifecycleOperationNotFoundException(query.OperationId);
+        ExecuteAsync(async () =>
+            await _systemManagementQueryHandler.GetSystemLifecycleOperationByIdAsync(query, cancellationToken)
+            ?? throw new SystemLifecycleOperationNotFoundException(query.OperationId));
 
     public Task<List<SystemLifecycleOperationDto>> GetSystemLifecycleOperationsBySystemIdAsync(
         GetSystemLifecycleOperationsBySystemIdQuery query, CancellationToken cancellationToken = default) =>
-        _systemManagementQueryHandler.GetSystemLifecycleOperationsBySystemIdAsync(query, cancellationToken);
+        ExecuteAsync(() => _systemManagementQueryHandler.GetSystemLifecycleOperationsBySystemIdAsync(query, cancellationToken));
 
-    public async Task<List<SystemLifecycleOperationDto>> GetSystemLifecycleOperationsByStatusAsync(
-        GetSystemLifecycleOperationsByStatusQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Enum.IsDefined(query.Status)) throw new InvalidOperationStatusException(query.Status.ToString());
-        return await _systemManagementQueryHandler.GetSystemLifecycleOperationsByStatusAsync(query, cancellationToken);
-    }
+    public Task<List<SystemLifecycleOperationDto>> GetSystemLifecycleOperationsByStatusAsync(
+        GetSystemLifecycleOperationsByStatusQuery query, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            if (!Enum.IsDefined(query.Status)) throw new InvalidOperationStatusException(query.Status.ToString());
+            return await _systemManagementQueryHandler.GetSystemLifecycleOperationsByStatusAsync(query, cancellationToken);
+        });
 
-    public async Task<List<SystemLifecycleOperationDto>> GetSystemLifecycleOperationsBySystemIdAndStatusAsync(
-        GetSystemLifecycleOperationsBySystemIdAndStatusQuery query,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Enum.IsDefined(query.Status)) throw new InvalidOperationStatusException(query.Status.ToString());
-        return await _systemManagementQueryHandler.GetSystemLifecycleOperationsBySystemIdAndStatusAsync(query, cancellationToken);
-    }
+    public Task<List<SystemLifecycleOperationDto>> GetSystemLifecycleOperationsBySystemIdAndStatusAsync(
+        GetSystemLifecycleOperationsBySystemIdAndStatusQuery query, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(async () =>
+        {
+            if (!Enum.IsDefined(query.Status)) throw new InvalidOperationStatusException(query.Status.ToString());
+            return await _systemManagementQueryHandler.GetSystemLifecycleOperationsBySystemIdAndStatusAsync(query, cancellationToken);
+        });
 
     public Task<List<SystemLifecycleOperationDto>> GetSystemLifecycleOperationsByDeletionStatusAsync(
         GetSystemLifecycleOperationsByDeletionStatusQuery query, CancellationToken cancellationToken = default) =>
-        _systemManagementQueryHandler.GetSystemLifecycleOperationsByDeletionStatusAsync(query, cancellationToken);
+        ExecuteAsync(() => _systemManagementQueryHandler.GetSystemLifecycleOperationsByDeletionStatusAsync(query, cancellationToken));
 
     public Task<List<SystemLifecycleOperationDto>> GetDeletedSystemLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
-        _systemManagementQueryHandler.GetDeletedSystemLifecycleOperationsAsync(cancellationToken);
+        ExecuteAsync(() => _systemManagementQueryHandler.GetDeletedSystemLifecycleOperationsAsync(cancellationToken));
 }

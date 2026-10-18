@@ -2,11 +2,18 @@ using Athena.Domain.Common;
 
 namespace Athena.Domain.SystemManagement.Exceptions;
 
-public abstract class SystemLifecycleException(
-    SystemLifecycleErrorCode code,
-    string message)
-    : DomainException<SystemLifecycleErrorCode>(code, message)
+public abstract class SystemLifecycleException(SystemLifecycleErrorCode code, string message)
+    : DomainException<SystemLifecycleErrorCode>(code, message, MapErrorType(code))
 {
+    private static DomainErrorType MapErrorType(SystemLifecycleErrorCode code)
+    {
+        return code switch
+        {
+            SystemLifecycleErrorCode.SystemIdRequired or SystemLifecycleErrorCode.InvalidDesiredState
+                => DomainErrorType.Validation,
+            _ => DomainErrorType.Conflict
+        };
+    }
 }
 
 public enum SystemLifecycleErrorCode

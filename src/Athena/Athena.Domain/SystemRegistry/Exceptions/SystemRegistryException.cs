@@ -3,11 +3,27 @@ using Athena.Domain.Common;
 
 namespace Athena.Domain.SystemRegistry.Exceptions;
 
-public abstract class SystemRegistryException(
-    SystemRegistryErrorCode code,
-    string message)
-    : DomainException<SystemRegistryErrorCode>(code, message)
+public abstract class SystemRegistryException(SystemRegistryErrorCode code, string message)
+    : DomainException<SystemRegistryErrorCode>(code, message, MapErrorType(code))
 {
+    private static DomainErrorType MapErrorType(SystemRegistryErrorCode code)
+    {
+        return code switch
+        {
+            SystemRegistryErrorCode.SystemIdRequired
+                or SystemRegistryErrorCode.SystemNameRequired
+                or SystemRegistryErrorCode.SystemNameTooLong
+                or SystemRegistryErrorCode.SystemEndpointRequired
+                or SystemRegistryErrorCode.SystemEndpointInvalid
+                or SystemRegistryErrorCode.SystemCapabilityRequired
+                => DomainErrorType.Validation,
+
+            SystemRegistryErrorCode.SystemNotFound
+                => DomainErrorType.NotFound,
+
+            _ => DomainErrorType.Conflict
+        };
+    }
 }
 
 public enum SystemRegistryErrorCode
@@ -37,5 +53,4 @@ public enum SystemRegistryErrorCode
     SystemAlreadyAvailabilityUnknown = 52,
     SystemDisabledCannotBeModified = 53,
     SystemDeletedCannotBeModified = 54
-
 }

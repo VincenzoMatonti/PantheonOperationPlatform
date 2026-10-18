@@ -1,13 +1,25 @@
-
 using Athena.Domain.Common;
 
 namespace Athena.Domain.OrchestrationManagement.Exceptions;
 
-public abstract class OrchestrationLifecycleOperationException(
-    OrchestrationLifecycleOperationErrorCode code,
-    string message)
-    : DomainException<OrchestrationLifecycleOperationErrorCode>(code, message)
+public abstract class OrchestrationLifecycleOperationException(OrchestrationLifecycleOperationErrorCode code, string message)
+    : DomainException<OrchestrationLifecycleOperationErrorCode>(code, message, MapErrorType(code))
 {
+    private static DomainErrorType MapErrorType(
+        OrchestrationLifecycleOperationErrorCode code)
+    {
+        return code switch
+        {
+            OrchestrationLifecycleOperationErrorCode.IdRequired
+                or OrchestrationLifecycleOperationErrorCode.OrchestrationIdRequired
+                or OrchestrationLifecycleOperationErrorCode.ErrorMessageRequired
+                or OrchestrationLifecycleOperationErrorCode.InvalidType
+                or OrchestrationLifecycleOperationErrorCode.InvalidStatus
+                => DomainErrorType.Validation,
+
+            _ => DomainErrorType.Conflict
+        };
+    }
 }
 
 public enum OrchestrationLifecycleOperationErrorCode

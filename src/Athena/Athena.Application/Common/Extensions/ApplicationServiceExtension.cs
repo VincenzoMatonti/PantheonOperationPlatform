@@ -1,3 +1,6 @@
+using Athena.Application.Common.Interfaces;
+using Athena.Application.Common.Mappings;
+using Athena.Application.Common.Services;
 using Athena.Application.SystemManagement.Commands;
 using Athena.Application.SystemManagement.Queries;
 using Athena.Application.SystemManagement.UseCases;
@@ -14,6 +17,7 @@ public static class AthenaApplicationExtensions
     {
         AddSystemRegistryApplicationServices(services);
         AddSystemManagementApplicationServices(services);
+        AddApplicationExceptionHandling(services);
         return services;
     }
 
@@ -29,5 +33,14 @@ public static class AthenaApplicationExtensions
         services.AddScoped<SystemManagementCommandHandler>();
         services.AddScoped<SystemManagementQueryHandler>();
         services.AddScoped<SystemManagementUseCaseHandler>();
+    }
+
+    private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
+    {
+        services.AddSingleton<IApplicationExceptionMapper, DomainExceptionMapper>();
+        services.AddSingleton<IApplicationExceptionMapper, ApplicationExceptionMapper>();
+        services.AddSingleton<ApplicationExceptionService>();
+
+        return services;
     }
 }

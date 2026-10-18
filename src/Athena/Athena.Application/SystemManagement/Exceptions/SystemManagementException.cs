@@ -2,11 +2,31 @@ using Athena.Application.Common.exceptions;
 
 namespace Athena.Application.SystemManagement.Exceptions;
 
-public abstract class SystemManagementApplicationException(
-    SystemManagementApplicationErrorCode code,
-    string message)
-    : ApplicationException<SystemManagementApplicationErrorCode>(code, message);
+public abstract class SystemManagementApplicationException(SystemManagementApplicationErrorCode code, string message)
+    : ApplicationException<SystemManagementApplicationErrorCode>(code, "SystemManagement", message, MapErrorType(code))
+{
+    private static ApplicationCoreErrorType MapErrorType(SystemManagementApplicationErrorCode code)
+    {
+        return code switch
+        {
+            SystemManagementApplicationErrorCode.InvalidDesiredState
+                or SystemManagementApplicationErrorCode.InvalidOperationalStatus
+                or SystemManagementApplicationErrorCode.InvalidOperationType
+                or SystemManagementApplicationErrorCode.InvalidOperationStatus
+                => ApplicationCoreErrorType.Validation,
 
+            SystemManagementApplicationErrorCode.SystemNotFound
+                or SystemManagementApplicationErrorCode.SystemLifecycleNotFound
+                or SystemManagementApplicationErrorCode.SystemLifecycleOperationNotFound
+                => ApplicationCoreErrorType.NotFound,
+
+            SystemManagementApplicationErrorCode.SystemLifecycleAlreadyExists
+                => ApplicationCoreErrorType.Conflict,
+
+            _ => ApplicationCoreErrorType.Internal
+        };
+    }
+}
 
 public enum SystemManagementApplicationErrorCode
 {

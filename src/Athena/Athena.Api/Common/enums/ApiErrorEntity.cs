@@ -10,5 +10,6 @@ public enum ApiErrorEntity
     OrchestrationOperation = 5,
     Request = 6,
     Response = 7,
-    Data = 8
+    Data = 8,
+    Resource = 9,
 }
