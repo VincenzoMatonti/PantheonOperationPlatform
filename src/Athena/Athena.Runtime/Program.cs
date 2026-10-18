@@ -1,5 +1,5 @@
 ﻿using Athena.Api.Common.extensions;
-using Athena.Application.Common.extensions;
+using Athena.Application.Common.Extensions;
 using Athena.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Builder;
 

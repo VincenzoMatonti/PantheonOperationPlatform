@@ -9,13 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Athena.Api.Common.services;
 
-public class ExceptionHandlingService(
-    ExceptionMapperResolver resolver,
-    ExceptionResponseBuilder responseBuilder,
-    ILogger<ExceptionHandlingService> logger)
+public class ExceptionHandlingService(ExceptionMapperResolver resolver, ILogger<ExceptionHandlingService> logger)
 {
     private readonly ExceptionMapperResolver _resolver = resolver;
-    private readonly ExceptionResponseBuilder _responseBuilder = responseBuilder;
     private readonly ILogger<ExceptionHandlingService> _logger = logger;
 
     public ExceptionResponse Handle(Exception exception)
@@ -23,7 +19,7 @@ public class ExceptionHandlingService(
         try
         {
             var mappingResult = _resolver.Map(exception);
-            var response = _responseBuilder.Build(mappingResult);
+            var response = ExceptionResponseBuilder.Build(mappingResult);
             LogException(exception, response.StatusCode);
             return response;
         }

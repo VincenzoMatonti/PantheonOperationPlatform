@@ -7,7 +7,7 @@ using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
 
 namespace Athena.Infrastructure.Repositories;
 
-public sealed class SystemRepository(AthenaDbContext dbContext) : ISystemRepository
+public class SystemRepository(AthenaDbContext dbContext) : ISystemRepository
 {
     private IQueryable<RegisteredSystem> SystemsWithDetails => dbContext.Systems
         .Include(system => system.Endpoints)
