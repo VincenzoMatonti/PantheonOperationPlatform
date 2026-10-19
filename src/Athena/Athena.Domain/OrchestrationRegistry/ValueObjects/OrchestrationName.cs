@@ -1,9 +1,8 @@
-
 using Athena.Domain.OrchestrationRegistry.Exceptions;
 
 namespace Athena.Domain.OrchestrationRegistry.ValueObjects;
 
-public sealed record OrchestrationName
+public class OrchestrationName
 {
     public string Value { get; }
 

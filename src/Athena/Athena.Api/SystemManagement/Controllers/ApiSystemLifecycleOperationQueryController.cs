@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Athena.Api.SystemManagement.Controllers;
 
 [ApiController]
-[Route("api/systems/mangement")]
+[Route("api/systems/management")]
 public class SystemLifecycleOperationQueryController(SystemManagementUseCaseHandler handler) : ControllerBase
 {
     [HttpGet("lifecycle-operations/{operationId:guid}")]

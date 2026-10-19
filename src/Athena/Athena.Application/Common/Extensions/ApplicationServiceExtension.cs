@@ -40,7 +40,6 @@ public static class AthenaApplicationExtensions
         services.AddSingleton<IApplicationExceptionMapper, DomainExceptionMapper>();
         services.AddSingleton<IApplicationExceptionMapper, ApplicationExceptionMapper>();
         services.AddSingleton<ApplicationExceptionService>();
-
         return services;
     }
 }
