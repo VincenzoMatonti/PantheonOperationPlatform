@@ -1,6 +1,9 @@
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Mappings;
 using Athena.Application.Common.Services;
+using Athena.Application.OrchestrationRegistry.Commands;
+using Athena.Application.OrchestrationRegistry.Queries;
+using Athena.Application.OrchestrationRegistry.UseCases;
 using Athena.Application.SystemManagement.Commands;
 using Athena.Application.SystemManagement.Queries;
 using Athena.Application.SystemManagement.UseCases;
@@ -17,6 +20,7 @@ public static class AthenaApplicationExtensions
     {
         AddSystemRegistryApplicationServices(services);
         AddSystemManagementApplicationServices(services);
+        AddOrchestrationRegistryApplicationServices(services);
         AddApplicationExceptionHandling(services);
         return services;
     }
@@ -33,6 +37,13 @@ public static class AthenaApplicationExtensions
         services.AddScoped<SystemManagementCommandHandler>();
         services.AddScoped<SystemManagementQueryHandler>();
         services.AddScoped<SystemManagementUseCaseHandler>();
+    }
+
+     private static void AddOrchestrationRegistryApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<OrchestrationRegistryCommandHandler>();
+        services.AddScoped<OrchestrationRegistryQueryHandler>();
+        services.AddScoped<OrchestrationRegistryUseCaseHandler>();
     }
 
     private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
