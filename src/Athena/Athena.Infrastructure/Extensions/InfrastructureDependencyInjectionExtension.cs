@@ -1,5 +1,4 @@
 using Athena.Infrastructure.Persistence;
-using Athena.Infrastructure.Persistence.Repositories;
 using Athena.Infrastructure.Repositories;
 using Athena.Domain.OrchestrationRegistry.Repositories;
 using Athena.Domain.SystemManagement.Repositories;
@@ -7,6 +6,7 @@ using Athena.Domain.SystemRegistry.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Athena.Domain.OrchestrationManagement.Repositories;
 
 namespace Athena.Infrastructure.Extensions;
 
@@ -29,16 +29,13 @@ public static class DependencyInjectionExtension
 
     private static IServiceCollection AddRepositories(IServiceCollection services)
     {
-        // System Registry
         services.AddScoped<ISystemRepository, SystemRepository>();
-
-        // System Management
         services.AddScoped<ISystemLifecycleRepository, SystemLifecycleRepository>();
         services.AddScoped<ISystemLifecycleOperationRepository, SystemLifecycleOperationRepository>();
-
-        // Orchestration Registry
         services.AddScoped<IOrchestrationRepository, OrchestrationRepository>();
-        
+        services.AddScoped<IOrchestrationLifecycleRepository, OrchestrationLifecycleRepository>();
+        services.AddScoped<IOrchestrationLifecycleOperationRepository, OrchestrationLifecycleOperationRepository>();
+
         return services;
     }
 }

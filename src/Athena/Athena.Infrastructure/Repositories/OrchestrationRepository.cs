@@ -2,9 +2,10 @@ using Athena.Domain.OrchestrationRegistry.Entities;
 using Athena.Domain.OrchestrationRegistry.Enums;
 using Athena.Domain.OrchestrationRegistry.Repositories;
 using Athena.Domain.OrchestrationRegistry.ValueObjects;
+using Athena.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Athena.Infrastructure.Persistence.Repositories;
+namespace Athena.Infrastructure.Repositories;
 
 public sealed class OrchestrationRepository(AthenaDbContext context) : IOrchestrationRepository
 {
@@ -15,22 +16,15 @@ public sealed class OrchestrationRepository(AthenaDbContext context) : IOrchestr
 
     public async Task<Orchestration?> GetByNameAsync(OrchestrationName name, CancellationToken cancellationToken = default)
     {
-        return await context.Orchestrations
-            .FirstOrDefaultAsync(
-                orchestration => orchestration.Name == name && !orchestration.IsDeleted,
-                cancellationToken);
+        return await context.Orchestrations.FirstOrDefaultAsync(orchestration => orchestration.Name == name && !orchestration.IsDeleted, cancellationToken);
     }
 
     public async Task<List<Orchestration>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await context.Orchestrations
-            .Where(orchestration => !orchestration.IsDeleted)
-            .ToListAsync(cancellationToken);
+        return await context.Orchestrations.Where(orchestration => !orchestration.IsDeleted).ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Orchestration>> GetByRegistrationStatusAsync(
-        OrchestrationRegistrationStatus status,
-        CancellationToken cancellationToken = default)
+    public async Task<List<Orchestration>> GetByRegistrationStatusAsync(OrchestrationRegistrationStatus status, CancellationToken cancellationToken = default)
     {
         return await context.Orchestrations
             .Where(orchestration => !orchestration.IsDeleted && orchestration.RegistrationStatus == status)
