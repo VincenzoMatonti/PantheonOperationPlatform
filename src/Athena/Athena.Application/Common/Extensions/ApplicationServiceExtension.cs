@@ -1,6 +1,9 @@
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Mappings;
 using Athena.Application.Common.Services;
+using Athena.Application.OrchestrationManagement.Commands;
+using Athena.Application.OrchestrationManagement.Queries;
+using Athena.Application.OrchestrationManagement.UseCases;
 using Athena.Application.OrchestrationRegistry.Commands;
 using Athena.Application.OrchestrationRegistry.Queries;
 using Athena.Application.OrchestrationRegistry.UseCases;
@@ -18,10 +21,18 @@ public static class AthenaApplicationExtensions
 {
     public static IServiceCollection AddAthenaApplication(this IServiceCollection services)
     {
+        AddApplicationService(services);
+        AddApplicationExceptionHandling(services);
+        return services;
+    }
+
+    //private method
+    private static IServiceCollection AddApplicationService(this IServiceCollection services)
+    {
         AddSystemRegistryApplicationServices(services);
         AddSystemManagementApplicationServices(services);
         AddOrchestrationRegistryApplicationServices(services);
-        AddApplicationExceptionHandling(services);
+        AddOrchestrationManagementApplicationServices(services);
         return services;
     }
 
@@ -39,11 +50,21 @@ public static class AthenaApplicationExtensions
         services.AddScoped<SystemManagementUseCaseHandler>();
     }
 
-     private static void AddOrchestrationRegistryApplicationServices(IServiceCollection services)
+    private static void AddOrchestrationRegistryApplicationServices(IServiceCollection services)
     {
         services.AddScoped<OrchestrationRegistryCommandHandler>();
         services.AddScoped<OrchestrationRegistryQueryHandler>();
         services.AddScoped<OrchestrationRegistryUseCaseHandler>();
+    }
+
+    private static void AddOrchestrationManagementApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<OrchestrationLifecycleCommandHandler>();
+        services.AddScoped<OrchestrationLifecycleQueryHandler>();
+        services.AddScoped<OrchestrationLifecycleUseCaseHandler>();
+        services.AddScoped<OrchestrationLifecycleOperationCommandHandler>();
+        services.AddScoped<OrchestrationLifecycleOperationQueryHandler>();
+        services.AddScoped<OrchestrationLifecycleOperationUseCaseHandler>();
     }
 
     private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
