@@ -1,22 +1,55 @@
-﻿using Athena.Cli.Infrastructure.Dependencies;
-using Athena.Cli.Presentation.Inputs.Common;
-using Athena.Cli.Presentation.Interactives.Common;
+﻿using Athena.Cli.Application.Extensions;
+using Athena.Cli.Infrastructure.Extensions;
+using Athena.Cli.Presentation.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console.Cli;
 
 var baseAddress = new Uri(Environment.GetEnvironmentVariable("ATHENA_API_URL") ?? "http://localhost:8080/");
 var services = new ServiceCollection();
-
-services.AddAthenaCli(baseAddress);
-using var provider = services.BuildServiceProvider();
-
-try
+services.AddAthenaCliApplication();
+services.AddAthenaCliInfrastructure(baseAddress);
+var registrar = new TypeRegistrar(services);
+var app = new CommandApp(registrar);
+app.Configure(config =>
 {
-    var input = new CliInput(args);
-    var interactive = provider.GetRequiredService<CliInteractive>();
-    await interactive.RunAsync(input);
+    config.SetApplicationName("athena");
+    config.AddAthenaCliCommands();
+});
+
+return await app.RunAsync(args);
+
+internal class TypeRegistrar(IServiceCollection services) : ITypeRegistrar
+{
+    public ITypeResolver Build()
+    {
+        return new TypeResolver(services.BuildServiceProvider());
+    }
+
+    public void Register(Type service, Type implementation)
+    {
+        services.AddSingleton(service, implementation);
+    }
+
+    public void RegisterInstance(Type service, object implementation)
+    {
+        services.AddSingleton(service, implementation);
+    }
+
+    public void RegisterLazy(Type service, Func<object> factory)
+    {
+        services.AddSingleton(service, _ => factory());
+    }
 }
-catch (Exception exception)
+
+internal class TypeResolver(IServiceProvider provider) : ITypeResolver, IDisposable
 {
-    Console.Error.WriteLine($"Error: {exception.Message}");
-    Environment.ExitCode = 1;
+    public object? Resolve(Type? type)
+    {
+        return type is null ? null : provider.GetService(type);
+    }
+
+    public void Dispose()
+    {
+        if (provider is IDisposable disposable) disposable.Dispose();
+    }
 }

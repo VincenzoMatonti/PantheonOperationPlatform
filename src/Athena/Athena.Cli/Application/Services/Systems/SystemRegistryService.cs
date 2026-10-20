@@ -3,7 +3,7 @@ using Athena.Cli.Application.Interfaces.Systems;
 
 namespace Athena.Cli.Application.Services.Systems;
 
-public sealed class SystemRegistryService(ISystemsRegistry systemsRegistry)
+public class SystemRegistryService(ISystemsRegistry systemsRegistry)
 {
     public Task<SystemResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         systemsRegistry.GetByIdAsync(id, cancellationToken);
