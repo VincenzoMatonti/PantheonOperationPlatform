@@ -2,7 +2,7 @@ using Athena.Api.Common.exceptions;
 
 namespace Athena.Api.Common.contracts;
 
-public sealed class ExceptionMappingResult
+public class ExceptionMappingResult
 {
     public int StatusCode { get; }
     public IReadOnlyList<ApiErrorResponse> Errors { get; }

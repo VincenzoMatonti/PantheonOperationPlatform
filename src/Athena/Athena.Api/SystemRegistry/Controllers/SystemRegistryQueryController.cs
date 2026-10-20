@@ -1,8 +1,11 @@
+using Athena.Api.Common.builders;
+using Athena.Api.Common.contracts;
 using Athena.Api.SystemRegistry.Mappings;
 using Athena.Api.SystemRegistry.Requests;
 using Athena.Api.SystemRegistry.Responses;
 using Athena.Application.SystemRegistry.Enums;
 using Athena.Application.SystemRegistry.UseCases;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Athena.Api.SystemRegistry.Controllers;
@@ -14,80 +17,108 @@ public class SystemRegistryQueryController(SystemRegistryUseCaseHandler handler)
     private readonly SystemRegistryUseCaseHandler _handler = handler;
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<SystemResponse>> GetById(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<SystemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<SystemResponse>>> GetById(
+        Guid id, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToByIdQuery(id);
         var result = await _handler.GetSystemByIdAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-name")]
-    public async Task<ActionResult<SystemResponse>> GetByName([FromQuery] GetSystemByNameRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<SystemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<SystemResponse>>> GetByName(
+        [FromQuery] GetSystemByNameRequest request, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToQuery(request);
         var result = await _handler.GetSystemByNameAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<SystemResponse>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetAll(CancellationToken cancellationToken)
     {
         var result = await _handler.GetAllSystemsAsync(cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-registration-status/{status}")]
-    public async Task<ActionResult<IReadOnlyList<SystemResponse>>> GetByRegistrationStatus(SystemRegistrationStatusFilter status, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetByRegistrationStatus(
+        SystemRegistrationStatusFilter status, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToQuery(status);
         var result = await _handler.GetSystemsByRegistrationStatusAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-availability-status/{status}")]
-    public async Task<ActionResult<IReadOnlyList<SystemResponse>>> GetByAvailabilityStatus(SystemAvailabilityStatusFilter status, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetByAvailabilityStatus(
+        SystemAvailabilityStatusFilter status, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToQuery(status);
         var result = await _handler.GetSystemsByAvailabilityStatusAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-capability")]
-    public async Task<ActionResult<IReadOnlyList<SystemResponse>>> GetByCapability([FromQuery] GetSystemsByCapabilityRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetByCapability(
+        [FromQuery] GetSystemsByCapabilityRequest request, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToQuery(request);
         var result = await _handler.GetSystemsByCapabilityAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("{id:guid}/endpoints")]
-    public async Task<ActionResult<IReadOnlyList<SystemEndpointResponse>>> GetEndpoints(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemEndpointResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemEndpointResponse>>>> GetEndpoints(
+        Guid id, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToEndpointsQuery(id);
         var result = await _handler.GetSystemEndpointsAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToEndpointResponses(result));
+        var response = SystemRegistryResponseMapper.ToEndpointResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("{id:guid}/capabilities")]
-    public async Task<ActionResult<IReadOnlyList<SystemCapabilityResponse>>> GetCapabilities(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemCapabilityResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemCapabilityResponse>>>> GetCapabilities(
+        Guid id, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToCapabilitiesQuery(id);
         var result = await _handler.GetSystemCapabilitiesAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToCapabilityResponses(result));
+        var response = SystemRegistryResponseMapper.ToCapabilityResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-deletion-status")]
-    public async Task<ActionResult<IReadOnlyList<SystemResponse>>> GetByDeletionStatus([FromQuery] GetSystemsByDeletionStatusRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetByDeletionStatus(
+        [FromQuery] GetSystemsByDeletionStatusRequest request, CancellationToken cancellationToken)
     {
         var query = SystemRegistryQueryRequestMapper.ToQuery(request);
         var result = await _handler.GetSystemsByDeletionStatusAsync(query, cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("deleted")]
-    public async Task<ActionResult<IReadOnlyList<SystemResponse>>> GetDeleted(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetDeleted(CancellationToken cancellationToken)
     {
         var result = await _handler.GetDeletedSystemsAsync(cancellationToken);
-        return Ok(SystemRegistryResponseMapper.ToResponse(result));
+        var response = SystemRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 }

@@ -1,7 +1,10 @@
+using Athena.Api.Common.builders;
+using Athena.Api.Common.contracts;
 using Athena.Api.SystemManagement.Mappings;
 using Athena.Api.SystemManagement.Requests;
 using Athena.Api.SystemManagement.Responses;
 using Athena.Application.SystemManagement.UseCases;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Athena.Api.SystemManagement.Controllers;
@@ -11,51 +14,63 @@ namespace Athena.Api.SystemManagement.Controllers;
 public class SystemLifecycleQueryController(SystemManagementUseCaseHandler handler) : ControllerBase
 {
     [HttpGet("{systemId:guid}/lifecycle")]
-    public async Task<ActionResult<SystemLifecycleQueryResponse>> GetBySystemId(Guid systemId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<SystemLifecycleQueryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<SystemLifecycleQueryResponse>>> GetBySystemId(Guid systemId, CancellationToken cancellationToken)
     {
         var query = SystemManagementRequestQueryMapper.ToLifecycleBySystemIdQuery(systemId);
         var result = await handler.GetSystemLifecycleBySystemIdAsync(query, cancellationToken);
-        return Ok(SystemManagementResponseQueryMapper.ToResponse(result));
+        var response = SystemManagementResponseQueryMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("lifecycles")]
-    public async Task<ActionResult<IReadOnlyList<SystemLifecycleQueryResponse>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>>> GetAll(CancellationToken cancellationToken)
     {
         var result = await handler.GetAllSystemLifecyclesAsync(cancellationToken);
-        return Ok(SystemManagementResponseQueryMapper.ToLifecycleResponses(result));
+        var response = SystemManagementResponseQueryMapper.ToLifecycleResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("lifecycles/by-desired-state")]
-    public async Task<ActionResult<IReadOnlyList<SystemLifecycleQueryResponse>>> GetByDesiredState(
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>>> GetByDesiredState(
         [FromQuery] GetSystemLifecyclesByDesiredStateRequest request, CancellationToken cancellationToken)
     {
         var query = SystemManagementRequestQueryMapper.ToLifecyclesByDesiredStateQuery(request);
         var result = await handler.GetSystemLifecyclesByDesiredStateAsync(query, cancellationToken);
-        return Ok(SystemManagementResponseQueryMapper.ToLifecycleResponses(result));
+        var response = SystemManagementResponseQueryMapper.ToLifecycleResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("lifecycles/by-operational-status")]
-    public async Task<ActionResult<IReadOnlyList<SystemLifecycleQueryResponse>>> GetByOperationalStatus(
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>>> GetByOperationalStatus(
         [FromQuery] GetSystemLifecyclesByOperationalStatusRequest request, CancellationToken cancellationToken)
     {
         var query = SystemManagementRequestQueryMapper.ToLifecyclesByOperationalStatusQuery(request);
         var result = await handler.GetSystemLifecyclesByOperationalStatusAsync(query, cancellationToken);
-        return Ok(SystemManagementResponseQueryMapper.ToLifecycleResponses(result));
+        var response = SystemManagementResponseQueryMapper.ToLifecycleResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("lifecycles/by-deletion-status")]
-    public async Task<ActionResult<IReadOnlyList<SystemLifecycleQueryResponse>>> GetByDeletionStatus(
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>>> GetByDeletionStatus(
         [FromQuery] GetSystemLifecyclesByDeletionStatusRequest request, CancellationToken cancellationToken)
     {
         var query = SystemManagementRequestQueryMapper.ToLifecyclesByDeletionStatusQuery(request);
         var result = await handler.GetSystemLifecyclesByDeletionStatusAsync(query, cancellationToken);
-        return Ok(SystemManagementResponseQueryMapper.ToLifecycleResponses(result));
+        var response = SystemManagementResponseQueryMapper.ToLifecycleResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("lifecycles/deleted")]
-    public async Task<ActionResult<IReadOnlyList<SystemLifecycleQueryResponse>>> GetDeleted(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemLifecycleQueryResponse>>>> GetDeleted(CancellationToken cancellationToken)
     {
         var result = await handler.GetDeletedSystemLifecyclesAsync(cancellationToken);
-        return Ok(SystemManagementResponseQueryMapper.ToLifecycleResponses(result));
+        var response = SystemManagementResponseQueryMapper.ToLifecycleResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 }

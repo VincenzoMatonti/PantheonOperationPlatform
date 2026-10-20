@@ -13,6 +13,7 @@ public static class ApiCommonServiceCollectionExtensions
     {
         services.AddSingleton<ExceptionMapperResolver>();
         services.AddSingleton<ExceptionResponseBuilder>();
+        services.AddSingleton<ApiResponseBuilder>();
         services.AddSingleton<ExceptionHandlingService>();
         services.AddSingleton<IExceptionMapper, ApiApplicationCoreExceptionMapper>();
         services.AddSingleton<IExceptionMapper, ApiValidationExceptionMapper>();

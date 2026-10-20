@@ -2,7 +2,7 @@ using Athena.Api.Common.exceptions;
 
 namespace Athena.Api.Common.contracts;
 
-public sealed class ExceptionResponse
+public class ExceptionResponse
 {
     public int StatusCode { get; }
     public ApiResponse Body { get; }

@@ -8,6 +8,7 @@ public class ExceptionResponseBuilder
     public static ExceptionResponse Build(ExceptionMappingResult mappingResult)
     {
         if (mappingResult is null) throw new ApiArgumentNullException(nameof(mappingResult));
-        return new ExceptionResponse(mappingResult.StatusCode, ApiResponse.Fail(mappingResult.Errors));
+        var body = ApiResponseBuilder.BuildFailure(mappingResult.Errors);
+        return new ExceptionResponse(mappingResult.StatusCode, body);
     }
 }

@@ -1,3 +1,5 @@
+using Athena.Api.Common.builders;
+using Athena.Api.Common.contracts;
 using Athena.Api.OrchestrationManagement.Mappings;
 using Athena.Api.OrchestrationManagement.Requests;
 using Athena.Api.OrchestrationManagement.Responses;
@@ -16,141 +18,171 @@ public class OrchestrationManagementCommandController(
     private readonly OrchestrationLifecycleUseCaseHandler _lifecycleHandler = lifecycleHandler;
     private readonly OrchestrationLifecycleOperationUseCaseHandler _operationHandler = operationHandler;
 
-    // =============================================================================================================
+    // =====================================================================
     // ORCHESTRATION LIFECYCLE COMMANDS
     [HttpPost("{orchestrationId:guid}/lifecycle")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> CreateLifecycle(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> CreateLifecycle(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var result = await _lifecycleHandler.CreateOrchestrationLifecycleAsync(orchestrationId, cancellationToken);
-        return StatusCode(StatusCodes.Status201Created, OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPatch("{orchestrationId:guid}/lifecycle/desired-state")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> SetDesiredState(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> SetDesiredState(
         Guid orchestrationId, [FromBody] SetOrchestrationDesiredStateRequest request, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToSetDesiredStateCommand(orchestrationId, request);
         var result = await _lifecycleHandler.SetOrchestrationDesiredStateAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{orchestrationId:guid}/lifecycle/starting")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> MarkStarting(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> MarkStarting(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToMarkStartingCommand(orchestrationId);
         var result = await _lifecycleHandler.MarkOrchestrationStartingAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{orchestrationId:guid}/lifecycle/running")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> MarkRunning(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> MarkRunning(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToMarkRunningCommand(orchestrationId);
         var result = await _lifecycleHandler.MarkOrchestrationRunningAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{orchestrationId:guid}/lifecycle/stopping")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> MarkStopping(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> MarkStopping(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToMarkStoppingCommand(orchestrationId);
         var result = await _lifecycleHandler.MarkOrchestrationStoppingAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{orchestrationId:guid}/lifecycle/stopped")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> MarkStopped(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> MarkStopped(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToMarkStoppedCommand(orchestrationId);
         var result = await _lifecycleHandler.MarkOrchestrationStoppedAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{orchestrationId:guid}/lifecycle/failed")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> MarkFailed(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> MarkFailed(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToMarkFailedCommand(orchestrationId);
         var result = await _lifecycleHandler.MarkOrchestrationFailedAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{orchestrationId:guid}/lifecycle/unknown")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> MarkUnknown(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> MarkUnknown(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToMarkOperationalStatusUnknownCommand(orchestrationId);
         var result = await _lifecycleHandler.MarkOrchestrationOperationalStatusUnknownAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpDelete("{orchestrationId:guid}/lifecycle")]
-    public async Task<ActionResult<OrchestrationLifecycleCommandResponse>> DeleteLifecycle(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> DeleteLifecycle(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToDeleteLifecycleCommand(orchestrationId);
         var result = await _lifecycleHandler.DeleteOrchestrationLifecycleAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
-    // =============================================================================================================
+    // =====================================================================
     // ORCHESTRATION LIFECYCLE OPERATION COMMANDS
     [HttpPost("{orchestrationId:guid}/lifecycle/operations")]
-    public async Task<ActionResult<OrchestrationLifecycleOperationCommandResponse>> CreateOperation(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> CreateOperation(
         Guid orchestrationId, [FromBody] CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCreateOperationCommand(orchestrationId, request);
         var result = await _operationHandler.CreateOrchestrationLifecycleOperationAsync(command, cancellationToken);
-        return StatusCode(StatusCodes.Status201Created, OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("lifecycle-operations/{operationId:guid}/start")]
-    public async Task<ActionResult<OrchestrationLifecycleOperationCommandResponse>> StartOperation(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> StartOperation(
         Guid operationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToStartOperationCommand(operationId);
         var result = await _operationHandler.StartOrchestrationLifecycleOperationAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("lifecycle-operations/{operationId:guid}/complete")]
-    public async Task<ActionResult<OrchestrationLifecycleOperationCommandResponse>> CompleteOperation(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> CompleteOperation(
         Guid operationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCompleteOperationCommand(operationId);
         var result = await _operationHandler.CompleteOrchestrationLifecycleOperationAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("lifecycle-operations/{operationId:guid}/fail")]
-    public async Task<ActionResult<OrchestrationLifecycleOperationCommandResponse>> FailOperation(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> FailOperation(
         Guid operationId, [FromBody] FailOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToFailOperationCommand(operationId, request);
         var result = await _operationHandler.FailOrchestrationLifecycleOperationAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("lifecycle-operations/{operationId:guid}/cancel")]
-    public async Task<ActionResult<OrchestrationLifecycleOperationCommandResponse>> CancelOperation(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> CancelOperation(
         Guid operationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCancelOperationCommand(operationId);
         var result = await _operationHandler.CancelOrchestrationLifecycleOperationAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpDelete("lifecycle-operations/{operationId:guid}")]
-    public async Task<ActionResult<OrchestrationLifecycleOperationCommandResponse>> DeleteOperation(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> DeleteOperation(
         Guid operationId, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToDeleteOperationCommand(operationId);
         var result = await _operationHandler.DeleteOrchestrationLifecycleOperationAsync(command, cancellationToken);
-        return Ok(OrchestrationManagementResponseCommandMapper.ToResponse(result));
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 }

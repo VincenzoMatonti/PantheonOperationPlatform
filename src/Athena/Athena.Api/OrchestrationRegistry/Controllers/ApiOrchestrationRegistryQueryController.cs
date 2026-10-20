@@ -1,3 +1,5 @@
+using Athena.Api.Common.builders;
+using Athena.Api.Common.contracts;
 using Athena.Api.OrchestrationRegistry.Mappings;
 using Athena.Api.OrchestrationRegistry.Requests;
 using Athena.Api.OrchestrationRegistry.Responses;
@@ -14,57 +16,64 @@ public sealed class OrchestrationRegistryQueryController(OrchestrationRegistryUs
 {
     private readonly OrchestrationRegistryUseCaseHandler _handler = handler;
 
-    // =====================================================================
-    // QUERIES
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(OrchestrationResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<OrchestrationResponse>> GetById(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationResponse>>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var query = OrchestrationRegistryQueryRequestMapper.ToByIdQuery(id);
         var result = await _handler.GetByIdAsync(query, cancellationToken);
-        return Ok(OrchestrationRegistryResponseMapper.ToResponse(result));
+        var response = OrchestrationRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-name")]
-    [ProducesResponseType(typeof(OrchestrationResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<OrchestrationResponse>> GetByName([FromQuery] GetOrchestrationByNameRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationResponse>>> GetByName(
+        [FromQuery] GetOrchestrationByNameRequest request, CancellationToken cancellationToken)
     {
         var query = OrchestrationRegistryQueryRequestMapper.ToByNameQuery(request);
         var result = await _handler.GetByNameAsync(query, cancellationToken);
-        return Ok(OrchestrationRegistryResponseMapper.ToResponse(result));
+        var response = OrchestrationRegistryResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<OrchestrationResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<OrchestrationResponse>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationResponse>>>> GetAll(CancellationToken cancellationToken)
     {
         var result = await _handler.GetAllAsync(cancellationToken);
-        return Ok(OrchestrationRegistryResponseMapper.ToResponses(result));
+        var response = OrchestrationRegistryResponseMapper.ToResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-registration-status/{status}")]
-    [ProducesResponseType(typeof(IReadOnlyList<OrchestrationResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<OrchestrationResponse>>> GetByRegistrationStatus(OrchestrationRegistrationStatusFilter status, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationResponse>>>> GetByRegistrationStatus(
+        OrchestrationRegistrationStatusFilter status, CancellationToken cancellationToken)
     {
         var query = OrchestrationRegistryQueryRequestMapper.ToByRegistrationStatusQuery(status);
         var result = await _handler.GetByRegistrationStatusAsync(query, cancellationToken);
-        return Ok(OrchestrationRegistryResponseMapper.ToResponses(result));
+        var response = OrchestrationRegistryResponseMapper.ToResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("by-availability-status/{status}")]
-    [ProducesResponseType(typeof(IReadOnlyList<OrchestrationResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<OrchestrationResponse>>> GetByAvailabilityStatus(OrchestrationAvailabilityStatusFilter status, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationResponse>>>> GetByAvailabilityStatus(
+        OrchestrationAvailabilityStatusFilter status, CancellationToken cancellationToken)
     {
         var query = OrchestrationRegistryQueryRequestMapper.ToByAvailabilityStatusQuery(status);
         var result = await _handler.GetByAvailabilityStatusAsync(query, cancellationToken);
-        return Ok(OrchestrationRegistryResponseMapper.ToResponses(result));
+        var response = OrchestrationRegistryResponseMapper.ToResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("deleted")]
-    [ProducesResponseType(typeof(IReadOnlyList<OrchestrationResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<OrchestrationResponse>>> GetDeleted(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationResponse>>>> GetDeleted(CancellationToken cancellationToken)
     {
         var result = await _handler.GetDeletedAsync(cancellationToken);
-        return Ok(OrchestrationRegistryResponseMapper.ToResponses(result));
+        var response = OrchestrationRegistryResponseMapper.ToResponses(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 }
