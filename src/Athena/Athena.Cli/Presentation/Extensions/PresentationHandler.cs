@@ -7,10 +7,7 @@ public static class PresentationHandler
 {
     public static IConfigurator AddAthenaCliCommands(this IConfigurator config)
     {
-        config.AddSystemRegistryCommands();
-
-        // In futuro:
-        // config.AddSystemManagementCommands();
+        config.AddSystemCommands();
         // config.AddOrchestrationRegistryCommands();
         // config.AddOrchestrationManagementCommands();
 

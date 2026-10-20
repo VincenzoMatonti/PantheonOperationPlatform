@@ -8,6 +8,7 @@ public static class DependencyInjection
     public static IServiceCollection AddAthenaCliApplication(this IServiceCollection services)
     {
         services.AddTransient<SystemRegistryService>();
+        services.AddTransient<SystemManagementService>();
         return services;
     }
 }

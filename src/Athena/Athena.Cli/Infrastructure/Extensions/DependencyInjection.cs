@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddHttpClient<AthenaApiClient>(client => { client.BaseAddress = baseAddress; });
         services.AddTransient<ISystemsRegistry, AthenaSystemsRegistryClient>();
+        services.AddTransient<ISystemsManagement, AthenaSystemsManagementClient>();
         return services;
     }
 }
