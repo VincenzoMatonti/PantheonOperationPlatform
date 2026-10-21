@@ -1,12 +1,11 @@
 {
     "name": "Pantheon: Hermes Dev Container",
     "dockerComposeFile": [
-        "../../infra/local/compose.yml",
-        "../compose.dev.yml"
+        "../environment/compose.dev.yml"
     ],
-    "service": "hermes",
+    "service": "hermes-dev",
     "workspaceFolder": "/workspace",
-    "shutdownAction": "stopCompose",
+    "shutdownAction": "none",
     "customizations": {
         "vscode": {
             "extensions": [

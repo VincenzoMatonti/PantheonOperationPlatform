@@ -1,0 +1,18 @@
+{
+    "name": "Pantheon: Argus Dev Container",
+    "dockerComposeFile": [
+        "../environment/compose.dev.yml"
+    ],
+    "service": "argus-dev",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "none",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.csharp"
+            ]
+        }
+    },
+    "remoteUser": "root"
+}
