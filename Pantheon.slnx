@@ -1,5 +1,10 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/Argus/">
+    <Project Path="src/Argus/Argus.Api/Argus.Api.csproj" />
+    <Project Path="src/Argus/Argus.Core/Argus.Core.csproj" />
+    <Project Path="src/Argus/Argus.Infrastructure/Argus.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Athena/">
     <Project Path="src/Athena/Athena.Api/Athena.Api.csproj" />
     <Project Path="src/Athena/Athena.Application/Athena.Application.csproj" />
@@ -20,6 +25,11 @@
     <Project Path="src/Hermes/Hermes.Application/Hermes.Application.csproj" />
     <Project Path="src/Hermes/Hermes.Domain/Hermes.Domain.csproj" />
     <Project Path="src/Hermes/Hermes.Infrastructure/Hermes.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Janus/">
+    <Project Path="src/Janus/Janus.Api/Janus.Api.csproj" />
+    <Project Path="src/Janus/Janus.Core/Janus.Core.csproj" />
+    <Project Path="src/Janus/Janus.Infrastructure/Janus.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Hermes.Api.Tests/Hermes.Api.Tests.csproj" />
