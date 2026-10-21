@@ -44,6 +44,21 @@ services:
       - pantheon-local
     command: sleep infinity
 
+  argus-dev:
+    image: pantheon-argus-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/argus/Dockerfile
+    container_name: pantheon-argus-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/environment/argus/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
 networks:
   pantheon-local:
     external: true

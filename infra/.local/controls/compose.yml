@@ -20,7 +20,24 @@ services:
       start_period: 10s
     networks:
       - pantheon-local
-
+  
+  janus:
+    image: pantheon-janus:local
+    build:
+      context: ../../..
+      dockerfile: infra/.local/controls/janus/Dockerfile
+    container_name: pantheon-janus
+    restart: unless-stopped
+    env_file:
+      - ./janus/.env
+    ports:
+      - "${JANUS_HTTP_PORT}:${JANUS_CONTAINER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pantheon-local
+  
   athena:
     image: pantheon-athena:local
     build:
