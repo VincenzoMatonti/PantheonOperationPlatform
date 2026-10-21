@@ -1,0 +1,65 @@
+services:
+  hermes-dev:
+    image: pantheon-hermes-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/hermes/Dockerfile
+    container_name: pantheon-hermes-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/environment/hermes/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
+  hephaestus-dev:
+    image: pantheon-hephaestus-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/hephaestus/Dockerfile
+    container_name: pantheon-hephaestus-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/environment/hephaestus/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
+  hephaestus-worker-dev:
+    image: pantheon-hephaestus-worker-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/hephaestus-worker/Dockerfile
+    container_name: pantheon-hephaestus-worker-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/environment/hephaestus-worker/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
+  argus-dev:
+    image: pantheon-argus-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/argus/Dockerfile
+    container_name: pantheon-argus-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/environment/argus/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
+networks:
+  pantheon-local:
+    external: true
+    name: pantheon-local

@@ -1,0 +1,35 @@
+services:
+  athena-dev:
+    image: pantheon-athena-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/athena/Dockerfile
+    container_name: pantheon-athena-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/controls/athena/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+  
+  janus-dev:
+    image: pantheon-janus-dev:local
+    build:
+      context: ../..
+      dockerfile: .devcontainer/janus/Dockerfile
+    container_name: pantheon-janus-dev
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    env_file:
+      - ../../infra/.local/controls/janus/.env
+    networks:
+      - pantheon-local
+    command: sleep infinity
+
+networks:
+  pantheon-local:
+    external: true
+    name: pantheon-local

@@ -1,0 +1,26 @@
+using Athena.Cli.Application.Services.Orchestrations;
+using Athena.Cli.Presentation.Outputs.Orchestrations;
+using Spectre.Console;
+using Spectre.Console.Cli;
+
+namespace Athena.Cli.Presentation.Inputs.Orchestrations.Management.Operations.Commands;
+
+public class DeleteOrchestrationLifecycleOperationCommand(OrchestrationManagementService service) : AsyncCommand<DeleteOrchestrationLifecycleOperationCommand.Settings>
+{
+    public class Settings : CommandSettings
+    {
+        [CommandArgument(0, "<OPERATION_ID>")]
+        public Guid OperationId { get; init; }
+
+        public override ValidationResult Validate() =>
+            OperationId == Guid.Empty ? ValidationResult.Error("Operation ID cannot be empty.") : ValidationResult.Success();
+    }
+
+    public override async Task<int> ExecuteAsync(
+        CommandContext context, Settings settings, CancellationToken cancellationToken)
+    {
+        await service.DeleteOperationAsync(settings.OperationId, cancellationToken);
+        OrchestrationManagementOutput.WriteMessage($"Lifecycle operation '{settings.OperationId}' deleted.");
+        return 0;
+    }
+}
