@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: pantheon-postgres
+    restart: unless-stopped
+    env_file:
+      - ./databases/.env
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_CONTAINER_PORT}"
+    volumes:
+      - pantheon-postgres-data:/var/lib/postgresql
+      - ./databases/01-create-databases.sql:/docker-entrypoint-initdb.d/01-create-databases.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - pantheon-local
+  
+  janus:
+    image: pantheon-janus:local
+    build:
+      context: ../../..
+      dockerfile: infra/.local/controls/janus/Dockerfile
+    container_name: pantheon-janus
+    restart: unless-stopped
+    env_file:
+      - ./janus/.env
+    ports:
+      - "${JANUS_HTTP_PORT}:${JANUS_CONTAINER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pantheon-local
+  
+  athena:
+    image: pantheon-athena:local
+    build:
+      context: ../../..
+      dockerfile: infra/.local/controls/athena/Dockerfile
+    container_name: pantheon-athena
+    restart: unless-stopped
+    env_file:
+      - ./athena/.env
+    ports:
+      - "${ATHENA_HTTP_PORT}:${ATHENA_CONTAINER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pantheon-local
+
+networks:
+  pantheon-local:
+    name: pantheon-local
+
+volumes:
+  pantheon-postgres-data:
+    name: pantheon-postgres-data
