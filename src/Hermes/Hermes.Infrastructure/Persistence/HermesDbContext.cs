@@ -29,9 +29,7 @@ public class HermesDbContext(DbContextOptions<HermesDbContext> options) : DbCont
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(
-            typeof(HermesDbContext).Assembly);
-
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(HermesDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
 }
