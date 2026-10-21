@@ -1,3 +1,4 @@
+using Athena.Cli.Application.Services.Orchestrations;
 using Athena.Cli.Application.Services.Systems;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +10,8 @@ public static class DependencyInjection
     {
         services.AddTransient<SystemRegistryService>();
         services.AddTransient<SystemManagementService>();
+        services.AddTransient<OrchestrationRegistryService>();
+        services.AddScoped<OrchestrationManagementService>();
         return services;
     }
 }

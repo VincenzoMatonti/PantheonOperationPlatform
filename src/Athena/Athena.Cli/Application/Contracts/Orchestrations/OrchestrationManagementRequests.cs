@@ -1,0 +1,11 @@
+namespace Athena.Cli.Application.Contracts.Orchestrations;
+
+public record SetOrchestrationDesiredStateRequest(string DesiredState);
+public record GetOrchestrationLifecyclesByDesiredStateRequest(string DesiredState);
+public record GetOrchestrationLifecyclesByOperationalStatusRequest(string OperationalStatus);
+public record CreateOrchestrationLifecycleOperationRequest(Guid Id, string Type);
+public record FailOrchestrationLifecycleOperationRequest(string ErrorMessage);
+public record GetOrchestrationLifecycleOperationsByTypeRequest(string Type);
+public record GetOrchestrationLifecycleOperationsByStatusRequest(string Status);
+public record GetOrchestrationLifecycleOperationsByOrchestrationIdRequest(Guid OrchestrationId);
+public record GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequest(Guid OrchestrationId, string Status);

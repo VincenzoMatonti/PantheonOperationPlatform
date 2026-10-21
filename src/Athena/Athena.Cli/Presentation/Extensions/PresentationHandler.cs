@@ -1,3 +1,4 @@
+using Athena.Cli.Presentation.Inputs.Orchestrations.Registry;
 using Athena.Cli.Presentation.Inputs.Systems.Registry;
 using Spectre.Console.Cli;
 
@@ -8,9 +9,7 @@ public static class PresentationHandler
     public static IConfigurator AddAthenaCliCommands(this IConfigurator config)
     {
         config.AddSystemCommands();
-        // config.AddOrchestrationRegistryCommands();
-        // config.AddOrchestrationManagementCommands();
-
+        config.AddOrchestrationCommands();
         return config;
     }
 }
