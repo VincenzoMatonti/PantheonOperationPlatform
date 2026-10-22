@@ -14,10 +14,17 @@ public sealed class AthenaDbContext(DbContextOptions<AthenaDbContext> options) :
     public DbSet<RegisteredOrchestration> Orchestrations => Set<RegisteredOrchestration>();
     public DbSet<OrchestrationLifecycle> OrchestrationLifecycles => Set<OrchestrationLifecycle>();
     public DbSet<OrchestrationLifecycleOperation> OrchestrationLifecycleOperations => Set<OrchestrationLifecycleOperation>();
+    public DbSet<OrchestrationSystem> OrchestrationSystems => Set<OrchestrationSystem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Dichiarare prima i tipi delle chiavi tecniche shadow.
+        modelBuilder.Entity<RegisteredSystem>().Property<int>("id");
+        modelBuilder.Entity<RegisteredOrchestration>().Property<int>("id");
+
+        // Applicare tutte le configurazioni.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AthenaDbContext).Assembly);
     }
 }
