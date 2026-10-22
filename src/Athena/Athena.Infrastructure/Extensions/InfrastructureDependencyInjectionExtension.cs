@@ -35,7 +35,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IOrchestrationRepository, OrchestrationRepository>();
         services.AddScoped<IOrchestrationLifecycleRepository, OrchestrationLifecycleRepository>();
         services.AddScoped<IOrchestrationLifecycleOperationRepository, OrchestrationLifecycleOperationRepository>();
-
+        services.AddScoped<IOrchestrationSystemRepository, OrchestrationSystemRepository>();
         return services;
     }
 }

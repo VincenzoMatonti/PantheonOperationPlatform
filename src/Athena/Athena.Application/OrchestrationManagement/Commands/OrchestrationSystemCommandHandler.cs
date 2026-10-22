@@ -36,7 +36,7 @@ public class OrchestrationSystemCommandHandler(IOrchestrationSystemRepository or
         var association = await _orchestrationSystemRepository.GetByIdAsync(associationId, includeDeleted, cancellationToken);
         if (association is null) return null;
         update(association);
-        _orchestrationSystemRepository.Update(association);
+        _ = _orchestrationSystemRepository.UpdateAsync(association, cancellationToken);
         return ConvertOrchestrationSystemEntitiesToDto(association);
     }
 

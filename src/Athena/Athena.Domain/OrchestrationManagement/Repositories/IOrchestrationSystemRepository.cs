@@ -15,5 +15,7 @@ public interface IOrchestrationSystemRepository
     Task<bool> ExistsAsync(OrchestrationSystemId id, CancellationToken cancellationToken = default);
     Task<bool> AssociationExistsAsync(OrchestrationId orchestrationId, SystemId systemId, bool includeDeleted = true, CancellationToken cancellationToken = default);
     Task AddAsync(OrchestrationSystem association, CancellationToken cancellationToken = default);
-    void Update(OrchestrationSystem association);
+    Task UpdateAsync(
+    OrchestrationSystem association,
+    CancellationToken cancellationToken = default);
 }
