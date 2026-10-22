@@ -12,6 +12,7 @@ public static class DependencyInjection
         services.AddTransient<SystemManagementService>();
         services.AddTransient<OrchestrationRegistryService>();
         services.AddScoped<OrchestrationManagementService>();
+        services.AddScoped<OrchestrationSystemManagementService>();
         return services;
     }
 }

@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddTransient<ISystemsManagement, AthenaSystemsManagementClient>();
         services.AddTransient<IOrchestrationsRegistry, AthenaOrchestrationsRegistryClient>();
         services.AddScoped<IOrchestrationManagement, AthenaOrchestrationManagementClient>();
+        services.AddScoped<IOrchestrationSystemManagement, AthenaOrchestrationSystemManagementClient>();
         return services;
     }
 }
