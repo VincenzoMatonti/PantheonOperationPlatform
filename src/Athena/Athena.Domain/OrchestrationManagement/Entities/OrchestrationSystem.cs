@@ -1,3 +1,4 @@
+using Athena.Domain.OrchestrationManagement.Exceptions;
 using Athena.Domain.OrchestrationManagement.ValueObjects;
 using Athena.Domain.OrchestrationRegistry.ValueObjects;
 using Athena.Domain.SystemRegistry.ValueObjects;
@@ -20,8 +21,8 @@ public class OrchestrationSystem
 
     public static OrchestrationSystem Create(OrchestrationId orchestrationId, SystemId systemId)
     {
-        ArgumentNullException.ThrowIfNull(orchestrationId);
-        ArgumentNullException.ThrowIfNull(systemId);
+        if (orchestrationId is null) throw new OrchestrationSystemOrchestrationIdRequiredException();
+        if (systemId is null) throw new OrchestrationSystemSystemIdRequiredException();
         return new OrchestrationSystem
         {
             Id = OrchestrationSystemId.New(),
@@ -34,8 +35,15 @@ public class OrchestrationSystem
 
     public void Delete()
     {
-        if (IsDeleted) throw new InvalidOperationException("The orchestration-system association is already deleted.");
+        if (IsDeleted) throw new OrchestrationSystemAlreadyDeletedException(Id);
         IsDeleted = true;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Restore()
+    {
+        if (!IsDeleted) throw new OrchestrationSystemAlreadyRestoredException(Id);
+        IsDeleted = false;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }
