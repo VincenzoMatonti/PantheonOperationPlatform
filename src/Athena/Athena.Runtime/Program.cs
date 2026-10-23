@@ -7,7 +7,7 @@ namespace Athena.Runtime;
 
 internal static class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddAthenaApplication();
@@ -15,7 +15,8 @@ internal static class Program
         builder.Services.AddAthenaApi();
 
         var app = builder.Build();
+        await app.Services.InitializeAthenaDatabaseAsync();
         app.UseAthenaApi();
-        app.Run();
+        await app.RunAsync();
     }
 }

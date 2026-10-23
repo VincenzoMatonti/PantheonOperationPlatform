@@ -1,12 +1,13 @@
-using Athena.Infrastructure.Persistence;
-using Athena.Infrastructure.Repositories;
+using Athena.Domain.OrchestrationManagement.Repositories;
 using Athena.Domain.OrchestrationRegistry.Repositories;
 using Athena.Domain.SystemManagement.Repositories;
 using Athena.Domain.SystemRegistry.Repositories;
+using Athena.Infrastructure.Persistence;
+using Athena.Infrastructure.Repositories;
+using Athena.Infrastructure.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Athena.Domain.OrchestrationManagement.Repositories;
 
 namespace Athena.Infrastructure.Extensions;
 
@@ -16,6 +17,7 @@ public static class DependencyInjectionExtension
     {
         AddDatabase(services, configuration);
         AddRepositories(services);
+        AddAthenaSeeder(services);
         return services;
     }
 
@@ -37,5 +39,20 @@ public static class DependencyInjectionExtension
         services.AddScoped<IOrchestrationLifecycleOperationRepository, OrchestrationLifecycleOperationRepository>();
         services.AddScoped<IOrchestrationSystemRepository, OrchestrationSystemRepository>();
         return services;
+    }
+
+    private static IServiceCollection AddAthenaSeeder(IServiceCollection services)
+    {
+        services.AddScoped<AthenaSeeder>();
+        return services;
+    }
+
+    public static async Task InitializeAthenaDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
+    {
+        await using var scope = services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AthenaDbContext>();
+        await dbContext.Database.MigrateAsync(cancellationToken);
+        var seeder = scope.ServiceProvider.GetRequiredService<AthenaSeeder>();
+        await seeder.SeedAsync(cancellationToken);
     }
 }
