@@ -131,6 +131,19 @@ public class OrchestrationManagementCommandController(
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
+    [HttpPost("{orchestrationId:guid}/lifecycle/execute")]
+    [ProducesResponseType(
+    typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>),
+    StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> ExecuteRuntimeOperation(
+        Guid orchestrationId, [FromBody] CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken)
+    {
+        var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCreateOperationCommand(orchestrationId, request);
+        var result = await _operationHandler.ExecuteOrchestrationRuntimeOperationAsync(command, cancellationToken);
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
+    }
+
     [HttpPost("lifecycle-operations/{operationId:guid}/start")]
     [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> StartOperation(

@@ -8,7 +8,7 @@ namespace Athena.Application.Common.Services;
 /// Coordinates application-level operations on registered runtime instances.
 /// Does not depend on concrete runtime providers or persistence models.
 /// </summary>
-public sealed class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, IRuntimeProviderResolver providerResolver)
+public class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, IRuntimeProviderResolver providerResolver)
 {
     public Task<SystemRuntimeInstanceDto?> GetByIdAsync(
         Guid id, CancellationToken cancellationToken = default) => registry.GetByIdAsync(id, cancellationToken);
