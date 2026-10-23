@@ -5,21 +5,32 @@ services:
       context: ../..
       dockerfile: .devcontainer/athena/Dockerfile
     container_name: pantheon-athena-dev
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "unregistered:athena"
+      com.pantheon.environment: "development"
+      com.pantheon.role: "devcontainer"
     working_dir: /workspace
     volumes:
       - ../..:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ../../infra/.local/controls/athena/.env
     networks:
       - pantheon-local
     command: sleep infinity
-  
+
   janus-dev:
     image: pantheon-janus-dev:local
     build:
       context: ../..
       dockerfile: .devcontainer/janus/Dockerfile
     container_name: pantheon-janus-dev
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "unregistered:janus"
+      com.pantheon.environment: "development"
+      com.pantheon.role: "devcontainer"
     working_dir: /workspace
     volumes:
       - ../..:/workspace

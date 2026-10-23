@@ -6,6 +6,11 @@ services:
       dockerfile: infra/.local/environment/hermes/Dockerfile
     container_name: pantheon-hermes
     restart: unless-stopped
+    labels:
+      com.pantheon.managed: "true"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000001"
+      com.pantheon.environment: "local"
+      com.pantheon.role: "service"
     env_file:
       - ./hermes/.env
     ports:
@@ -20,6 +25,11 @@ services:
       dockerfile: infra/.local/environment/hephaestus/Dockerfile
     container_name: pantheon-hephaestus
     restart: unless-stopped
+    labels:
+      com.pantheon.managed: "true"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000002"
+      com.pantheon.environment: "local"
+      com.pantheon.role: "service"
     env_file:
       - ./hephaestus/.env
     ports:
@@ -34,6 +44,11 @@ services:
       dockerfile: infra/.local/environment/hephaestus-worker/Dockerfile
     container_name: pantheon-hephaestus-worker
     restart: unless-stopped
+    labels:
+      com.pantheon.managed: "true"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000002"
+      com.pantheon.environment: "local"
+      com.pantheon.role: "worker"
     env_file:
       - ./hephaestus-worker/.env
     networks:
@@ -46,12 +61,17 @@ services:
       dockerfile: infra/.local/environment/argus/Dockerfile
     container_name: pantheon-argus
     restart: unless-stopped
+    labels:
+      com.pantheon.managed: "true"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000003"
+      com.pantheon.environment: "local"
+      com.pantheon.role: "service"
     env_file:
       - ./argus/.env
     ports:
       - "${ARGUS_HTTP_PORT}:${ARGUS_CONTAINER_PORT}"
     networks:
-      - pantheon-local    
+      - pantheon-local
 
 networks:
   pantheon-local:

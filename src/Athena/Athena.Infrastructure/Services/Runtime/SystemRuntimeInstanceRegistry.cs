@@ -92,6 +92,63 @@ public sealed class SystemRuntimeInstanceRegistry(AthenaDbContext dbContext) : I
         return true;
     }
 
+    public async Task<SystemRuntimeInstanceDto?> SynchronizeDiscoveredAsync(
+        DiscoveredRuntimeInstanceDto discoveredInstance, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(discoveredInstance);
+        EnsureSystemId(discoveredInstance.SystemId);
+        EnsureText(discoveredInstance.RuntimeProvider, nameof(discoveredInstance.RuntimeProvider), 50);
+        EnsureText(discoveredInstance.RuntimeResourceId, nameof(discoveredInstance.RuntimeResourceId), 255);
+        EnsureText(discoveredInstance.RuntimeResourceName, nameof(discoveredInstance.RuntimeResourceName), 255);
+        EnsureText(discoveredInstance.Environment, nameof(discoveredInstance.Environment), 100);
+        var systemId = SystemId.Create(discoveredInstance.SystemId);
+        var runtimeProvider = discoveredInstance.RuntimeProvider.Trim();
+        var runtimeResourceId = discoveredInstance.RuntimeResourceId.Trim();
+        var runtimeResourceName = discoveredInstance.RuntimeResourceName.Trim();
+        var environment = discoveredInstance.Environment.Trim();
+        var system = await dbContext.Systems.SingleOrDefaultAsync(x => x.Id == systemId, cancellationToken);
+        if (system is null) return null;
+        var systemDatabaseId = dbContext.Entry(system).Property<int>("id").CurrentValue;
+        var instance = await dbContext.SystemRuntimeInstances.SingleOrDefaultAsync(
+                x => x.RuntimeProvider == runtimeProvider && x.Environment == environment && x.RuntimeResourceId == runtimeResourceId, cancellationToken);
+
+        // Docker may assign a new ID when Compose recreates a container.
+        // The name is the fallback identity within the same provider/environment.
+        instance ??= await dbContext.SystemRuntimeInstances.SingleOrDefaultAsync(
+                x => x.RuntimeProvider == runtimeProvider && x.Environment == environment && x.RuntimeResourceName == runtimeResourceName, cancellationToken);
+        var now = DateTime.UtcNow;
+        if (instance is null)
+        {
+            instance = new PersistenceRuntimeInstance
+            {
+                Id = Guid.NewGuid(),
+                SystemId = systemId,
+                RuntimeProvider = runtimeProvider,
+                RuntimeResourceId = runtimeResourceId,
+                RuntimeResourceName = runtimeResourceName,
+                Environment = environment,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now
+            };
+
+            dbContext.SystemRuntimeInstances.Add(instance);
+            dbContext.Entry(instance).Property<int>("system_database_id").CurrentValue = systemDatabaseId;
+        }
+        else
+        {
+            instance.SystemId = systemId;
+            instance.RuntimeProvider = runtimeProvider;
+            instance.RuntimeResourceId = runtimeResourceId;
+            instance.RuntimeResourceName = runtimeResourceName;
+            instance.Environment = environment;
+            instance.UpdatedAtUtc = now;
+            dbContext.Entry(instance).Property<int>("system_database_id").CurrentValue = systemDatabaseId;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToDto(instance);
+    }
+
     private static SystemRuntimeInstanceDto ToDto(PersistenceRuntimeInstance instance)
         => new(
             instance.Id,

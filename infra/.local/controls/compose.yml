@@ -20,7 +20,7 @@ services:
       start_period: 10s
     networks:
       - pantheon-local
-  
+
   janus:
     image: pantheon-janus:local
     build:
@@ -28,6 +28,11 @@ services:
       dockerfile: infra/.local/controls/janus/Dockerfile
     container_name: pantheon-janus
     restart: unless-stopped
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "unregistered:janus"
+      com.pantheon.environment: "local"
+      com.pantheon.role: "control"
     env_file:
       - ./janus/.env
     ports:
@@ -37,7 +42,7 @@ services:
         condition: service_healthy
     networks:
       - pantheon-local
-  
+
   athena:
     image: pantheon-athena:local
     build:
@@ -45,10 +50,17 @@ services:
       dockerfile: infra/.local/controls/athena/Dockerfile
     container_name: pantheon-athena
     restart: unless-stopped
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "unregistered:athena"
+      com.pantheon.environment: "local"
+      com.pantheon.role: "control"
     env_file:
       - ./athena/.env
     ports:
       - "${ATHENA_HTTP_PORT}:${ATHENA_CONTAINER_PORT}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  
     depends_on:
       postgres:
         condition: service_healthy

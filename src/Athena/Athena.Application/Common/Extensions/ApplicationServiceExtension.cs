@@ -69,6 +69,7 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationSystemCommandHandler>();
         services.AddScoped<OrchestrationSystemQueryHandler>();
         services.AddScoped<OrchestrationSystemUseCaseHandler>();
+        services.AddScoped<OrchestrationRuntimeUseCaseHandler>();
     }
 
     private static void AddRuntimeApplicationServices(IServiceCollection services)

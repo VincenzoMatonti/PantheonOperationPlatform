@@ -244,6 +244,7 @@ public class SystemManagementUseCaseHandler(
                         {
                             await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
                             await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
+                            await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
                             await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
                             await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
                             await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
@@ -259,7 +260,7 @@ public class SystemManagementUseCaseHandler(
                         throw new SystemLifecycleOperationNotFoundException(operation.Id);
             }
             catch (Exception ex)
-            {              
+            {
                 if (!operationStarted)
                 {
                     await _systemManagementCommandHandler.CancelSystemLifecycleOperationAsync(

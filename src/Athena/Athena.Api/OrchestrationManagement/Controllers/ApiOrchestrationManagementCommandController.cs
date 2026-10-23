@@ -13,10 +13,12 @@ namespace Athena.Api.OrchestrationManagement.Controllers;
 [Route("api/orchestrations/management")]
 public class OrchestrationManagementCommandController(
     OrchestrationLifecycleUseCaseHandler lifecycleHandler,
-    OrchestrationLifecycleOperationUseCaseHandler operationHandler) : ControllerBase
+    OrchestrationLifecycleOperationUseCaseHandler operationHandler,
+    OrchestrationRuntimeUseCaseHandler runtimeHandler) : ControllerBase
 {
     private readonly OrchestrationLifecycleUseCaseHandler _lifecycleHandler = lifecycleHandler;
     private readonly OrchestrationLifecycleOperationUseCaseHandler _operationHandler = operationHandler;
+    private readonly OrchestrationRuntimeUseCaseHandler _runtimeHandler = runtimeHandler;
 
     // =====================================================================
     // ORCHESTRATION LIFECYCLE COMMANDS
@@ -139,7 +141,7 @@ public class OrchestrationManagementCommandController(
         Guid orchestrationId, [FromBody] CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCreateOperationCommand(orchestrationId, request);
-        var result = await _operationHandler.ExecuteOrchestrationRuntimeOperationAsync(command, cancellationToken);
+        var result = await _runtimeHandler.ExecuteOrchestrationRuntimeOperationAsync(command, cancellationToken);
         var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

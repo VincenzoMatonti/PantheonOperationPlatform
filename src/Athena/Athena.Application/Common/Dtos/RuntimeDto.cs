@@ -11,3 +11,5 @@ public record RuntimeLogEntryDto(DateTime TimestampUtc, string Stream, string Me
 public record RuntimeLogOptionsDto(int Tail = 100, DateTime? SinceUtc = null, DateTime? UntilUtc = null, bool Follow = false);
 
 public record RuntimeOperationResultDto(bool Succeeded, string? Details = null);
+
+public record DiscoveredRuntimeInstanceDto(Guid SystemId, string RuntimeProvider, string RuntimeResourceId, string RuntimeResourceName, string Environment);

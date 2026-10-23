@@ -5,6 +5,11 @@ services:
       context: ../..
       dockerfile: .devcontainer/hermes/Dockerfile
     container_name: pantheon-hermes-dev
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000001"
+      com.pantheon.environment: "development"
+      com.pantheon.role: "devcontainer"
     working_dir: /workspace
     volumes:
       - ../..:/workspace
@@ -20,6 +25,11 @@ services:
       context: ../..
       dockerfile: .devcontainer/hephaestus/Dockerfile
     container_name: pantheon-hephaestus-dev
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000002"
+      com.pantheon.environment: "development"
+      com.pantheon.role: "devcontainer"
     working_dir: /workspace
     volumes:
       - ../..:/workspace
@@ -35,6 +45,11 @@ services:
       context: ../..
       dockerfile: .devcontainer/hephaestus-worker/Dockerfile
     container_name: pantheon-hephaestus-worker-dev
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000002"
+      com.pantheon.environment: "development"
+      com.pantheon.role: "devcontainer"
     working_dir: /workspace
     volumes:
       - ../..:/workspace
@@ -50,6 +65,11 @@ services:
       context: ../..
       dockerfile: .devcontainer/argus/Dockerfile
     container_name: pantheon-argus-dev
+    labels:
+      com.pantheon.managed: "false"
+      com.pantheon.system-id: "10000000-0000-0000-0000-000000000003"
+      com.pantheon.environment: "development"
+      com.pantheon.role: "devcontainer"
     working_dir: /workspace
     volumes:
       - ../..:/workspace

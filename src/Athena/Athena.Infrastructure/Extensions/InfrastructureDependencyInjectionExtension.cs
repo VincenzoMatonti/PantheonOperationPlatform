@@ -62,6 +62,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRuntimeProvider, DockerRuntimeProvider>();
         services.AddScoped<IRuntimeHealthCheck, DockerRuntimeHealthCheck>();
         services.AddScoped<IRuntimeLogReader, DockerRuntimeLogReader>();
+        services.AddScoped<IRuntimeDiscoveryService, DockerRuntimeDiscoveryService>();
         return services;
     }
 

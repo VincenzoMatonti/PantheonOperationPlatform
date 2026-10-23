@@ -20,4 +20,5 @@ public interface ISystemRuntimeInstanceRegistry
         CancellationToken cancellationToken = default);
 
     Task<bool> UnregisterAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<SystemRuntimeInstanceDto?> SynchronizeDiscoveredAsync(DiscoveredRuntimeInstanceDto discoveredInstance, CancellationToken cancellationToken = default);
 }

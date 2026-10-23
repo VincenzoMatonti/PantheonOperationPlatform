@@ -3,11 +3,7 @@ using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.DTOs;
 using Athena.Application.OrchestrationManagement.Exceptions;
 using Athena.Application.OrchestrationManagement.Queries;
-using Athena.Application.SystemManagement.Commands;
-using Athena.Application.SystemManagement.Enums;
-using Athena.Application.SystemManagement.UseCases;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
+
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 
@@ -15,18 +11,12 @@ public class OrchestrationLifecycleOperationUseCaseHandler(
     OrchestrationLifecycleOperationCommandHandler commandHandler,
     OrchestrationLifecycleOperationQueryHandler queryHandler,
     OrchestrationLifecycleQueryHandler lifecycleQueryHandler,
-    ApplicationExceptionService exceptionService,
-    SystemManagementUseCaseHandler systemManagementUseCaseHandler,
-    IOrchestrationSystemRepository orchestrationSystemRepository,
-    OrchestrationLifecycleUseCaseHandler orchestrationLifecycleUseCaseHandler)
+    ApplicationExceptionService exceptionService)
 {
     private readonly OrchestrationLifecycleOperationCommandHandler _commandHandler = commandHandler;
     private readonly OrchestrationLifecycleOperationQueryHandler _queryHandler = queryHandler;
     private readonly OrchestrationLifecycleQueryHandler _lifecycleQueryHandler = lifecycleQueryHandler;
     private readonly ApplicationExceptionService _exceptionService = exceptionService;
-    private readonly SystemManagementUseCaseHandler _systemManagementUseCaseHandler = systemManagementUseCaseHandler;
-    private readonly IOrchestrationSystemRepository _orchestrationSystemRepository = orchestrationSystemRepository;
-    private readonly OrchestrationLifecycleUseCaseHandler _orchestrationLifecycleUseCaseHandler = orchestrationLifecycleUseCaseHandler;
     private Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => _exceptionService.ExecuteAsync(operation);
 
     // =============================================================================================================
@@ -121,45 +111,4 @@ public class OrchestrationLifecycleOperationUseCaseHandler(
     public Task<List<OrchestrationLifecycleOperationDto>> GetDeletedOrchestrationLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
         ExecuteAsync(() => _queryHandler.GetDeletedOrchestrationLifecycleOperationsAsync(cancellationToken));
 
-    //Orchestration Runtime
-    public Task<OrchestrationLifecycleOperationDto> ExecuteOrchestrationRuntimeOperationAsync(
-        CreateOrchestrationLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(async () =>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!Enum.IsDefined(command.Type)) throw new InvalidOperationTypeException(command.Type.ToString());
-            var lifecycleQuery = new GetOrchestrationLifecycleByIdQuery { OrchestrationId = command.OrchestrationId };
-            _ = await _lifecycleQueryHandler.GetOrchestrationLifecycleByIdAsync(lifecycleQuery, cancellationToken) ??
-                   throw new OrchestrationLifecycleNotFoundException(command.OrchestrationId);
-            var operation = await CreateOrchestrationLifecycleOperationAsync(command, cancellationToken);
-            var operationStarted = false;
-
-            try
-            {
-                operation = await StartOrchestrationLifecycleOperationAsync(new StartOrchestrationLifecycleOperationCommand { Id = operation.Id }, cancellationToken);
-                operationStarted = true;
-                var orchestrationId = OrchestrationId.Create(command.OrchestrationId);
-                var associations = await _orchestrationSystemRepository.GetByOrchestrationIdAsync(orchestrationId, cancellationToken: cancellationToken);
-                if (associations.Count == 0) throw new InvalidOperationException($"Orchestration '{command.OrchestrationId}' has no active system associations.");
-                if (!Enum.TryParse<SystemLifecycleOperationTypeFilter>(command.Type.ToString(), ignoreCase: true, out var systemOperationType) || !Enum.IsDefined(systemOperationType))
-                    throw new InvalidOperationTypeException(command.Type.ToString());
-                foreach (var association in associations)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var systemCommand = new CreateSystemLifecycleOperationCommand { SystemId = association.SystemId.Value, Type = systemOperationType };
-                    await _systemManagementUseCaseHandler.ExecuteSystemRuntimeOperationAsync(systemCommand, cancellationToken);
-                }
-
-                return await CompleteOrchestrationLifecycleOperationAsync(new CompleteOrchestrationLifecycleOperationCommand { Id = operation.Id }, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                if (operationStarted)
-                    await FailOrchestrationLifecycleOperationAsync(
-                        new FailOrchestrationLifecycleOperationCommand { Id = operation.Id, ErrorMessage = ex.Message }, CancellationToken.None);
-                
-                await CancelOrchestrationLifecycleOperationAsync(new CancelOrchestrationLifecycleOperationCommand { Id = operation.Id }, CancellationToken.None);
-                throw;
-            }
-        });
 }
