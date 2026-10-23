@@ -392,6 +392,67 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("systems", (string)null);
                 });
 
+            modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Environment")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("environment");
+
+                    b.Property<string>("RuntimeProvider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("runtime_provider");
+
+                    b.Property<string>("RuntimeResourceId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("runtime_resource_id");
+
+                    b.Property<string>("RuntimeResourceName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("runtime_resource_name");
+
+                    b.Property<Guid>("SystemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("system_id");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<int>("system_database_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("system_database_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_system_runtime_instances");
+
+                    b.HasIndex("system_database_id", "Environment")
+                        .HasDatabaseName("ix_system_runtime_instances_system_environment");
+
+                    b.HasIndex("system_database_id", "SystemId");
+
+                    b.HasIndex("RuntimeProvider", "Environment", "RuntimeResourceId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_system_runtime_instances_resource");
+
+                    b.ToTable("system_runtime_instances", (string)null);
+                });
+
             modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycle", b =>
                 {
                     b.HasOne("Athena.Domain.OrchestrationRegistry.Entities.Orchestration", null)
@@ -523,6 +584,16 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.Navigation("Capabilities");
 
                     b.Navigation("Endpoints");
+                });
+
+            modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
+                {
+                    b.HasOne("Athena.Domain.SystemRegistry.Entities.System", null)
+                        .WithMany()
+                        .HasForeignKey("system_database_id", "SystemId")
+                        .HasPrincipalKey("id", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

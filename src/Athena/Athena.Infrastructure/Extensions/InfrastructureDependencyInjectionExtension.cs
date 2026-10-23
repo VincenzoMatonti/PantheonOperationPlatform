@@ -21,6 +21,15 @@ public static class DependencyInjectionExtension
         return services;
     }
 
+    public static async Task InitializeAthenaDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
+    {
+        await using var scope = services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AthenaDbContext>();
+        await dbContext.Database.MigrateAsync(cancellationToken);
+        var seeder = scope.ServiceProvider.GetRequiredService<AthenaSeeder>();
+        await seeder.SeedAsync(cancellationToken);
+    }
+
     private static IServiceCollection AddDatabase(IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Athena");
@@ -45,14 +54,5 @@ public static class DependencyInjectionExtension
     {
         services.AddScoped<AthenaSeeder>();
         return services;
-    }
-
-    public static async Task InitializeAthenaDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
-    {
-        await using var scope = services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AthenaDbContext>();
-        await dbContext.Database.MigrateAsync(cancellationToken);
-        var seeder = scope.ServiceProvider.GetRequiredService<AthenaSeeder>();
-        await seeder.SeedAsync(cancellationToken);
     }
 }
