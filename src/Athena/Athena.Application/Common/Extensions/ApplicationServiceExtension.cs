@@ -33,6 +33,7 @@ public static class AthenaApplicationExtensions
         AddSystemManagementApplicationServices(services);
         AddOrchestrationRegistryApplicationServices(services);
         AddOrchestrationManagementApplicationServices(services);
+        AddRuntimeApplicationServices(services);
         return services;
     }
 
@@ -68,6 +69,11 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationSystemCommandHandler>();
         services.AddScoped<OrchestrationSystemQueryHandler>();
         services.AddScoped<OrchestrationSystemUseCaseHandler>();
+    }
+
+    private static void AddRuntimeApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<RuntimeApplicationService>();
     }
 
     private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
