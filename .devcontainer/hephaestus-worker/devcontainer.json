@@ -1,7 +1,7 @@
 {
     "name": "Pantheon: Hephaestus Worker Dev Container",
     "dockerComposeFile": [
-        "../environment/compose.dev.yml"
+        "../workloads/compose.dev.yml"
     ],
     "service": "hephaestus-worker-dev",
     "workspaceFolder": "/workspace",

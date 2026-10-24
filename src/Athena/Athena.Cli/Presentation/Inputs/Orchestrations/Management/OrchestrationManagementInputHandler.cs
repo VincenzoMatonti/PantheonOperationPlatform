@@ -55,6 +55,7 @@ public static class OrchestrationManagementInputHandler
                 operations.AddCommand<GetDeletedOrchestrationLifecycleOperationsCommand>("deleted");
 
                 // Commands
+                operations.AddCommand<ExecuteOrchestrationRuntimeOperationCommand>("execute");
                 operations.AddCommand<CreateOrchestrationLifecycleOperationCommand>("create");
                 operations.AddCommand<StartOrchestrationLifecycleOperationCommand>("start");
                 operations.AddCommand<CompleteOrchestrationLifecycleOperationCommand>("complete");

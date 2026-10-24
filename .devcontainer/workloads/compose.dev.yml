@@ -14,7 +14,7 @@ services:
     volumes:
       - ../..:/workspace
     env_file:
-      - ../../infra/.local/environment/hermes/.env
+      - ../../infra/.local/workloads/hermes/.env
     networks:
       - pantheon-local
     command: sleep infinity
@@ -34,7 +34,7 @@ services:
     volumes:
       - ../..:/workspace
     env_file:
-      - ../../infra/.local/environment/hephaestus/.env
+      - ../../infra/.local/workloads/hephaestus/.env
     networks:
       - pantheon-local
     command: sleep infinity
@@ -54,7 +54,7 @@ services:
     volumes:
       - ../..:/workspace
     env_file:
-      - ../../infra/.local/environment/hephaestus-worker/.env
+      - ../../infra/.local/workloads/hephaestus-worker/.env
     networks:
       - pantheon-local
     command: sleep infinity
@@ -74,7 +74,7 @@ services:
     volumes:
       - ../..:/workspace
     env_file:
-      - ../../infra/.local/environment/argus/.env
+      - ../../infra/.local/workloads/argus/.env
     networks:
       - pantheon-local
     command: sleep infinity

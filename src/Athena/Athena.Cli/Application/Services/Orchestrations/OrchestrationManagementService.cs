@@ -57,6 +57,10 @@ public class OrchestrationManagementService(IOrchestrationManagement management)
 
     // ============================================================
     // LIFECYCLE OPERATION COMMANDS
+    public Task<OrchestrationLifecycleOperationResponse> ExecuteRuntimeOperationAsync(
+        Guid orchestrationId, CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken = default) =>
+        _management.ExecuteRuntimeOperationAsync(orchestrationId, request, cancellationToken);
+
     public Task<OrchestrationLifecycleOperationResponse> CreateOperationAsync(
         Guid orchestrationId, CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken = default) =>
         _management.CreateOperationAsync(orchestrationId, request, cancellationToken);

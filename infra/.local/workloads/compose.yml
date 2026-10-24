@@ -3,7 +3,7 @@ services:
     image: pantheon-hermes:local
     build:
       context: ../../..
-      dockerfile: infra/.local/environment/hermes/Dockerfile
+      dockerfile: infra/.local/workloads/hermes/Dockerfile
     container_name: pantheon-hermes
     restart: unless-stopped
     labels:
@@ -22,7 +22,7 @@ services:
     image: pantheon-hephaestus:local
     build:
       context: ../../..
-      dockerfile: infra/.local/environment/hephaestus/Dockerfile
+      dockerfile: infra/.local/workloads/hephaestus/Dockerfile
     container_name: pantheon-hephaestus
     restart: unless-stopped
     labels:
@@ -41,7 +41,7 @@ services:
     image: pantheon-hephaestus-worker:local
     build:
       context: ../../..
-      dockerfile: infra/.local/environment/hephaestus-worker/Dockerfile
+      dockerfile: infra/.local/workloads/hephaestus-worker/Dockerfile
     container_name: pantheon-hephaestus-worker
     restart: unless-stopped
     labels:
@@ -58,7 +58,7 @@ services:
     image: pantheon-argus:local
     build:
       context: ../../..
-      dockerfile: infra/.local/environment/argus/Dockerfile
+      dockerfile: infra/.local/workloads/argus/Dockerfile
     container_name: pantheon-argus
     restart: unless-stopped
     labels:
