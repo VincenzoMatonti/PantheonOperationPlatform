@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Athena.Application.Common.Dtos;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Interfaces.Runtime;
@@ -54,7 +55,7 @@ public class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, 
     }
 
     public async IAsyncEnumerable<RuntimeLogEntryDto> ReadLogsAsync(
-        Guid runtimeInstanceId, RuntimeLogOptionsDto options, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        Guid runtimeInstanceId, RuntimeLogOptionsDto options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
         var instance = await GetRequiredInstanceAsync(runtimeInstanceId, cancellationToken);

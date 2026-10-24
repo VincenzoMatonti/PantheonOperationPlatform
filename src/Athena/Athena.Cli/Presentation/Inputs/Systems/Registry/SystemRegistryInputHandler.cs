@@ -1,6 +1,7 @@
 using Athena.Cli.Presentation.Inputs.Systems.Management;
 using Athena.Cli.Presentation.Inputs.Systems.Registry.Queries;
 using Athena.Cli.Presentation.Inputs.Systems.Registry.Commands;
+using Athena.Cli.Presentation.Inputs.Systems.Diagnostic;
 using Spectre.Console.Cli;
 
 namespace Athena.Cli.Presentation.Inputs.Systems.Registry;
@@ -30,6 +31,7 @@ public static class SystemRegistryInputHandler
             systems.AddCommand<DisableSystemCommand>("disable");
             systems.AddCommand<DeleteSystemCommand>("delete");
             systems.AddSystemManagementCommands();
+            systems.AddSystemDiagnosticCommands();
         });
     }
 }

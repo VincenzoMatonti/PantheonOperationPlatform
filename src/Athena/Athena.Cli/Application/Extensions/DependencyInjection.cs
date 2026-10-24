@@ -10,6 +10,7 @@ public static class DependencyInjection
     {
         services.AddTransient<SystemRegistryService>();
         services.AddTransient<SystemManagementService>();
+        services.AddTransient<SystemDiagnosticService>();
         services.AddTransient<OrchestrationRegistryService>();
         services.AddScoped<OrchestrationManagementService>();
         services.AddScoped<OrchestrationSystemManagementService>();

@@ -199,86 +199,102 @@ public class SystemManagementUseCaseHandler(
     public Task<List<SystemLifecycleOperationDto>> GetDeletedSystemLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
         ExecuteAsync(() => _systemManagementQueryHandler.GetDeletedSystemLifecycleOperationsAsync(cancellationToken));
 
-    //=======================================================================================================================================
-    //System Runtime Operation
-    public Task<SystemLifecycleOperationDto> ExecuteSystemRuntimeOperationAsync(
-        CreateSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(async () =>
+    // =================================================================================================================
+    // SYSTEM RUNTIME OPERATION
+    public Task<SystemLifecycleOperationDto> ExecuteSystemRuntimeOperationAsync(CreateSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default)
+    {
+        SystemLifecycleOperationDto? operation = null;
+        var operationStarted = false;
+        return _exceptionService.ExecuteWithRecoveryAsync(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!Enum.IsDefined(command.Type)) throw new InvalidOperationTypeException(command.Type.ToString());
             var lifecycleQuery = new GetSystemLifecycleBySystemIdQuery { SystemId = command.SystemId };
             _ = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(lifecycleQuery, cancellationToken) ??
                 throw new SystemLifecycleNotFoundException(command.SystemId);
-            var operation = await _systemManagementCommandHandler.CreateSystemLifecycleOperationAsync(command, cancellationToken) ??
+
+            operation = await _systemManagementCommandHandler.CreateSystemLifecycleOperationAsync(command, cancellationToken) ??
                 throw new SystemLifecycleNotFoundException(command.SystemId);
-            var operationStarted = false;
 
-            try
-            {
-                operation = await _systemManagementCommandHandler.StartSystemLifecycleOperationAsync(
+            operation = await _systemManagementCommandHandler.StartSystemLifecycleOperationAsync(
                     new StartSystemLifecycleOperationCommand { OperationId = operation.Id }, cancellationToken) ??
-                    throw new SystemLifecycleOperationNotFoundException(operation.Id);
-                operationStarted = true;
-                var instances = await _runtimeApplicationService.GetBySystemIdAsync(command.SystemId);
-                if (instances.Count == 0) throw new InvalidOperationException($"No runtime instances are registered for system '{command.SystemId}'.");
-                switch (command.Type)
-                {
-                    case SystemLifecycleOperationTypeFilter.Start:
-                        {
-                            await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
-                            await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
-                            await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
-                            break;
-                        }
-
-                    case SystemLifecycleOperationTypeFilter.Stop:
-                        {
-                            await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
-                            await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
-                            await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
-                            break;
-                        }
-
-                    case SystemLifecycleOperationTypeFilter.Restart:
-                        {
-                            await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
-                            await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
-                            await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
-                            await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
-                            await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
-                            await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
-                            break;
-                        }
-
-                    default:
-                        throw new InvalidOperationTypeException(command.Type.ToString());
-                }
-
-                return await _systemManagementCommandHandler.CompleteSystemLifecycleOperationAsync(
-                        new CompleteSystemLifecycleOperationCommand { OperationId = operation.Id }, cancellationToken) ??
                         throw new SystemLifecycleOperationNotFoundException(operation.Id);
-            }
-            catch (Exception ex)
+                        
+            operationStarted = true;
+            var instances = await _runtimeApplicationService.GetBySystemIdAsync(command.SystemId);
+            if (instances.Count == 0) throw new InvalidOperationException($"No runtime instances are registered for system '{command.SystemId}'.");
+            switch (command.Type)
             {
-                if (!operationStarted)
-                {
-                    await _systemManagementCommandHandler.CancelSystemLifecycleOperationAsync(
-                        new CancelSystemLifecycleOperationCommand { OperationId = operation.Id }, CancellationToken.None);
-                }
-                else
-                {
-                    await _systemManagementCommandHandler.FailSystemLifecycleOperationAsync(
-                            new FailSystemLifecycleOperationCommand { OperationId = operation.Id, ErrorMessage = ex.Message }, CancellationToken.None);
-                    await MarkSystemFailedAsync(new MarkSystemFailedCommand { SystemId = command.SystemId }, CancellationToken.None);
-                }
+                case SystemLifecycleOperationTypeFilter.Start:
+                    {
+                        await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
+                        await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
+                        await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
+                        break;
+                    }
 
-                throw;
+                case SystemLifecycleOperationTypeFilter.Stop:
+                    {
+                        await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
+                        await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
+                        await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
+                        break;
+                    }
+
+                case SystemLifecycleOperationTypeFilter.Restart:
+                    {
+                        await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
+                        await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
+                        await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
+                        await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
+                        await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
+                        await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
+                        break;
+                    }
+
+                default:
+                    throw new InvalidOperationTypeException(command.Type.ToString());
             }
-        });
+
+            return await _systemManagementCommandHandler.CompleteSystemLifecycleOperationAsync(
+                    new CompleteSystemLifecycleOperationCommand { OperationId = operation.Id }, cancellationToken) ??
+                        throw new SystemLifecycleOperationNotFoundException(operation.Id);
+        },
+       async originalException =>
+       {
+           if (operation is null) return;
+           if (operationStarted)
+           {
+               await ApplicationExceptionService.TryExecuteCleanupAsync(async () =>
+               {
+                   _ = await _systemManagementCommandHandler.FailSystemLifecycleOperationAsync(
+                           new FailSystemLifecycleOperationCommand { OperationId = operation.Id, ErrorMessage = originalException.ToString() },
+                           CancellationToken.None);
+
+               }, $"Failed to mark system lifecycle operation '{operation.Id}' as Failed.");
+
+               await ApplicationExceptionService.TryExecuteCleanupAsync(async () =>
+               {
+                   await MarkSystemFailedAsync(new MarkSystemFailedCommand { SystemId = command.SystemId }, CancellationToken.None);
+
+               }, $"Failed to mark system '{command.SystemId}' as Failed.");
+           }
+           else
+           {
+               await ApplicationExceptionService.TryExecuteCleanupAsync(async () =>
+               {
+                   _ = await _systemManagementCommandHandler.CancelSystemLifecycleOperationAsync(
+                           new CancelSystemLifecycleOperationCommand { OperationId = operation.Id }, CancellationToken.None);
+
+               }, $"Failed to cancel system lifecycle operation '{operation.Id}'.");
+           }
+       });
+    }
 
     private async Task ExecuteOnAllInstancesAsync(
-        IEnumerable<SystemRuntimeInstanceDto> instances, Func<RuntimeApplicationService, Guid, Task> execute, CancellationToken cancellationToken)
+        IEnumerable<SystemRuntimeInstanceDto> instances,
+        Func<RuntimeApplicationService, Guid, Task> execute,
+        CancellationToken cancellationToken)
     {
         foreach (var instance in instances)
         {
