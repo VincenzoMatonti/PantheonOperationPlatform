@@ -9,6 +9,8 @@ namespace Athena.Application.Common.Interfaces;
 public interface ISystemRuntimeInstanceRegistry
 {
     Task<SystemRuntimeInstanceDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetByRuntimeResourceNameAsync(string runtimeResourceName, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetBySystemIdAsync(Guid systemId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetBySystemIdAndEnvironmentAsync(Guid systemId, string environment, CancellationToken cancellationToken = default);
     Task<SystemRuntimeInstanceDto> RegisterAsync(

@@ -10,12 +10,17 @@ namespace Athena.Application.Common.Services;
 /// Does not depend on concrete runtime providers or persistence models.
 /// </summary>
 public class RuntimeApplicationService(
-    ISystemRuntimeInstanceRegistry registry, 
+    ISystemRuntimeInstanceRegistry registry,
     IRuntimeProviderResolver providerResolver,
     IRuntimeDiscoveryService runtimeDiscoveryService)
 {
-    public Task<SystemRuntimeInstanceDto?> GetByIdAsync(
-        Guid id, CancellationToken cancellationToken = default) => registry.GetByIdAsync(id, cancellationToken);
+    public Task<SystemRuntimeInstanceDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => registry.GetByIdAsync(id, cancellationToken);
+
+    public Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        registry.GetAllAsync(cancellationToken);
+
+    public Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetByRuntimeResourceNameAsync(string runtimeResourceName, CancellationToken cancellationToken = default) =>
+        registry.GetByRuntimeResourceNameAsync(runtimeResourceName, cancellationToken);
 
     public Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetBySystemIdAsync(
         Guid systemId, CancellationToken cancellationToken = default) => registry.GetBySystemIdAsync(systemId, cancellationToken);

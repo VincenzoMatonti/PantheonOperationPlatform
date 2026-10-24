@@ -14,16 +14,36 @@ public sealed class SystemRuntimeInstanceRegistry(AthenaDbContext dbContext) : I
         return instance is null ? null : ToDto(instance);
     }
 
+    public async Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetAllAsync(
+    CancellationToken cancellationToken = default)
+    {
+        var instances = await dbContext.SystemRuntimeInstances
+            .AsNoTracking()
+            .OrderBy(x => x.RuntimeResourceName)
+            .ThenBy(x => x.Environment)
+            .ThenBy(x => x.RuntimeProvider)
+            .ToListAsync(cancellationToken);
+
+        return instances.Select(ToDto).ToArray();
+    }
+
+    public async Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetByRuntimeResourceNameAsync(string runtimeResourceName, CancellationToken cancellationToken = default)
+    {
+        EnsureText(runtimeResourceName, nameof(runtimeResourceName), 255);
+        var normalizedName = runtimeResourceName.Trim();
+        var instances = await dbContext.SystemRuntimeInstances
+            .AsNoTracking().Where(x => x.RuntimeResourceName == normalizedName).OrderBy(x => x.Environment).ThenBy(x => x.RuntimeProvider).ToListAsync(cancellationToken);
+
+        return instances.Select(ToDto).ToArray();
+    }
+
     public async Task<IReadOnlyList<SystemRuntimeInstanceDto>> GetBySystemIdAsync(Guid systemId, CancellationToken cancellationToken = default)
     {
         EnsureSystemId(systemId);
         var id = SystemId.Create(systemId);
         var instances = await dbContext.SystemRuntimeInstances
-            .AsNoTracking()
-            .Where(x => x.SystemId == id)
-            .OrderBy(x => x.Environment)
-            .ThenBy(x => x.RuntimeProvider)
-            .ToListAsync(cancellationToken);
+            .AsNoTracking().Where(x => x.SystemId == id).OrderBy(x => x.Environment).ThenBy(x => x.RuntimeProvider).ToListAsync(cancellationToken);
+        
         return [.. instances.Select(ToDto)];
     }
 
