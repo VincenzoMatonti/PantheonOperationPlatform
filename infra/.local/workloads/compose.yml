@@ -11,6 +11,12 @@ services:
       com.pantheon.system-id: "10000000-0000-0000-0000-000000000001"
       com.pantheon.environment: "local"
       com.pantheon.role: "service"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s  
     env_file:
       - ./hermes/.env
     ports:
@@ -30,6 +36,12 @@ services:
       com.pantheon.system-id: "10000000-0000-0000-0000-000000000002"
       com.pantheon.environment: "local"
       com.pantheon.role: "service"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     env_file:
       - ./hephaestus/.env
     ports:
@@ -49,6 +61,12 @@ services:
       com.pantheon.system-id: "10000000-0000-0000-0000-000000000002"
       com.pantheon.environment: "local"
       com.pantheon.role: "worker"
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     env_file:
       - ./hephaestus-worker/.env
     networks:
@@ -66,6 +84,12 @@ services:
       com.pantheon.system-id: "10000000-0000-0000-0000-000000000003"
       com.pantheon.environment: "local"
       com.pantheon.role: "service"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     env_file:
       - ./argus/.env
     ports:

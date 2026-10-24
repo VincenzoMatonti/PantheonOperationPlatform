@@ -9,7 +9,10 @@ namespace Athena.Application.Common.Services;
 /// Coordinates application-level operations on registered runtime instances.
 /// Does not depend on concrete runtime providers or persistence models.
 /// </summary>
-public class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, IRuntimeProviderResolver providerResolver)
+public class RuntimeApplicationService(
+    ISystemRuntimeInstanceRegistry registry, 
+    IRuntimeProviderResolver providerResolver,
+    IRuntimeDiscoveryService runtimeDiscoveryService)
 {
     public Task<SystemRuntimeInstanceDto?> GetByIdAsync(
         Guid id, CancellationToken cancellationToken = default) => registry.GetByIdAsync(id, cancellationToken);
@@ -40,7 +43,7 @@ public class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, 
 
     public async Task<RuntimeResourceStatusDto> GetStatusAsync(Guid runtimeInstanceId, CancellationToken cancellationToken = default)
     {
-        var instance = await GetRequiredInstanceAsync(runtimeInstanceId, cancellationToken);
+        var instance = await GetDiagnosticInstanceAsync(runtimeInstanceId, cancellationToken);
         var resource = ToResourceReference(instance);
         var provider = providerResolver.Resolve(instance.RuntimeProvider);
         return await provider.GetStatusAsync(resource, cancellationToken);
@@ -48,7 +51,7 @@ public class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, 
 
     public async Task<RuntimeHealthCheckDto> CheckHealthAsync(Guid runtimeInstanceId, CancellationToken cancellationToken = default)
     {
-        var instance = await GetRequiredInstanceAsync(runtimeInstanceId, cancellationToken);
+        var instance = await GetDiagnosticInstanceAsync(runtimeInstanceId, cancellationToken);
         var resource = ToResourceReference(instance);
         var healthCheck = providerResolver.ResolveHealthCheck(instance.RuntimeProvider);
         return await healthCheck.CheckHealthAsync(resource, cancellationToken);
@@ -58,13 +61,22 @@ public class RuntimeApplicationService(ISystemRuntimeInstanceRegistry registry, 
         Guid runtimeInstanceId, RuntimeLogOptionsDto options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
-        var instance = await GetRequiredInstanceAsync(runtimeInstanceId, cancellationToken);
+        var instance = await GetDiagnosticInstanceAsync(runtimeInstanceId, cancellationToken);
         var resource = ToResourceReference(instance);
         var logReader = providerResolver.ResolveLogReader(instance.RuntimeProvider);
         await foreach (var entry in logReader.ReadLogsAsync(resource, options, cancellationToken).WithCancellation(cancellationToken))
         {
             yield return entry;
         }
+    }
+
+    private async Task<SystemRuntimeInstanceDto> GetDiagnosticInstanceAsync(Guid runtimeInstanceId, CancellationToken cancellationToken)
+    {
+        var instance = await GetRequiredInstanceAsync(runtimeInstanceId, cancellationToken);
+        if (!string.Equals(instance.RuntimeProvider, "docker", StringComparison.OrdinalIgnoreCase)) return instance;
+        await runtimeDiscoveryService.DiscoverAndSynchronizeAsync(cancellationToken);
+        return await registry.GetByIdAsync(runtimeInstanceId, cancellationToken)
+            ?? throw new InvalidOperationException($"Runtime instance '{runtimeInstanceId}' non trovata dopo la sincronizzazione.");
     }
 
     private async Task ExecuteProviderOperationAsync(

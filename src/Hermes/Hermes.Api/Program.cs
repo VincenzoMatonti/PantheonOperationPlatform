@@ -165,7 +165,9 @@ builder.Services.AddScoped<RouteCommandHandler>();
 builder.Services.AddScoped<RouteQueryHandler>();
 builder.Services.AddScoped<RouteUseCaseHandler>();
 
+builder.Services.AddHealthChecks();
 var app = builder.Build();
+app.MapHealthChecks("/health");
 app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
