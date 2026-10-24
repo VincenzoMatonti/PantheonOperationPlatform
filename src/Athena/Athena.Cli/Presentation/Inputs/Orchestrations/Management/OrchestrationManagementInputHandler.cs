@@ -15,7 +15,7 @@ public static class OrchestrationManagementInputHandler
         config.AddBranch("management", management =>
         {
             management.SetDescription("Manage orchestration lifecycles and lifecycle operations.");
-            management.AddBranch("lifecycle", lifecycle =>
+            management.AddBranch("lifecycles", lifecycle =>
             {
                 lifecycle.SetDescription("Query and manage orchestration lifecycles.");
 

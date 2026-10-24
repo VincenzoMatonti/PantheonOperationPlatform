@@ -18,8 +18,6 @@ public static class ApiCommonServiceCollectionExtensions
         services.AddSingleton<IExceptionMapper, ApiApplicationCoreExceptionMapper>();
         services.AddSingleton<IExceptionMapper, ApiValidationExceptionMapper>();
         services.AddSingleton<IExceptionMapper, ApiCommonExceptionMapper>();
-
-
         return services;
     }
 }

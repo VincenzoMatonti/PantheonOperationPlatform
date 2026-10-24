@@ -14,7 +14,7 @@ public static class OrchestrationRegistryInputHandler
             orchestrations.SetDescription("Manage registered orchestrations.");
             orchestrations.AddBranch("registry", registry =>
             {
-                registry.SetDescription("Manage the orchestration registry.");
+                registry.SetDescription("Register, query, and manage orchestration records and availability.");
 
                 // Queries
                 registry.AddCommand<ListOrchestrationsCommand>("list").WithDescription("List all orchestrations.");

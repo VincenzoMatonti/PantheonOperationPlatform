@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddTransient<ISystemsRegistry, AthenaSystemsRegistryClient>();
         services.AddTransient<ISystemsManagement, AthenaSystemsManagementClient>();
         services.AddTransient<ISystemsDiagnostic, AthenaSystemsDiagnosticClient>();
+        services.AddTransient<ISystemsRuntimeInstances, AthenaSystemsRuntimeInstancesClient>();
         services.AddTransient<IOrchestrationsRegistry, AthenaOrchestrationsRegistryClient>();
         services.AddScoped<IOrchestrationManagement, AthenaOrchestrationManagementClient>();
         services.AddScoped<IOrchestrationSystemManagement, AthenaOrchestrationSystemManagementClient>();
