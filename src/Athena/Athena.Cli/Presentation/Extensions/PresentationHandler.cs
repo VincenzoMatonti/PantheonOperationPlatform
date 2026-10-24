@@ -15,43 +15,44 @@ public static class PresentationHandler
         return config;
     }
 
+
     public static IConfigurator UseAthenaHelp(this IConfigurator config)
     {
-
         config.Settings.HelpProviderStyles = new HelpProviderStyle
         {
-            Description = new DescriptionStyle { Header = "bold yellow" },
+            Description = new DescriptionStyle { Header = "bold white on rgb(35,45,60)" },
             Usage = new UsageStyle
             {
-                Header = "bold yellow",
-                Options = "dim",
-                Command = "bold cyan",
+                Header = "bold white on rgb(35,45,60)",
+                Options = "grey",
+                Command = "bold white",
                 CurrentCommand = "bold cyan",
-                RequiredArgument = "bold green",
-                OptionalArgument = "dim green"
+                RequiredArgument = "bold springgreen3",
+                OptionalArgument = "grey70"
             },
 
-            Examples = new ExampleStyle { Header = "bold yellow", Arguments = "cyan" },
-            Arguments = new ArgumentStyle { Header = "bold yellow", RequiredArgument = "bold green", OptionalArgument = "dim green" },
+            Examples = new ExampleStyle { Header = "bold cyan", Arguments = "springgreen3" },
+            Arguments = new ArgumentStyle { Header = "bold cyan", RequiredArgument = "bold springgreen3", OptionalArgument = "grey70" },
             Options = new OptionStyle
             {
-                Header = "bold yellow",
-                DefaultValueHeader = "dim",
-                DefaultValue = "dim",
+                Header = "bold cyan",
+                DefaultValueHeader = "grey",
+                DefaultValue = "grey70",
                 RequiredOption = "bold cyan",
-                RequiredOptionValue = "bold green",
-                OptionalOptionValue = "dim green"
+                RequiredOptionValue = "bold springgreen3",
+                OptionalOptionValue = "grey70"
             },
 
             Commands = new CommandStyle
             {
-                Header = "bold yellow",
-                ChildCommand = "bold cyan",
-                RequiredArgument = "bold green"
+                Header = "bold cyan",
+                ChildCommand = "bold white",
+                RequiredArgument = "springgreen3"
             }
         };
 
         config.SetHelpProvider(new AthenaHelpProvider(config.Settings));
         return config;
     }
+
 }
