@@ -13,13 +13,13 @@ public class SystemManagementUseCaseHandler(
     SystemManagementQueryHandler systemQueryHandler,
     ApplicationExceptionService exceptionService,
     RuntimeApplicationService runtimeApplicationService,
-    OrchestrationOperationalStatusSynchronizationService orchestrationStatusSynchronizationService)
+    OrchestrationStatusSynchronizationService orchestrationStatusSynchronizationService)
 {
     private readonly SystemManagementCommandHandler _systemManagementCommandHandler = systemCommandHandler;
     private readonly SystemManagementQueryHandler _systemManagementQueryHandler = systemQueryHandler;
     private readonly ApplicationExceptionService _exceptionService = exceptionService;
     private readonly RuntimeApplicationService _runtimeApplicationService = runtimeApplicationService;
-    private readonly OrchestrationOperationalStatusSynchronizationService _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
+    private readonly OrchestrationStatusSynchronizationService _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
 
     private Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => _exceptionService.ExecuteAsync(operation);
 

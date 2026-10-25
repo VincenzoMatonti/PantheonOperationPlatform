@@ -20,7 +20,7 @@ public class OrchestrationRuntimeUseCaseHandler(
     SystemManagementUseCaseHandler systemManagementUseCaseHandler,
     OrchestrationLifecycleUseCaseHandler orchestrationLifecycleUseCaseHandler,
     OrchestrationLifecycleOperationUseCaseHandler orchestrationLifecycleOperationUseCaseHandler,
-    OrchestrationOperationalStatusSynchronizationService orchestrationStatusSynchronizationService,
+    OrchestrationStatusSynchronizationService orchestrationStatusSynchronizationService,
     IOrchestrationSystemRepository orchestrationSystemRepository,
     IRuntimeDiscoveryService runtimeDiscoveryService)
 {
@@ -30,7 +30,7 @@ public class OrchestrationRuntimeUseCaseHandler(
     private readonly SystemManagementUseCaseHandler _systemManagementUseCaseHandler = systemManagementUseCaseHandler;
     private readonly OrchestrationLifecycleUseCaseHandler _orchestrationLifecycleUseCaseHandler = orchestrationLifecycleUseCaseHandler;
     private readonly OrchestrationLifecycleOperationUseCaseHandler _orchestrationLifecycleOperationUseCaseHandler = orchestrationLifecycleOperationUseCaseHandler;
-    private readonly OrchestrationOperationalStatusSynchronizationService _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
+    private readonly OrchestrationStatusSynchronizationService _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
     private readonly IOrchestrationSystemRepository _orchestrationSystemRepository = orchestrationSystemRepository;
     private readonly IRuntimeDiscoveryService _runtimeDiscoveryService = runtimeDiscoveryService;
 
