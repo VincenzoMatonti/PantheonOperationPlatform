@@ -12,12 +12,14 @@ public class SystemManagementUseCaseHandler(
     SystemManagementCommandHandler systemCommandHandler,
     SystemManagementQueryHandler systemQueryHandler,
     ApplicationExceptionService exceptionService,
-    RuntimeApplicationService runtimeApplicationService)
+    RuntimeApplicationService runtimeApplicationService,
+    OrchestrationOperationalStatusSynchronizationService orchestrationStatusSynchronizationService)
 {
     private readonly SystemManagementCommandHandler _systemManagementCommandHandler = systemCommandHandler;
     private readonly SystemManagementQueryHandler _systemManagementQueryHandler = systemQueryHandler;
     private readonly ApplicationExceptionService _exceptionService = exceptionService;
     private readonly RuntimeApplicationService _runtimeApplicationService = runtimeApplicationService;
+    private readonly OrchestrationOperationalStatusSynchronizationService _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
 
     private Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => _exceptionService.ExecuteAsync(operation);
 
@@ -160,7 +162,8 @@ public class SystemManagementUseCaseHandler(
 
     // =================================================================================================================
     // SYSTEM RUNTIME OPERATION
-    public Task<SystemLifecycleOperationDto> ExecuteSystemRuntimeOperationAsync(CreateSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default)
+    public Task<SystemLifecycleOperationDto> ExecuteSystemRuntimeOperationAsync(
+        CreateSystemLifecycleOperationCommand command, CancellationToken cancellationToken = default, bool synchronizeRelatedOrchestrations = true)
     {
         SystemLifecycleOperationDto? operation = null;
         var operationStarted = false;
@@ -169,8 +172,7 @@ public class SystemManagementUseCaseHandler(
             cancellationToken.ThrowIfCancellationRequested();
             if (!Enum.IsDefined(command.Type)) throw new InvalidOperationTypeException(command.Type.ToString());
             var lifecycleQuery = new GetSystemLifecycleBySystemIdQuery { SystemId = command.SystemId };
-            _ = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(lifecycleQuery, cancellationToken) ??
-                throw new SystemLifecycleNotFoundException(command.SystemId);
+            var lifecycle = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(lifecycleQuery, cancellationToken) ?? throw new SystemLifecycleNotFoundException(command.SystemId);
             var desiredState = command.Type switch
             {
                 SystemLifecycleOperationTypeFilter.Start => SystemDesiredStateFilter.Running,
@@ -179,8 +181,9 @@ public class SystemManagementUseCaseHandler(
                 _ => SystemDesiredStateFilter.Unknown
             };
 
-            _ = await _systemManagementCommandHandler.SetSystemDesiredStateAsync(new SetSystemDesiredStateCommand { SystemId = command.SystemId, DesiredState = desiredState }, cancellationToken) ??
-                throw new SystemLifecycleNotFoundException(command.SystemId);
+            if (!string.Equals(lifecycle.DesiredState, desiredState.ToString(), StringComparison.Ordinal))
+                _ = await _systemManagementCommandHandler.SetSystemDesiredStateAsync(
+                    new SetSystemDesiredStateCommand { SystemId = command.SystemId, DesiredState = desiredState }, cancellationToken) ?? throw new SystemLifecycleNotFoundException(command.SystemId);
 
             operation = await _systemManagementCommandHandler.CreateSystemLifecycleOperationAsync(command, cancellationToken) ??
                 throw new SystemLifecycleNotFoundException(command.SystemId);
@@ -191,11 +194,15 @@ public class SystemManagementUseCaseHandler(
 
             operationStarted = true;
             var instances = await _runtimeApplicationService.GetBySystemIdAsync(command.SystemId);
-            if (instances.Count == 0) throw new InvalidOperationException($"No runtime instances are registered for system '{command.SystemId}'.");
             switch (command.Type)
             {
                 case SystemLifecycleOperationTypeFilter.Start:
                     {
+                        if (lifecycle.OperationalStatus == "Running") break;
+                        if (lifecycle.OperationalStatus is not ("Unknown" or "Stopped" or "Failed"))
+                            throw new InvalidOperationException($"Cannot start system '{command.SystemId}' while its operational status is '{lifecycle.OperationalStatus}'.");
+
+                        EnsureRuntimeInstancesAvailable(instances, command.SystemId);
                         await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
                         await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
                         await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
@@ -204,6 +211,11 @@ public class SystemManagementUseCaseHandler(
 
                 case SystemLifecycleOperationTypeFilter.Stop:
                     {
+                        if (lifecycle.OperationalStatus == "Stopped") break;
+                        if (lifecycle.OperationalStatus != "Running")
+                            throw new InvalidOperationException($"Cannot stop system '{command.SystemId}' while its operational status is '{lifecycle.OperationalStatus}'.");
+
+                        EnsureRuntimeInstancesAvailable(instances, command.SystemId);
                         await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
                         await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
                         await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
@@ -212,9 +224,19 @@ public class SystemManagementUseCaseHandler(
 
                 case SystemLifecycleOperationTypeFilter.Restart:
                     {
-                        await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
-                        await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
-                        await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
+                        if (lifecycle.OperationalStatus is "Starting" or "Stopping")
+                            throw new InvalidOperationException($"Cannot restart system '{command.SystemId}' while its operational status is '{lifecycle.OperationalStatus}'.");
+
+                        EnsureRuntimeInstancesAvailable(instances, command.SystemId);
+                        if (lifecycle.OperationalStatus == "Running")
+                        {
+                            await MarkSystemStoppingAsync(new MarkSystemStoppingCommand { SystemId = command.SystemId }, cancellationToken);
+                            await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StopAsync(id), cancellationToken);
+                            await MarkSystemStoppedAsync(new MarkSystemStoppedCommand { SystemId = command.SystemId }, cancellationToken);
+                        }
+                        else if (lifecycle.OperationalStatus is not ("Unknown" or "Stopped" or "Failed"))
+                            throw new InvalidOperationException($"Cannot restart system '{command.SystemId}' while its operational status is '{lifecycle.OperationalStatus}'.");
+
                         await MarkSystemStartingAsync(new MarkSystemStartingCommand { SystemId = command.SystemId }, cancellationToken);
                         await ExecuteOnAllInstancesAsync(instances, static (runtime, id) => runtime.StartAsync(id), cancellationToken);
                         await MarkSystemRunningAsync(new MarkSystemRunningCommand { SystemId = command.SystemId }, cancellationToken);
@@ -225,9 +247,10 @@ public class SystemManagementUseCaseHandler(
                     throw new InvalidOperationTypeException(command.Type.ToString());
             }
 
-            return await _systemManagementCommandHandler.CompleteSystemLifecycleOperationAsync(
-                    new CompleteSystemLifecycleOperationCommand { OperationId = operation.Id }, cancellationToken) ??
-                        throw new SystemLifecycleOperationNotFoundException(operation.Id);
+            var completedOperation = await _systemManagementCommandHandler.CompleteSystemLifecycleOperationAsync(new CompleteSystemLifecycleOperationCommand { OperationId = operation.Id }, cancellationToken) ??
+                  throw new SystemLifecycleOperationNotFoundException(operation.Id);
+            if (synchronizeRelatedOrchestrations) await _orchestrationStatusSynchronizationService.SynchronizeForSystemsAsync([command.SystemId], cancellationToken);
+            return completedOperation;
         },
        async originalException =>
        {
@@ -245,6 +268,7 @@ public class SystemManagementUseCaseHandler(
                await ApplicationExceptionService.TryExecuteCleanupAsync(async () =>
                {
                    await MarkSystemFailedAsync(new MarkSystemFailedCommand { SystemId = command.SystemId }, CancellationToken.None);
+                   if (synchronizeRelatedOrchestrations) await _orchestrationStatusSynchronizationService.SynchronizeForSystemsAsync([command.SystemId], CancellationToken.None);
 
                }, $"Failed to mark system '{command.SystemId}' as Failed.");
            }
@@ -268,4 +292,11 @@ public class SystemManagementUseCaseHandler(
             await execute(_runtimeApplicationService, instance.Id);
         }
     }
+
+
+    private static void EnsureRuntimeInstancesAvailable(IReadOnlyCollection<SystemRuntimeInstanceDto> instances, Guid systemId)
+    {
+        if (instances.Count == 0) throw new InvalidOperationException($"No runtime instances are registered for system '{systemId}'.");
+    }
+
 }
