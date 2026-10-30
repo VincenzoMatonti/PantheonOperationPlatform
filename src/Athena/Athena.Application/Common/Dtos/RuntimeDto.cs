@@ -13,3 +13,5 @@ public record RuntimeLogOptionsDto(int Tail = 100, DateTime? SinceUtc = null, Da
 public record RuntimeOperationResultDto(bool Succeeded, string? Details = null);
 
 public record DiscoveredRuntimeInstanceDto(Guid SystemId, string RuntimeProvider, string RuntimeResourceId, string RuntimeResourceName, string Environment);
+
+public record RuntimeInstanceDiagnosticsDto(SystemRuntimeInstanceDto Instance, RuntimeResourceStatusDto Status, RuntimeHealthCheckDto HealthCheck);

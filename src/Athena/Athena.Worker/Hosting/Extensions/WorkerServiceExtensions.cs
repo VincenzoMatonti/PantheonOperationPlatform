@@ -1,5 +1,7 @@
 using Athena.Worker.Reconciliation;
 using Athena.Worker.Reconciliation.Options;
+using Athena.Worker.Synchronization;
+using Athena.Worker.Synchronization.Options;
 
 namespace Athena.Worker.Hosting.Extensions;
 
@@ -8,6 +10,7 @@ public static class WorkerServiceExtensions
     public static IServiceCollection AddWorkerServices(this IServiceCollection services)
     {
         services.AddOrchestrationReconciliation();
+        services.AddSystemSynchronization();
         return services;
     }
 
@@ -19,7 +22,17 @@ public static class WorkerServiceExtensions
             .ValidateOnStart();
 
         services.AddHostedService<OrchestrationReconciliationHostedService>();
+        return services;
+    }
 
+    private static IServiceCollection AddSystemSynchronization(this IServiceCollection services)
+    {
+        services.AddOptions<SystemSynchronizationOptions>()
+            .BindConfiguration(SystemSynchronizationOptions.SectionName)
+            .Validate(options => options.Interval > TimeSpan.Zero, "The system synchronization interval must be greater than zero.")
+            .ValidateOnStart();
+
+        services.AddHostedService<SystemSynchronizationHostedService>();
         return services;
     }
 }

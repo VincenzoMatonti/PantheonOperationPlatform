@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Globalization;
 using Athena.Application.Common.Dtos;
 using Athena.Application.Common.Interfaces;
 using Athena.Infrastructure.Services.Client;
@@ -31,6 +32,59 @@ public sealed class DockerRuntimeDiscoveryService(ISystemRuntimeInstanceRegistry
         }
 
         return synchronized;
+    }
+
+    public async Task<IReadOnlyList<RuntimeInstanceDiagnosticsDto>> DiscoverWithDiagnosticsAsync(CancellationToken cancellationToken = default)
+    {
+        var output = await DockerCli.ExecuteAsync(["ps", "-aq", "--filter", $"label={ManagedLabel}=true"], cancellationToken);
+        var containerIds = output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.Ordinal).ToArray();
+        if (containerIds.Length == 0) return [];
+        var arguments = new List<string> { "inspect" };
+        arguments.AddRange(containerIds);
+        var json = await DockerCli.ExecuteAsync(arguments, cancellationToken);
+        using var document = JsonDocument.Parse(json);
+        var diagnostics = new List<RuntimeInstanceDiagnosticsDto>();
+        foreach (var container in document.RootElement.EnumerateArray())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!TryReadCandidate(container, out var candidate)) continue;
+            var instance = await registry.SynchronizeDiscoveredAsync(candidate, cancellationToken);
+            if (instance is null) continue;
+            var status = ReadRuntimeStatus(container);
+            var healthCheck = ReadHealthCheck(container);
+            diagnostics.Add(new RuntimeInstanceDiagnosticsDto(instance, status, healthCheck));
+        }
+
+        return diagnostics;
+    }
+
+    private static RuntimeResourceStatusDto ReadRuntimeStatus(JsonElement container)
+    {
+        var observedAtUtc = DateTime.UtcNow;
+
+        if (!container.TryGetProperty("State", out var state)) return new RuntimeResourceStatusDto("unknown", false, null, observedAtUtc, "Docker non ha restituito lo stato del container.");
+        var stateName = state.TryGetProperty("Status", out var statusElement) ? statusElement.GetString() ?? "unknown" : "unknown";
+        var isRunning = state.TryGetProperty("Running", out var runningElement) && runningElement.ValueKind == JsonValueKind.True;
+        DateTime? startedAtUtc = null;
+        if (state.TryGetProperty("StartedAt", out var startedAtElement))
+        {
+            var startedAtText = startedAtElement.GetString();
+            if (DateTime.TryParse(startedAtText, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out var parsed) && parsed.Year > 1) startedAtUtc = parsed;
+        }
+
+        return new RuntimeResourceStatusDto(stateName, isRunning, startedAtUtc, observedAtUtc);
+    }
+
+    private static RuntimeHealthCheckDto ReadHealthCheck(JsonElement container)
+    {
+        var checkedAtUtc = DateTime.UtcNow;
+        if (!container.TryGetProperty("State", out var state)) return new RuntimeHealthCheckDto(false, "unknown", checkedAtUtc, "Docker non ha restituito lo stato del container.");
+        var isRunning = state.TryGetProperty("Running", out var runningElement) && runningElement.ValueKind == JsonValueKind.True;
+        if (!state.TryGetProperty("Health", out var health))
+            return new RuntimeHealthCheckDto(false, isRunning ? "health-check-not-configured" : "not-running", checkedAtUtc, "Il container non espone un health check Docker configurato.");
+        
+        var healthStatus = health.TryGetProperty("Status", out var healthStatusElement) ? healthStatusElement.GetString() ?? "unknown" : "unknown";
+        return new RuntimeHealthCheckDto(string.Equals(healthStatus, "healthy", StringComparison.OrdinalIgnoreCase), healthStatus, checkedAtUtc);
     }
 
     private static bool TryReadCandidate(JsonElement container, out DiscoveredRuntimeInstanceDto candidate)

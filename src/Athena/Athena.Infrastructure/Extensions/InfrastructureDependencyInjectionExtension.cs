@@ -1,3 +1,4 @@
+using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Interfaces.Runtime;
 using Athena.Domain.OrchestrationManagement.Repositories;
@@ -9,6 +10,7 @@ using Athena.Infrastructure.Repositories;
 using Athena.Infrastructure.Seeding;
 using Athena.Infrastructure.Services.Runtime;
 using Athena.Infrastructure.Services.Runtime.Providers.Docker;
+using Athena.Infrastructure.Services.Synchronization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,7 @@ public static class DependencyInjectionExtension
         AddDatabase(services, configuration);
         AddRepositories(services);
         AddRuntimeServices(services);
+        AddSynchronizationServices(services);
         AddAthenaSeeder(services);
         return services;
     }
@@ -63,6 +66,12 @@ public static class DependencyInjectionExtension
         services.AddScoped<IRuntimeHealthCheck, DockerRuntimeHealthCheck>();
         services.AddScoped<IRuntimeLogReader, DockerRuntimeLogReader>();
         services.AddScoped<IRuntimeDiscoveryService, DockerRuntimeDiscoveryService>();
+        return services;
+    }
+
+    private static IServiceCollection AddSynchronizationServices(IServiceCollection services)
+    {
+        services.AddHttpClient<IEndpointAvailabilityChecker, HttpEndpointAvailabilityChecker>(client => { client.Timeout = TimeSpan.FromSeconds(5); });
         return services;
     }
 

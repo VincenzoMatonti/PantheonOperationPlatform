@@ -62,6 +62,11 @@ public class RuntimeApplicationService(
         return await healthCheck.CheckHealthAsync(resource, cancellationToken);
     }
 
+    public Task<IReadOnlyList<RuntimeInstanceDiagnosticsDto>> DiscoverWithDiagnosticsAsync(CancellationToken cancellationToken = default)
+    {
+        return runtimeDiscoveryService.DiscoverWithDiagnosticsAsync(cancellationToken);
+    }
+
     public async IAsyncEnumerable<RuntimeLogEntryDto> ReadLogsAsync(
         Guid runtimeInstanceId, RuntimeLogOptionsDto options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {

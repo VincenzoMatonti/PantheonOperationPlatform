@@ -1,4 +1,5 @@
 using Athena.Application.BackgroundTasks.Reconciliation;
+using Athena.Application.BackgroundTasks.Synchronization;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Mappings;
 using Athena.Application.Common.Services;
@@ -69,7 +70,7 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationLifecycleUseCaseHandler>();
         services.AddScoped<OrchestrationLifecycleOperationCommandHandler>();
         services.AddScoped<OrchestrationLifecycleOperationQueryHandler>();
-        services.AddScoped<OrchestrationLifecycleOperationUseCaseHandler>();        
+        services.AddScoped<OrchestrationLifecycleOperationUseCaseHandler>();
         services.AddScoped<OrchestrationDesiredStateUseCaseHandler>();
         services.AddScoped<OrchestrationSystemCommandHandler>();
         services.AddScoped<OrchestrationSystemQueryHandler>();
@@ -94,6 +95,8 @@ public static class AthenaApplicationExtensions
     private static IServiceCollection AddBackgroundService(IServiceCollection services)
     {
         services.AddScoped<OrchestrationReconciliationService>();
+        services.AddSingleton<EndpointCheckSchedule>();
+        services.AddScoped<SystemSynchronizationService>();
         return services;
     }
 }
