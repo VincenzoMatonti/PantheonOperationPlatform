@@ -1,3 +1,4 @@
+using Athena.Application.BackgroundTasks.Reconciliation;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Mappings;
 using Athena.Application.Common.Services;
@@ -23,6 +24,7 @@ public static class AthenaApplicationExtensions
     {
         AddApplicationService(services);
         AddApplicationExceptionHandling(services);
+        AddBackgroundService(services);
         return services;
     }
 
@@ -86,6 +88,12 @@ public static class AthenaApplicationExtensions
         services.AddSingleton<IApplicationExceptionMapper, DomainExceptionMapper>();
         services.AddSingleton<IApplicationExceptionMapper, ApplicationExceptionMapper>();
         services.AddSingleton<ApplicationExceptionService>();
+        return services;
+    }
+
+    private static IServiceCollection AddBackgroundService(IServiceCollection services)
+    {
+        services.AddScoped<OrchestrationReconciliationService>();
         return services;
     }
 }

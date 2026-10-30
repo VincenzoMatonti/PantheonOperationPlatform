@@ -12,6 +12,7 @@
     <Project Path="src/Athena/Athena.Domain/Athena.Domain.csproj" />
     <Project Path="src/Athena/Athena.Infrastructure/Athena.Infrastructure.csproj" />
     <Project Path="src/Athena/Athena.Runtime/Athena.Runtime.csproj" />
+    <Project Path="src/Athena/Athena.Worker/Athena.Worker.csproj" />
   </Folder>  
   <Folder Name="/src/Hephaestus/">
     <Project Path="src/Hephaestus/Hephaestus.Api/Hephaestus.Api.csproj" />
