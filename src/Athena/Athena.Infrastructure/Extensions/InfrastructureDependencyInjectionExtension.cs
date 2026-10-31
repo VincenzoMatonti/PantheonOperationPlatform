@@ -1,6 +1,7 @@
 using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Interfaces.Runtime;
+using Athena.Domain.Block.Registry.Repositories;
 using Athena.Domain.Company.Registry.Repositories;
 using Athena.Domain.Ecosystem.Registry.Repositories;
 using Athena.Domain.Orchestration.Management.Repositories;
@@ -60,6 +61,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IEcosystemRepository, EcosystemRepository>();
+        services.AddScoped<IBlockRepository, BlockRepository>();
         return services;
     }
 
