@@ -5,6 +5,7 @@ using Athena.Infrastructure.Persistence.Runtime;
 using Athena.Domain.Orchestration.Management.Entities;
 using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 using RegisteredOrchestration = Athena.Domain.Orchestration.Registry.Entities.Orchestration;
+using Athena.Domain.Ecosystem.Registry.Entities;
 
 
 
@@ -23,6 +24,7 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
     public DbSet<SystemRuntimeInstance> SystemRuntimeInstances => Set<SystemRuntimeInstance>();
     public DbSet<Group> Groups => Set<Group>();
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Ecosystem> Ecosystems => Set<Ecosystem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +35,8 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
         modelBuilder.Entity<RegisteredOrchestration>().Property<int>("id");
         modelBuilder.Entity<Group>().Property<int>("id");
         modelBuilder.Entity<Company>().Property<int>("id");
+        modelBuilder.Entity<Ecosystem>().Property<int>("id");
+        modelBuilder.Entity<Ecosystem>().Property<int>("company_database_id");
 
         // Applicare tutte le configurazioni.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AthenaDbContext).Assembly);
