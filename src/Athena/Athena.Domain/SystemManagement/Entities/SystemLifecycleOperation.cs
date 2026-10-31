@@ -10,6 +10,7 @@ public class SystemLifecycleOperation
     public SystemId SystemId { get; private set; } = null!;
     public SystemLifecycleOperationType Type { get; private set; }
     public SystemLifecycleOperationStatus Status { get; private set; }
+    public Guid? OrchestrationLifecycleOperationId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
     public DateTime? StartedAtUtc { get; private set; }
@@ -77,6 +78,14 @@ public class SystemLifecycleOperation
         if (Status == SystemLifecycleOperationStatus.Running) throw new SystemLifecycleOperationInProgressException(Id);
         IsDeleted = true;
         Touch();
+    }
+
+    public void AssociateWithOrchestrationOperation(Guid orchestrationOperationId)
+    {
+        if (orchestrationOperationId == Guid.Empty) throw new ArgumentException("Orchestration lifecycle operation ID cannot be empty.", nameof(orchestrationOperationId));
+        if (IsDeleted) throw new InvalidOperationException("A deleted system lifecycle operation cannot be modified.");
+        OrchestrationLifecycleOperationId = orchestrationOperationId;
+        UpdatedAtUtc = DateTime.UtcNow;
     }
 
     private void EnsurePending()

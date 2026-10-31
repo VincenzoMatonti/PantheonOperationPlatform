@@ -9,19 +9,17 @@ public abstract class OrchestrationManagementApplicationException(OrchestrationM
     {
         return code switch
         {
-            OrchestrationManagementApplicationErrorCode.InvalidDesiredState
-                or OrchestrationManagementApplicationErrorCode.InvalidOperationalStatus
-                or OrchestrationManagementApplicationErrorCode.InvalidOperationType
-                or OrchestrationManagementApplicationErrorCode.InvalidOperationStatus
+            OrchestrationManagementApplicationErrorCode.InvalidDesiredState or OrchestrationManagementApplicationErrorCode.InvalidOperationalStatus or
+            OrchestrationManagementApplicationErrorCode.InvalidOperationType or OrchestrationManagementApplicationErrorCode.InvalidOperationStatus
                 => ApplicationCoreErrorType.Validation,
 
-            OrchestrationManagementApplicationErrorCode.OrchestrationNotFound
-                or OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleNotFound
-                or OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationNotFound
+            OrchestrationManagementApplicationErrorCode.OrchestrationNotFound or OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleNotFound or
+            OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationNotFound or OrchestrationManagementApplicationErrorCode.OrchestrationSystemNotFound
                 => ApplicationCoreErrorType.NotFound,
 
-            OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleAlreadyExists
-                or OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationAlreadyExists
+            OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleAlreadyExists or
+            OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationAlreadyExists or
+            OrchestrationManagementApplicationErrorCode.OrchestrationSystemAlreadyExists 
                 => ApplicationCoreErrorType.Conflict,
 
             _ => ApplicationCoreErrorType.Internal
@@ -40,5 +38,7 @@ public enum OrchestrationManagementApplicationErrorCode
     OrchestrationLifecycleAlreadyExists = 6,
     OrchestrationLifecycleNotFound = 7,
     OrchestrationLifecycleOperationNotFound = 8,
-    OrchestrationLifecycleOperationAlreadyExists = 9
+    OrchestrationLifecycleOperationAlreadyExists = 9,
+    OrchestrationSystemNotFound = 10,
+    OrchestrationSystemAlreadyExists = 11
 }

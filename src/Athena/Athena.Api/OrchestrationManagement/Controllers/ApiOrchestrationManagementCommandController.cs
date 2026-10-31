@@ -13,10 +13,14 @@ namespace Athena.Api.OrchestrationManagement.Controllers;
 [Route("api/orchestrations/management")]
 public class OrchestrationManagementCommandController(
     OrchestrationLifecycleUseCaseHandler lifecycleHandler,
-    OrchestrationLifecycleOperationUseCaseHandler operationHandler) : ControllerBase
+    OrchestrationDesiredStateUseCaseHandler desiredStateHandler,
+    OrchestrationLifecycleOperationUseCaseHandler operationHandler,
+    OrchestrationRuntimeUseCaseHandler runtimeHandler) : ControllerBase
 {
     private readonly OrchestrationLifecycleUseCaseHandler _lifecycleHandler = lifecycleHandler;
     private readonly OrchestrationLifecycleOperationUseCaseHandler _operationHandler = operationHandler;
+    private readonly OrchestrationDesiredStateUseCaseHandler _desiredStateHandler = desiredStateHandler;
+    private readonly OrchestrationRuntimeUseCaseHandler _runtimeHandler = runtimeHandler;
 
     // =====================================================================
     // ORCHESTRATION LIFECYCLE COMMANDS
@@ -36,7 +40,7 @@ public class OrchestrationManagementCommandController(
         Guid orchestrationId, [FromBody] SetOrchestrationDesiredStateRequest request, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleRequestCommandMapper.ToSetDesiredStateCommand(orchestrationId, request);
-        var result = await _lifecycleHandler.SetOrchestrationDesiredStateAsync(command, cancellationToken);
+        var result = await _desiredStateHandler.SetOrchestrationDesiredStateAsync(command, cancellationToken);
         var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -127,6 +131,19 @@ public class OrchestrationManagementCommandController(
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCreateOperationCommand(orchestrationId, request);
         var result = await _operationHandler.CreateOrchestrationLifecycleOperationAsync(command, cancellationToken);
+        var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
+    }
+
+    [HttpPost("{orchestrationId:guid}/lifecycle/execute")]
+    [ProducesResponseType(
+    typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>),
+    StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> ExecuteRuntimeOperation(
+        Guid orchestrationId, [FromBody] CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken)
+    {
+        var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCreateOperationCommand(orchestrationId, request);
+        var result = await _runtimeHandler.ExecuteOrchestrationRuntimeOperationAsync(command, cancellationToken);
         var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

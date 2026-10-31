@@ -14,8 +14,11 @@ public static class DependencyInjection
         services.AddHttpClient<AthenaApiClient>(client => { client.BaseAddress = baseAddress; });
         services.AddTransient<ISystemsRegistry, AthenaSystemsRegistryClient>();
         services.AddTransient<ISystemsManagement, AthenaSystemsManagementClient>();
+        services.AddTransient<ISystemsDiagnostic, AthenaSystemsDiagnosticClient>();
+        services.AddTransient<ISystemsRuntimeInstances, AthenaSystemsRuntimeInstancesClient>();
         services.AddTransient<IOrchestrationsRegistry, AthenaOrchestrationsRegistryClient>();
         services.AddScoped<IOrchestrationManagement, AthenaOrchestrationManagementClient>();
+        services.AddScoped<IOrchestrationSystemManagement, AthenaOrchestrationSystemManagementClient>();
         return services;
     }
 }

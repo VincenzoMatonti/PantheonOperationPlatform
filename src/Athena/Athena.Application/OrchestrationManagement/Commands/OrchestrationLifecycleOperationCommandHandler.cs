@@ -62,6 +62,7 @@ public class OrchestrationLifecycleOperationCommandHandler(
     {
         ApplicationOperationType.Start => DomainOperationType.Start,
         ApplicationOperationType.Stop => DomainOperationType.Stop,
+        ApplicationOperationType.Restart => DomainOperationType.Restart,
         _ => DomainOperationType.Start
     };
 
@@ -70,6 +71,7 @@ public class OrchestrationLifecycleOperationCommandHandler(
     {
         DomainOperationType.Start => ApplicationOperationType.Start,
         DomainOperationType.Stop => ApplicationOperationType.Stop,
+        DomainOperationType.Restart => ApplicationOperationType.Restart,
         _ => ApplicationOperationType.Start
     };
 

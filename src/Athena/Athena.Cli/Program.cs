@@ -13,6 +13,7 @@ var app = new CommandApp(registrar);
 app.Configure(config =>
 {
     config.SetApplicationName("athena");
+    config.UseAthenaHelp();
     config.AddAthenaCliCommands();
 });
 

@@ -76,3 +76,33 @@ public class OrchestrationLifecycleOperationQueryResponse
 
     public bool IsDeleted { get; init; }
 }
+
+public class OrchestrationSystemCommandResponse
+{
+    public Guid Id { get; init; }
+
+    public Guid OrchestrationId { get; init; }
+
+    public Guid SystemId { get; init; }
+
+    public DateTime CreatedAtUtc { get; init; }
+
+    public DateTime? UpdatedAtUtc { get; init; }
+
+    public bool IsDeleted { get; init; }
+}
+
+public class OrchestrationSystemQueryResponse
+{
+    public Guid Id { get; init; }
+
+    public Guid OrchestrationId { get; init; }
+
+    public Guid SystemId { get; init; }
+
+    public DateTime CreatedAtUtc { get; init; }
+
+    public DateTime? UpdatedAtUtc { get; init; }
+
+    public bool IsDeleted { get; init; }
+}

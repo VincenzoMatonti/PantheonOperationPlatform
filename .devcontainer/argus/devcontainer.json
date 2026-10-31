@@ -1,7 +1,7 @@
 {
     "name": "Pantheon: Argus Dev Container",
     "dockerComposeFile": [
-        "../environment/compose.dev.yml"
+        "../workloads/compose.dev.yml"
     ],
     "service": "argus-dev",
     "workspaceFolder": "/workspace",

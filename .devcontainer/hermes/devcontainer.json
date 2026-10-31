@@ -1,7 +1,7 @@
 {
     "name": "Pantheon: Hermes Dev Container",
     "dockerComposeFile": [
-        "../environment/compose.dev.yml"
+        "../workloads/compose.dev.yml"
     ],
     "service": "hermes-dev",
     "workspaceFolder": "/workspace",

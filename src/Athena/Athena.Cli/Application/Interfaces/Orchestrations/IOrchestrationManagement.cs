@@ -23,6 +23,7 @@ public interface IOrchestrationManagement
     Task<IReadOnlyList<OrchestrationLifecycleResponse>> GetDeletedLifecyclesAsync(CancellationToken cancellationToken = default);
 
     // Lifecycle operation command
+    Task<OrchestrationLifecycleOperationResponse> ExecuteRuntimeOperationAsync(Guid orchestrationId, CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken = default);
     Task<OrchestrationLifecycleOperationResponse> CreateOperationAsync(Guid orchestrationId, CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken = default);
     Task<OrchestrationLifecycleOperationResponse> StartOperationAsync(Guid operationId, CancellationToken cancellationToken = default);
     Task<OrchestrationLifecycleOperationResponse> CompleteOperationAsync(Guid operationId, CancellationToken cancellationToken = default);

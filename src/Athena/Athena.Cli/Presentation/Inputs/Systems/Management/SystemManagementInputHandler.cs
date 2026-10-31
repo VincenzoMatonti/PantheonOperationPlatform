@@ -1,7 +1,9 @@
+using Athena.Cli.Presentation.Inputs.Systems.Diagnostic;
 using Athena.Cli.Presentation.Inputs.Systems.Management.Lifecycles.Commands;
 using Athena.Cli.Presentation.Inputs.Systems.Management.Lifecycles.Queries;
 using Athena.Cli.Presentation.Inputs.Systems.Management.Operations.Commands;
 using Athena.Cli.Presentation.Inputs.Systems.Management.Operations.Queries;
+using Athena.Cli.Presentation.Inputs.Systems.RuntimeInstances;
 using Spectre.Console.Cli;
 
 namespace Athena.Cli.Presentation.Inputs.Systems.Management;
@@ -49,6 +51,9 @@ public static class SystemManagementInputHandler
                 operations.AddCommand<CancelSystemLifecycleOperationCommand>("cancel");
                 operations.AddCommand<DeleteSystemLifecycleOperationCommand>("delete");
             });
+
+            management.AddSystemDiagnosticCommands();
+            management.AddSystemRuntimeInstancesCommands();
         });
 
         return config;

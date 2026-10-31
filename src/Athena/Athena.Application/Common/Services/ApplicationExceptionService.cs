@@ -40,6 +40,32 @@ public class ApplicationExceptionService(IEnumerable<IApplicationExceptionMapper
         }
     }
 
+    public async Task<T> ExecuteWithRecoveryAsync<T>(Func<Task<T>> operation, Func<Exception, Task> recovery)
+    {
+        try
+        {
+            return await operation();
+        }
+        catch (Exception originalException)
+        {
+            await TryExecuteCleanupAsync(() => recovery(originalException), "Failed to execute exception recovery.");
+            if (originalException is ApplicationCoreException) throw;
+            throw MapException(originalException);
+        }
+    }
+
+    public static async Task TryExecuteCleanupAsync(Func<Task> operation, string failureMessage)
+    {
+        try
+        {
+            await operation();
+        }
+        catch (Exception cleanupException)
+        {
+            System.Diagnostics.Trace.TraceError($"{failureMessage} {cleanupException}");
+        }
+    }
+
     private ApplicationCoreException MapException(Exception exception)
     {
         var mapper = _mappers.FirstOrDefault(candidate => candidate.CanMap(exception));

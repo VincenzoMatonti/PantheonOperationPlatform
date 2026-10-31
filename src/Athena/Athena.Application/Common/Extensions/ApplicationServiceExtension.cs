@@ -1,3 +1,5 @@
+using Athena.Application.BackgroundTasks.Reconciliation;
+using Athena.Application.BackgroundTasks.Synchronization;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Mappings;
 using Athena.Application.Common.Services;
@@ -23,6 +25,7 @@ public static class AthenaApplicationExtensions
     {
         AddApplicationService(services);
         AddApplicationExceptionHandling(services);
+        AddBackgroundService(services);
         return services;
     }
 
@@ -33,6 +36,7 @@ public static class AthenaApplicationExtensions
         AddSystemManagementApplicationServices(services);
         AddOrchestrationRegistryApplicationServices(services);
         AddOrchestrationManagementApplicationServices(services);
+        AddRuntimeApplicationServices(services);
         return services;
     }
 
@@ -48,6 +52,8 @@ public static class AthenaApplicationExtensions
         services.AddScoped<SystemManagementCommandHandler>();
         services.AddScoped<SystemManagementQueryHandler>();
         services.AddScoped<SystemManagementUseCaseHandler>();
+        services.AddScoped<SystemDiagnosticUseCaseHandler>();
+        services.AddScoped<SystemRuntimeUseCaseHandler>();
     }
 
     private static void AddOrchestrationRegistryApplicationServices(IServiceCollection services)
@@ -65,6 +71,17 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationLifecycleOperationCommandHandler>();
         services.AddScoped<OrchestrationLifecycleOperationQueryHandler>();
         services.AddScoped<OrchestrationLifecycleOperationUseCaseHandler>();
+        services.AddScoped<OrchestrationDesiredStateUseCaseHandler>();
+        services.AddScoped<OrchestrationSystemCommandHandler>();
+        services.AddScoped<OrchestrationSystemQueryHandler>();
+        services.AddScoped<OrchestrationSystemUseCaseHandler>();
+        services.AddScoped<OrchestrationStatusSynchronizationService>();
+        services.AddScoped<OrchestrationRuntimeUseCaseHandler>();
+    }
+
+    private static void AddRuntimeApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<RuntimeApplicationService>();
     }
 
     private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
@@ -72,6 +89,14 @@ public static class AthenaApplicationExtensions
         services.AddSingleton<IApplicationExceptionMapper, DomainExceptionMapper>();
         services.AddSingleton<IApplicationExceptionMapper, ApplicationExceptionMapper>();
         services.AddSingleton<ApplicationExceptionService>();
+        return services;
+    }
+
+    private static IServiceCollection AddBackgroundService(IServiceCollection services)
+    {
+        services.AddScoped<OrchestrationReconciliationService>();
+        services.AddSingleton<EndpointCheckSchedule>();
+        services.AddScoped<SystemSynchronizationService>();
         return services;
     }
 }
