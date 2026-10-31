@@ -1,11 +1,11 @@
 using Athena.Application.OrchestrationManagement.DTOs;
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
 using ApplicationDesiredState = Athena.Application.OrchestrationManagement.Enums.OrchestrationDesiredState;
 using ApplicationOperationalStatus = Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus;
-using DomainDesiredState = Athena.Domain.OrchestrationManagement.Enums.OrchestrationDesiredState;
-using DomainOperationalStatus = Athena.Domain.OrchestrationManagement.Enums.OrchestrationOperationalStatus;
+using DomainDesiredState = Athena.Domain.Orchestration.Management.Enums.OrchestrationDesiredState;
+using DomainOperationalStatus = Athena.Domain.Orchestration.Management.Enums.OrchestrationOperationalStatus;
 
 namespace Athena.Application.OrchestrationManagement.Commands;
 

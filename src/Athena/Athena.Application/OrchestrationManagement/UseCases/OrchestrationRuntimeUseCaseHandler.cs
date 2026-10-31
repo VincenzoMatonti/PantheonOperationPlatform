@@ -8,9 +8,9 @@ using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.SystemManagement.Commands;
 using Athena.Application.SystemManagement.Enums;
 using Athena.Application.SystemManagement.UseCases;
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 

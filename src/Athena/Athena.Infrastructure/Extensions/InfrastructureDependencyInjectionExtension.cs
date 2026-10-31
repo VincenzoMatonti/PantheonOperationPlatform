@@ -1,10 +1,10 @@
 using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Interfaces.Runtime;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.Repositories;
-using Athena.Domain.SystemManagement.Repositories;
-using Athena.Domain.SystemRegistry.Repositories;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Registry.Repositories;
+using Athena.Domain.System.Management.Repositories;
+using Athena.Domain.System.Registry.Repositories;
 using Athena.Infrastructure.Persistence;
 using Athena.Infrastructure.Repositories;
 using Athena.Infrastructure.Seeding;

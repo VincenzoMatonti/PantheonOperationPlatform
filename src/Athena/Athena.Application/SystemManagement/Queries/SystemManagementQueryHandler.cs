@@ -1,11 +1,11 @@
 using Athena.Application.SystemManagement.Dtos;
 using Athena.Application.SystemManagement.Enums;
-using Athena.Domain.SystemManagement.Entities;
-using Athena.Domain.SystemManagement.Repositories;
-using Athena.Domain.SystemRegistry.ValueObjects;
-using DomainDesiredState = Athena.Domain.SystemManagement.Enums.SystemDesiredState;
-using DomainOperationalStatus = Athena.Domain.SystemManagement.Enums.SystemOperationalStatus;
-using DomainOperationStatus = Athena.Domain.SystemManagement.Enums.SystemLifecycleOperationStatus;
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Management.Repositories;
+using Athena.Domain.System.Registry.ValueObjects;
+using DomainDesiredState = Athena.Domain.System.Management.Enums.SystemDesiredState;
+using DomainOperationalStatus = Athena.Domain.System.Management.Enums.SystemOperationalStatus;
+using DomainOperationStatus = Athena.Domain.System.Management.Enums.SystemLifecycleOperationStatus;
 
 namespace Athena.Application.SystemManagement.Queries;
 

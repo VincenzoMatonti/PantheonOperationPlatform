@@ -1,8 +1,8 @@
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationManagement.ValueObjects;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
-using Athena.Domain.SystemRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Management.ValueObjects;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
+using Athena.Domain.System.Registry.ValueObjects;
 using Athena.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 

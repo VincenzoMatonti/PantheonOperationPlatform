@@ -1,7 +1,7 @@
 using Athena.Application.OrchestrationRegistry.DTOs;
-using Athena.Domain.OrchestrationRegistry.Entities;
-using Athena.Domain.OrchestrationRegistry.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Registry.Entities;
+using Athena.Domain.Orchestration.Registry.Repositories;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
 
 namespace Athena.Application.OrchestrationRegistry.Commands;
 

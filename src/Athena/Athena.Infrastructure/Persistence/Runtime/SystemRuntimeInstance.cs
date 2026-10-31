@@ -1,4 +1,4 @@
-using Athena.Domain.SystemRegistry.ValueObjects;
+using Athena.Domain.System.Registry.ValueObjects;
 
 namespace Athena.Infrastructure.Persistence.Runtime;
 

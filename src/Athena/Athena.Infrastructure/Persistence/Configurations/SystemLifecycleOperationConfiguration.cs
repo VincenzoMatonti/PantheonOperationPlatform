@@ -1,10 +1,10 @@
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.SystemManagement.Entities;
-using Athena.Domain.SystemRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Registry.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
+using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 
 namespace Athena.Infrastructure.Persistence.Configurations;
 

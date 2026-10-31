@@ -1,8 +1,8 @@
 
 using Athena.Application.SystemRegistry.Dtos;
-using Athena.Domain.SystemRegistry.Repositories;
-using Athena.Domain.SystemRegistry.ValueObjects;
-using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
+using Athena.Domain.System.Registry.Repositories;
+using Athena.Domain.System.Registry.ValueObjects;
+using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 
 namespace Athena.Application.SystemRegistry.Commands;
 

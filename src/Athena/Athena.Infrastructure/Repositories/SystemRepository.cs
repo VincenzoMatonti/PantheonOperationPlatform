@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Athena.Infrastructure.Persistence;
-using Athena.Domain.SystemRegistry.Enums;
-using Athena.Domain.SystemRegistry.Repositories;
-using Athena.Domain.SystemRegistry.ValueObjects;
-using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
+using Athena.Domain.System.Registry.Enums;
+using Athena.Domain.System.Registry.Repositories;
+using Athena.Domain.System.Registry.ValueObjects;
+using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 
 namespace Athena.Infrastructure.Repositories;
 

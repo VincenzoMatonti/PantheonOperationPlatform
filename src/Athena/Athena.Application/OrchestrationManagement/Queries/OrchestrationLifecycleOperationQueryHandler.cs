@@ -1,11 +1,11 @@
 using Athena.Application.OrchestrationManagement.DTOs;
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
 using ApplicationOperationType = Athena.Application.OrchestrationManagement.Enums.OrchestrationLifecycleOperationType;
 using ApplicationOperationStatus = Athena.Application.OrchestrationManagement.Enums.OrchestrationLifecycleOperationStatus;
-using DomainOperationType = Athena.Domain.OrchestrationManagement.Enums.OrchestrationLifecycleOperationType;
-using DomainOperationStatus = Athena.Domain.OrchestrationManagement.Enums.OrchestrationLifecycleOperationStatus;
+using DomainOperationType = Athena.Domain.Orchestration.Management.Enums.OrchestrationLifecycleOperationType;
+using DomainOperationStatus = Athena.Domain.Orchestration.Management.Enums.OrchestrationLifecycleOperationStatus;
 
 namespace Athena.Application.OrchestrationManagement.Queries;
 

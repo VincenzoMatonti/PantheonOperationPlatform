@@ -1,7 +1,7 @@
 using Athena.Application.OrchestrationManagement.DTOs;
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationManagement.ValueObjects;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Management.ValueObjects;
 
 namespace Athena.Application.OrchestrationManagement.Queries;
 

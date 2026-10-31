@@ -22,7 +22,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycle", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycle", b =>
                 {
                     b.Property<int>("orchestration_database_id")
                         .HasColumnType("integer")
@@ -61,7 +61,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("orchestration_lifecycles", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycleOperation", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycleOperation", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -118,7 +118,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("orchestration_lifecycle_operations", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationSystem", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationSystem", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -179,7 +179,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("orchestration_systems", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationRegistry.Entities.Orchestration", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Registry.Entities.Orchestration", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -234,7 +234,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("orchestrations", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.SystemManagement.Entities.SystemLifecycle", b =>
+            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycle", b =>
                 {
                     b.Property<int>("system_database_id")
                         .HasColumnType("integer")
@@ -273,7 +273,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("system_lifecycles", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.SystemManagement.Entities.SystemLifecycleOperation", b =>
+            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycleOperation", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -337,7 +337,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("system_lifecycle_operations", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.SystemRegistry.Entities.System", b =>
+            modelBuilder.Entity("Athena.Domain.System.Registry.Entities.System", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -453,19 +453,19 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("system_runtime_instances", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycle", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycle", b =>
                 {
-                    b.HasOne("Athena.Domain.OrchestrationRegistry.Entities.Orchestration", null)
+                    b.HasOne("Athena.Domain.Orchestration.Registry.Entities.Orchestration", null)
                         .WithOne()
-                        .HasForeignKey("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycle", "orchestration_database_id", "Id")
-                        .HasPrincipalKey("Athena.Domain.OrchestrationRegistry.Entities.Orchestration", "id", "Id")
+                        .HasForeignKey("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycle", "orchestration_database_id", "Id")
+                        .HasPrincipalKey("Athena.Domain.Orchestration.Registry.Entities.Orchestration", "id", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycleOperation", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycleOperation", b =>
                 {
-                    b.HasOne("Athena.Domain.OrchestrationRegistry.Entities.Orchestration", null)
+                    b.HasOne("Athena.Domain.Orchestration.Registry.Entities.Orchestration", null)
                         .WithMany()
                         .HasForeignKey("orchestration_database_id", "OrchestrationId")
                         .HasPrincipalKey("id", "Id")
@@ -473,16 +473,16 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.OrchestrationManagement.Entities.OrchestrationSystem", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationSystem", b =>
                 {
-                    b.HasOne("Athena.Domain.OrchestrationRegistry.Entities.Orchestration", null)
+                    b.HasOne("Athena.Domain.Orchestration.Registry.Entities.Orchestration", null)
                         .WithMany()
                         .HasForeignKey("orchestration_database_id", "OrchestrationId")
                         .HasPrincipalKey("id", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Athena.Domain.SystemRegistry.Entities.System", null)
+                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
                         .WithMany()
                         .HasForeignKey("system_database_id", "SystemId")
                         .HasPrincipalKey("id", "Id")
@@ -490,24 +490,24 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.SystemManagement.Entities.SystemLifecycle", b =>
+            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycle", b =>
                 {
-                    b.HasOne("Athena.Domain.SystemRegistry.Entities.System", null)
+                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
                         .WithOne()
-                        .HasForeignKey("Athena.Domain.SystemManagement.Entities.SystemLifecycle", "system_database_id", "SystemId")
-                        .HasPrincipalKey("Athena.Domain.SystemRegistry.Entities.System", "id", "Id")
+                        .HasForeignKey("Athena.Domain.System.Management.Entities.SystemLifecycle", "system_database_id", "SystemId")
+                        .HasPrincipalKey("Athena.Domain.System.Registry.Entities.System", "id", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.SystemManagement.Entities.SystemLifecycleOperation", b =>
+            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycleOperation", b =>
                 {
-                    b.HasOne("Athena.Domain.OrchestrationManagement.Entities.OrchestrationLifecycleOperation", null)
+                    b.HasOne("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycleOperation", null)
                         .WithMany()
                         .HasForeignKey("OrchestrationLifecycleOperationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Athena.Domain.SystemRegistry.Entities.System", null)
+                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
                         .WithMany()
                         .HasForeignKey("system_database_id", "SystemId")
                         .HasPrincipalKey("id", "Id")
@@ -515,9 +515,9 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.SystemRegistry.Entities.System", b =>
+            modelBuilder.Entity("Athena.Domain.System.Registry.Entities.System", b =>
                 {
-                    b.OwnsMany("Athena.Domain.SystemRegistry.ValueObjects.SystemCapability", "Capabilities", b1 =>
+                    b.OwnsMany("Athena.Domain.System.Registry.ValueObjects.SystemCapability", "Capabilities", b1 =>
                         {
                             b1.Property<int>("id")
                                 .ValueGeneratedOnAdd()
@@ -549,7 +549,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("system_id");
                         });
 
-                    b.OwnsMany("Athena.Domain.SystemRegistry.ValueObjects.SystemEndpoint", "Endpoints", b1 =>
+                    b.OwnsMany("Athena.Domain.System.Registry.ValueObjects.SystemEndpoint", "Endpoints", b1 =>
                         {
                             b1.Property<int>("id")
                                 .ValueGeneratedOnAdd()
@@ -588,7 +588,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
                 {
-                    b.HasOne("Athena.Domain.SystemRegistry.Entities.System", null)
+                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
                         .WithMany()
                         .HasForeignKey("system_database_id", "SystemId")
                         .HasPrincipalKey("id", "Id")

@@ -5,8 +5,8 @@ using Athena.Application.SystemManagement.UseCases;
 using Athena.Application.SystemRegistry.Commands;
 using Athena.Application.SystemRegistry.UseCases;
 using Athena.Application.Common.Dtos;
-using Athena.Domain.SystemManagement.Enums;
-using Athena.Domain.SystemRegistry.Enums;
+using Athena.Domain.System.Management.Enums;
+using Athena.Domain.System.Registry.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Athena.Application.BackgroundTasks.Synchronization;

@@ -4,9 +4,9 @@ using Athena.Application.OrchestrationManagement.Exceptions;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.UseCases;
 using Athena.Application.SystemManagement.Queries;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
-using Athena.Domain.SystemRegistry.ValueObjects;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
+using Athena.Domain.System.Registry.ValueObjects;
 
 namespace Athena.Application.Common.Services;
 

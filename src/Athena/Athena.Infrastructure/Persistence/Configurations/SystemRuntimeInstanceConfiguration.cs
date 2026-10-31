@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Athena.Domain.SystemRegistry.ValueObjects;
+using Athena.Domain.System.Registry.ValueObjects;
 using RuntimeInstance = Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance;
-using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
+using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 
 namespace Athena.Infrastructure.Persistence.Configurations;
 

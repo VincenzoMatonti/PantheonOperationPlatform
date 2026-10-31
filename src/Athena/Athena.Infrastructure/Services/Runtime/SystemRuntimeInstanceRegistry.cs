@@ -1,6 +1,6 @@
 using Athena.Application.Common.Dtos;
 using Athena.Application.Common.Interfaces;
-using Athena.Domain.SystemRegistry.ValueObjects;
+using Athena.Domain.System.Registry.ValueObjects;
 using Athena.Infrastructure.Persistence;
 using PersistenceRuntimeInstance = Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance;
 using Microsoft.EntityFrameworkCore;

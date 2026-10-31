@@ -1,11 +1,11 @@
 
 using Athena.Application.SystemRegistry.Dtos;
 using Athena.Application.SystemRegistry.Enums;
-using Athena.Domain.SystemRegistry.Repositories;
-using Athena.Domain.SystemRegistry.ValueObjects;
-using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
-using DomainRegistrationStatus = Athena.Domain.SystemRegistry.Enums.SystemRegistrationStatus;
-using DomainAvailabilityStatus = Athena.Domain.SystemRegistry.Enums.SystemAvailabilityStatus;
+using Athena.Domain.System.Registry.Repositories;
+using Athena.Domain.System.Registry.ValueObjects;
+using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
+using DomainRegistrationStatus = Athena.Domain.System.Registry.Enums.SystemRegistrationStatus;
+using DomainAvailabilityStatus = Athena.Domain.System.Registry.Enums.SystemAvailabilityStatus;
 
 namespace Athena.Application.SystemRegistry.Queries;
 

@@ -1,14 +1,14 @@
 using Microsoft.Extensions.Logging;
-using Athena.Domain.OrchestrationManagement.Entities;
-using Athena.Domain.OrchestrationManagement.Repositories;
-using Athena.Domain.OrchestrationRegistry.Entities;
-using Athena.Domain.OrchestrationRegistry.Repositories;
-using Athena.Domain.OrchestrationRegistry.ValueObjects;
-using Athena.Domain.SystemManagement.Entities;
-using Athena.Domain.SystemManagement.Repositories;
-using Athena.Domain.SystemRegistry.Repositories;
-using Athena.Domain.SystemRegistry.ValueObjects;
-using RegisteredSystem = Athena.Domain.SystemRegistry.Entities.System;
+using Athena.Domain.Orchestration.Management.Entities;
+using Athena.Domain.Orchestration.Management.Repositories;
+using Athena.Domain.Orchestration.Registry.Entities;
+using Athena.Domain.Orchestration.Registry.Repositories;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Management.Repositories;
+using Athena.Domain.System.Registry.Repositories;
+using Athena.Domain.System.Registry.ValueObjects;
+using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 
 namespace Athena.Infrastructure.Seeding;
 
