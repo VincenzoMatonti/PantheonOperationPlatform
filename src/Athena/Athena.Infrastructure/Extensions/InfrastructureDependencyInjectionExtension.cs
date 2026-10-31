@@ -8,6 +8,7 @@ using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.Repositories;
 using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.System.Registry.Repositories;
+using Athena.Domain.Workload.Registry.Repositories;
 using Athena.Infrastructure.Persistence;
 using Athena.Infrastructure.Repositories;
 using Athena.Infrastructure.Seeding;
@@ -62,6 +63,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IEcosystemRepository, EcosystemRepository>();
         services.AddScoped<IBlockRepository, BlockRepository>();
+        services.AddScoped<IWorkloadRepository, WorkloadRepository>();
         return services;
     }
 

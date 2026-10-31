@@ -700,6 +700,74 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("systems", (string)null);
                 });
 
+            modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int>("AvailabilityStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(3)
+                        .HasColumnName("availability_status");
+
+                    b.Property<Guid>("BlockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("block_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workload_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RegistrationStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("registration_status");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<int>("block_database_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("block_database_id");
+
+                    b.HasKey("id")
+                        .HasName("pk_workloads");
+
+                    b.HasAlternateKey("id", "Id")
+                        .HasName("ak_workloads_id_workload_id");
+
+                    b.HasIndex("Id")
+                        .IsUnique()
+                        .HasDatabaseName("ux_workloads_workload_id");
+
+                    b.HasIndex("block_database_id", "BlockId")
+                        .HasDatabaseName("ix_workloads_block_database_id_block_id");
+
+                    b.HasIndex("block_database_id", "BlockId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_workloads_block_name");
+
+                    b.ToTable("workloads", (string)null);
+                });
+
             modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -965,6 +1033,16 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.Navigation("Capabilities");
 
                     b.Navigation("Endpoints");
+                });
+
+            modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>
+                {
+                    b.HasOne("Athena.Domain.Block.Registry.Entities.Block", null)
+                        .WithMany()
+                        .HasForeignKey("block_database_id", "BlockId")
+                        .HasPrincipalKey("id", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
