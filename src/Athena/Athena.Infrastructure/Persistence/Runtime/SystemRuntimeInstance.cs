@@ -6,7 +6,7 @@ namespace Athena.Infrastructure.Persistence.Runtime;
 /// Technical persistence model linking a Pantheon system to a runtime resource.
 /// This is not a domain entity.
 /// </summary>
-public sealed class SystemRuntimeInstance
+public class SystemRuntimeInstance
 {
     public Guid Id { get; set; }
 

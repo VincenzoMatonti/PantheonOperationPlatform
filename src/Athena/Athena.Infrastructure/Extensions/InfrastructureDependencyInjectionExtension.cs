@@ -1,6 +1,7 @@
 using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Interfaces.Runtime;
+using Athena.Domain.Company.Registry.Repositories;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.Repositories;
 using Athena.Domain.System.Management.Repositories;
@@ -55,6 +56,8 @@ public static class DependencyInjectionExtension
         services.AddScoped<IOrchestrationLifecycleRepository, OrchestrationLifecycleRepository>();
         services.AddScoped<IOrchestrationLifecycleOperationRepository, OrchestrationLifecycleOperationRepository>();
         services.AddScoped<IOrchestrationSystemRepository, OrchestrationSystemRepository>();
+        services.AddScoped<IGroupRepository, GroupRepository>();
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
         return services;
     }
 

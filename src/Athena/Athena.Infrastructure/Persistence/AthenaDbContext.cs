@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Athena.Domain.Company.Registry.Entities;
 using Athena.Domain.System.Management.Entities;
+using Athena.Infrastructure.Persistence.Runtime;
+using Athena.Domain.Orchestration.Management.Entities;
 using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 using RegisteredOrchestration = Athena.Domain.Orchestration.Registry.Entities.Orchestration;
-using Athena.Domain.Orchestration.Management.Entities;
-using Athena.Infrastructure.Persistence.Runtime;
+
+
+
 
 namespace Athena.Infrastructure.Persistence;
 
@@ -17,6 +21,8 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
     public DbSet<OrchestrationLifecycleOperation> OrchestrationLifecycleOperations => Set<OrchestrationLifecycleOperation>();
     public DbSet<OrchestrationSystem> OrchestrationSystems => Set<OrchestrationSystem>();
     public DbSet<SystemRuntimeInstance> SystemRuntimeInstances => Set<SystemRuntimeInstance>();
+    public DbSet<Group> Groups => Set<Group>();
+    public DbSet<Company> Companies => Set<Company>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +31,8 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
         // Dichiarare prima i tipi delle chiavi tecniche shadow.
         modelBuilder.Entity<RegisteredSystem>().Property<int>("id");
         modelBuilder.Entity<RegisteredOrchestration>().Property<int>("id");
+        modelBuilder.Entity<Group>().Property<int>("id");
+        modelBuilder.Entity<Company>().Property<int>("id");
 
         // Applicare tutte le configurazioni.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AthenaDbContext).Assembly);

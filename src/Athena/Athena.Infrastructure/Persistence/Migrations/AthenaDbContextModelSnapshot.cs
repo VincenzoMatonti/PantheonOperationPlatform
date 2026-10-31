@@ -22,6 +22,178 @@ namespace Athena.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Athena.Domain.Company.Registry.Entities.Company", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("country_code");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<Guid?>("GroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("LegalForm")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("legal_form");
+
+                    b.Property<string>("LegalName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("legal_name");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Pec")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("pec");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("RegistrationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("registration_number");
+
+                    b.Property<int>("RegistrationStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("registration_status");
+
+                    b.Property<string>("TaxCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tax_code");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<string>("VatNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("vat_number");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("website");
+
+                    b.Property<int?>("group_database_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("group_database_id");
+
+                    b.HasKey("id")
+                        .HasName("pk_companies");
+
+                    b.HasAlternateKey("id", "Id")
+                        .HasName("ak_companies_id_company_id");
+
+                    b.HasIndex("Id")
+                        .IsUnique()
+                        .HasDatabaseName("ux_companies_company_id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_companies_name");
+
+                    b.HasIndex("CountryCode", "TaxCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_companies_country_tax_code");
+
+                    b.HasIndex("CountryCode", "VatNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ux_companies_country_vat_number");
+
+                    b.HasIndex("group_database_id", "GroupId");
+
+                    b.ToTable("companies", (string)null);
+                });
+
+            modelBuilder.Entity("Athena.Domain.Company.Registry.Entities.Group", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("group_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RegistrationStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("registration_status");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("id")
+                        .HasName("pk_groups");
+
+                    b.HasAlternateKey("id", "Id")
+                        .HasName("ak_groups_id_group_id");
+
+                    b.HasIndex("Id")
+                        .IsUnique()
+                        .HasDatabaseName("ux_groups_group_id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_groups_name");
+
+                    b.ToTable("groups", (string)null);
+                });
+
             modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycle", b =>
                 {
                     b.Property<int>("orchestration_database_id")
@@ -451,6 +623,59 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ux_system_runtime_instances_resource");
 
                     b.ToTable("system_runtime_instances", (string)null);
+                });
+
+            modelBuilder.Entity("Athena.Domain.Company.Registry.Entities.Company", b =>
+                {
+                    b.HasOne("Athena.Domain.Company.Registry.Entities.Group", null)
+                        .WithMany()
+                        .HasForeignKey("group_database_id", "GroupId")
+                        .HasPrincipalKey("id", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("Athena.Domain.Company.Registry.ValueObjects.PostalAddress", "RegisteredAddress", b1 =>
+                        {
+                            b1.Property<int>("Companyid")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("registered_address_city");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("registered_address_country_code");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("registered_address_postal_code");
+
+                            b1.Property<string>("Region")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("registered_address_region");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("registered_address_street");
+
+                            b1.HasKey("Companyid");
+
+                            b1.ToTable("companies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("Companyid");
+                        });
+
+                    b.Navigation("RegisteredAddress");
                 });
 
             modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycle", b =>
