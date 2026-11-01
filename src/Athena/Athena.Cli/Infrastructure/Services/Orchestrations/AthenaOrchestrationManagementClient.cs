@@ -10,7 +10,7 @@ public class AthenaOrchestrationManagementClient(AthenaApiClient apiClient) : IO
 
     // ============================================================
     // LIFECYCLE COMMANDS
-    public Task<OrchestrationLifecycleOperationResponse> ExecuteRuntimeOperationAsync(
+    public Task<OrchestrationLifecycleOperationResponse> ExecuteOperationAsync(
         Guid orchestrationId, CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<CreateOrchestrationLifecycleOperationRequest, OrchestrationLifecycleOperationResponse>(
             $"{BasePath}/{orchestrationId}/lifecycle/execute", request, cancellationToken);

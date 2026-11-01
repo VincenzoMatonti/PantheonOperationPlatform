@@ -6,12 +6,12 @@ using Athena.Application.Common.Services;
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.UseCases;
+using Athena.Application.OrchestrationManagement.Interfaces;
+using Athena.Application.SystemManagement.Contracts;
 using Athena.Application.OrchestrationRegistry.Commands;
 using Athena.Application.OrchestrationRegistry.Queries;
 using Athena.Application.OrchestrationRegistry.UseCases;
-using Athena.Application.SystemManagement.Commands;
-using Athena.Application.SystemManagement.Queries;
-using Athena.Application.SystemManagement.UseCases;
+using Athena.Application.SystemManagement.Services;
 using Athena.Application.SystemRegistry.Commands;
 using Athena.Application.SystemRegistry.Queries;
 using Athena.Application.SystemRegistry.UseCases;
@@ -33,10 +33,11 @@ public static class AthenaApplicationExtensions
     private static IServiceCollection AddApplicationService(this IServiceCollection services)
     {
         AddSystemRegistryApplicationServices(services);
-        AddSystemManagementApplicationServices(services);
         AddOrchestrationRegistryApplicationServices(services);
         AddOrchestrationManagementApplicationServices(services);
-        AddRuntimeApplicationServices(services);
+        services.AddScoped<SystemInstanceProcessManagementService>();
+        services.AddScoped<SystemInstanceProcessUseCaseHandler>();
+        services.AddScoped<ISystemInstanceProcessCoordinator>(sp => sp.GetRequiredService<SystemInstanceProcessManagementService>());
         return services;
     }
 
@@ -45,15 +46,6 @@ public static class AthenaApplicationExtensions
         services.AddScoped<SystemRegistryCommandHandler>();
         services.AddScoped<SystemRegistryQueryHandler>();
         services.AddScoped<SystemRegistryUseCaseHandler>();
-    }
-
-    private static void AddSystemManagementApplicationServices(IServiceCollection services)
-    {
-        services.AddScoped<SystemManagementCommandHandler>();
-        services.AddScoped<SystemManagementQueryHandler>();
-        services.AddScoped<SystemManagementUseCaseHandler>();
-        services.AddScoped<SystemDiagnosticUseCaseHandler>();
-        services.AddScoped<SystemRuntimeUseCaseHandler>();
     }
 
     private static void AddOrchestrationRegistryApplicationServices(IServiceCollection services)
@@ -72,16 +64,15 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationLifecycleOperationQueryHandler>();
         services.AddScoped<OrchestrationLifecycleOperationUseCaseHandler>();
         services.AddScoped<OrchestrationDesiredStateUseCaseHandler>();
-        services.AddScoped<OrchestrationSystemCommandHandler>();
-        services.AddScoped<OrchestrationSystemQueryHandler>();
-        services.AddScoped<OrchestrationSystemUseCaseHandler>();
+        services.AddScoped<OrchestrationSystemInstanceCommandHandler>();
+        services.AddScoped<OrchestrationSystemInstanceQueryHandler>();
+        services.AddScoped<OrchestrationSystemInstanceUseCaseHandler>();
         services.AddScoped<OrchestrationStatusSynchronizationService>();
-        services.AddScoped<OrchestrationRuntimeUseCaseHandler>();
-    }
-
-    private static void AddRuntimeApplicationServices(IServiceCollection services)
-    {
-        services.AddScoped<RuntimeApplicationService>();
+        services.AddScoped<IOrchestrationLifecycleQueries>(sp => sp.GetRequiredService<OrchestrationLifecycleQueryHandler>());
+        services.AddScoped<IOrchestrationLifecycleCommands>(sp => sp.GetRequiredService<OrchestrationLifecycleUseCaseHandler>());
+        services.AddScoped<IOrchestrationLifecycleOperations>(sp => sp.GetRequiredService<OrchestrationLifecycleOperationUseCaseHandler>());
+        services.AddScoped<IOrchestrationStatusSynchronizer>(sp => sp.GetRequiredService<OrchestrationStatusSynchronizationService>());
+        services.AddScoped<OrchestrationProcessUseCaseHandler>();
     }
 
     private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
@@ -97,6 +88,7 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationReconciliationService>();
         services.AddSingleton<EndpointCheckSchedule>();
         services.AddScoped<SystemSynchronizationService>();
+        services.AddScoped<SystemEndpointSynchronizationService>();
         return services;
     }
 }

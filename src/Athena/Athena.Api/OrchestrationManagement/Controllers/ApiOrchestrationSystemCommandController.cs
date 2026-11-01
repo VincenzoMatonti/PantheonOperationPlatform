@@ -10,38 +10,38 @@ using Microsoft.AspNetCore.Mvc;
 namespace Athena.Api.OrchestrationManagement.Controllers;
 
 [ApiController]
-[Route("api/orchestrations/management/systems")]
-public class OrchestrationSystemCommandController(OrchestrationSystemUseCaseHandler handler) : ControllerBase
+[Route("api/orchestrations/management/system-instances")]
+public class OrchestrationSystemInstanceCommandController(OrchestrationSystemInstanceUseCaseHandler handler) : ControllerBase
 {
-    private readonly OrchestrationSystemUseCaseHandler _handler = handler;
+    private readonly OrchestrationSystemInstanceUseCaseHandler _handler = handler;
 
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemCommandResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<OrchestrationSystemCommandResponse>>> Create([FromBody] CreateOrchestrationSystemRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemInstanceCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationSystemInstanceCommandResponse>>> Create([FromBody] CreateOrchestrationSystemInstanceRequest request, CancellationToken cancellationToken)
     {
-        var command = OrchestrationSystemRequestCommandMapper.ToCreateCommand(request);
-        var result = await _handler.CreateOrchestrationSystemAsync(command, cancellationToken);
-        var response = OrchestrationSystemResponseMapper.ToCommandResponse(result);
+        var command = OrchestrationSystemInstanceRequestCommandMapper.ToCreateCommand(request);
+        var result = await _handler.CreateOrchestrationSystemInstanceAsync(command, cancellationToken);
+        var response = OrchestrationSystemInstanceResponseMapper.ToCommandResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpDelete("{id:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemCommandResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<OrchestrationSystemCommandResponse>>> Delete(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemInstanceCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationSystemInstanceCommandResponse>>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var command = OrchestrationSystemRequestCommandMapper.ToDeleteCommand(id);
-        var result = await _handler.DeleteOrchestrationSystemAsync(command, cancellationToken);
-        var response = OrchestrationSystemResponseMapper.ToCommandResponse(result);
+        var command = OrchestrationSystemInstanceRequestCommandMapper.ToDeleteCommand(id);
+        var result = await _handler.DeleteOrchestrationSystemInstanceAsync(command, cancellationToken);
+        var response = OrchestrationSystemInstanceResponseMapper.ToCommandResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{id:guid}/restore")]
-    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemCommandResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<OrchestrationSystemCommandResponse>>> Restore(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemInstanceCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationSystemInstanceCommandResponse>>> Restore(Guid id, CancellationToken cancellationToken)
     {
-        var command = OrchestrationSystemRequestCommandMapper.ToRestoreCommand(id);
-        var result = await _handler.RestoreOrchestrationSystemAsync(command, cancellationToken);
-        var response = OrchestrationSystemResponseMapper.ToCommandResponse(result);
+        var command = OrchestrationSystemInstanceRequestCommandMapper.ToRestoreCommand(id);
+        var result = await _handler.RestoreOrchestrationSystemInstanceAsync(command, cancellationToken);
+        var response = OrchestrationSystemInstanceResponseMapper.ToCommandResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 }

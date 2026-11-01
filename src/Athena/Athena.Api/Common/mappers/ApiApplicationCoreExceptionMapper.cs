@@ -39,6 +39,8 @@ public class ApiApplicationCoreExceptionMapper : IExceptionMapper
             ApplicationCoreErrorType.Validation => (StatusCodes.Status400BadRequest, ApiErrorType.Validation, ApiErrorEntity.Request),
             ApplicationCoreErrorType.NotFound => (StatusCodes.Status404NotFound, ApiErrorType.NotFound, ApiErrorEntity.Resource),
             ApplicationCoreErrorType.Conflict => (StatusCodes.Status409Conflict, ApiErrorType.Conflict, ApiErrorEntity.Resource),
+            ApplicationCoreErrorType.BadGateway => (StatusCodes.Status502BadGateway, ApiErrorType.Internal, ApiErrorEntity.Unknown),
+            ApplicationCoreErrorType.ServiceUnavailable => (StatusCodes.Status503ServiceUnavailable, ApiErrorType.Internal, ApiErrorEntity.Unknown),
             ApplicationCoreErrorType.Internal => (StatusCodes.Status500InternalServerError, ApiErrorType.Internal, ApiErrorEntity.Unknown),
             _ => (StatusCodes.Status500InternalServerError, ApiErrorType.Internal, ApiErrorEntity.Unknown)
         };

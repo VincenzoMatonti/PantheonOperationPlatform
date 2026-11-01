@@ -4,23 +4,23 @@ using Athena.Cli.Infrastructure.Services.Common;
 
 namespace Athena.Cli.Infrastructure.Services.Orchestrations;
 
-public class AthenaOrchestrationSystemManagementClient(AthenaApiClient apiClient) : IOrchestrationSystemManagement
+public class AthenaOrchestrationSystemInstanceManagementClient(AthenaApiClient apiClient) : IOrchestrationSystemInstanceManagement
 {
-    private const string BasePath = "api/orchestrations/management/systems";
+    private const string BasePath = "api/orchestrations/management/system-instances";
 
-    public Task<OrchestrationSystemResponse> CreateAsync(CreateOrchestrationSystemRequest request, CancellationToken cancellationToken = default) =>
-        apiClient.PostAsync<CreateOrchestrationSystemRequest, OrchestrationSystemResponse>(BasePath, request, cancellationToken);
+    public Task<OrchestrationSystemInstanceResponse> CreateAsync(CreateOrchestrationSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
+        apiClient.PostAsync<CreateOrchestrationSystemInstanceRequest, OrchestrationSystemInstanceResponse>(BasePath, request, cancellationToken);
 
-    public Task<OrchestrationSystemResponse> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
-        apiClient.DeleteAsync<OrchestrationSystemResponse>($"{BasePath}/{id}", cancellationToken);
+    public Task<OrchestrationSystemInstanceResponse> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
+        apiClient.DeleteAsync<OrchestrationSystemInstanceResponse>($"{BasePath}/{id}", cancellationToken);
 
-    public Task<OrchestrationSystemResponse> RestoreAsync(Guid id, CancellationToken cancellationToken = default) =>
-        apiClient.PostAsync<OrchestrationSystemResponse>($"{BasePath}/{id}/restore", cancellationToken);
+    public Task<OrchestrationSystemInstanceResponse> RestoreAsync(Guid id, CancellationToken cancellationToken = default) =>
+        apiClient.PostAsync<OrchestrationSystemInstanceResponse>($"{BasePath}/{id}/restore", cancellationToken);
 
-    public Task<OrchestrationSystemResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-        apiClient.GetAsync<OrchestrationSystemResponse>($"{BasePath}/{id}", cancellationToken);
+    public Task<OrchestrationSystemInstanceResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        apiClient.GetAsync<OrchestrationSystemInstanceResponse>($"{BasePath}/{id}", cancellationToken);
 
-    public Task<IReadOnlyList<OrchestrationSystemResponse>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default) =>
-        apiClient.GetAsync<IReadOnlyList<OrchestrationSystemResponse>>(
+    public Task<IReadOnlyList<OrchestrationSystemInstanceResponse>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default) =>
+        apiClient.GetAsync<IReadOnlyList<OrchestrationSystemInstanceResponse>>(
             $"{BasePath}?includeDeleted={includeDeleted.ToString().ToLowerInvariant()}", cancellationToken);
 }

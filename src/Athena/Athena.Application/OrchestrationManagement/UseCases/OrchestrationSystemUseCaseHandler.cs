@@ -6,31 +6,31 @@ using Athena.Application.OrchestrationManagement.Queries;
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 
-public class OrchestrationSystemUseCaseHandler(OrchestrationSystemCommandHandler commandHandler, OrchestrationSystemQueryHandler queryHandler, ApplicationExceptionService exceptionService)
+public class OrchestrationSystemInstanceUseCaseHandler(OrchestrationSystemInstanceCommandHandler commandHandler, OrchestrationSystemInstanceQueryHandler queryHandler, ApplicationExceptionService exceptionService)
 {
-    private readonly OrchestrationSystemCommandHandler _commandHandler = commandHandler;
-    private readonly OrchestrationSystemQueryHandler _queryHandler = queryHandler;
+    private readonly OrchestrationSystemInstanceCommandHandler _commandHandler = commandHandler;
+    private readonly OrchestrationSystemInstanceQueryHandler _queryHandler = queryHandler;
     private readonly ApplicationExceptionService _exceptionService = exceptionService;
 
     private Task<T> ExecuteAsync<T>(Func<Task<T>> operation) => _exceptionService.ExecuteAsync(operation);
 
     // =============================================================================================================
     // USE CASE COMMANDS - ORCHESTRATION SYSTEM
-    public Task<OrchestrationSystemDto> CreateOrchestrationSystemAsync(CreateOrchestrationSystemCommand command, CancellationToken cancellationToken = default) =>
-    ExecuteAsync(async () => await _commandHandler.CreateOrchestrationSystemAsync(command, cancellationToken));
+    public Task<OrchestrationSystemInstanceDto> CreateOrchestrationSystemInstanceAsync(CreateOrchestrationSystemInstanceCommand command, CancellationToken cancellationToken = default) =>
+    ExecuteAsync(async () => await _commandHandler.CreateOrchestrationSystemInstanceAsync(command, cancellationToken));
 
-    public Task<OrchestrationSystemDto> DeleteOrchestrationSystemAsync(DeleteOrchestrationSystemCommand command, CancellationToken cancellationToken = default) =>
-    ExecuteAsync(async () => await _commandHandler.DeleteOrchestrationSystemAsync(command, cancellationToken) ?? throw new OrchestrationSystemNotFoundException(command.Id));
+    public Task<OrchestrationSystemInstanceDto> DeleteOrchestrationSystemInstanceAsync(DeleteOrchestrationSystemInstanceCommand command, CancellationToken cancellationToken = default) =>
+    ExecuteAsync(async () => await _commandHandler.DeleteOrchestrationSystemInstanceAsync(command, cancellationToken) ?? throw new OrchestrationSystemInstanceNotFoundException(command.Id));
 
-    public Task<OrchestrationSystemDto> RestoreOrchestrationSystemAsync(RestoreOrchestrationSystemCommand command, CancellationToken cancellationToken = default) =>
-    ExecuteAsync(async () => await _commandHandler.RestoreOrchestrationSystemAsync(command, cancellationToken) ?? throw new OrchestrationSystemNotFoundException(command.Id));
+    public Task<OrchestrationSystemInstanceDto> RestoreOrchestrationSystemInstanceAsync(RestoreOrchestrationSystemInstanceCommand command, CancellationToken cancellationToken = default) =>
+    ExecuteAsync(async () => await _commandHandler.RestoreOrchestrationSystemInstanceAsync(command, cancellationToken) ?? throw new OrchestrationSystemInstanceNotFoundException(command.Id));
 
     // =============================================================================================================
     // USE CASE QUERIES - ORCHESTRATION SYSTEM
 
-    public Task<OrchestrationSystemDto> GetOrchestrationSystemByIdAsync(GetOrchestrationSystemByIdQuery query, CancellationToken cancellationToken = default) =>
-    ExecuteAsync(async () => await _queryHandler.GetOrchestrationSystemByIdAsync(query, cancellationToken) ?? throw new OrchestrationSystemNotFoundException(query.Id));
+    public Task<OrchestrationSystemInstanceDto> GetOrchestrationSystemInstanceByIdAsync(GetOrchestrationSystemInstanceByIdQuery query, CancellationToken cancellationToken = default) =>
+    ExecuteAsync(async () => await _queryHandler.GetOrchestrationSystemInstanceByIdAsync(query, cancellationToken) ?? throw new OrchestrationSystemInstanceNotFoundException(query.Id));
 
-    public Task<List<OrchestrationSystemDto>> GetAllOrchestrationSystemsAsync(GetOrchestrationSystemsQuery query, CancellationToken cancellationToken = default) =>
-    ExecuteAsync(() => _queryHandler.GetAllOrchestrationSystemsAsync(query, cancellationToken));
+    public Task<List<OrchestrationSystemInstanceDto>> GetAllOrchestrationSystemInstancesAsync(GetOrchestrationSystemInstancesQuery query, CancellationToken cancellationToken = default) =>
+    ExecuteAsync(() => _queryHandler.GetAllOrchestrationSystemInstancesAsync(query, cancellationToken));
 }

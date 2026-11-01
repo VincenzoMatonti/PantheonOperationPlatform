@@ -5,28 +5,28 @@ using Athena.Domain.Orchestration.Management.ValueObjects;
 
 namespace Athena.Application.OrchestrationManagement.Queries;
 
-public class OrchestrationSystemQueryHandler(IOrchestrationSystemRepository orchestrationSystemRepository)
+public class OrchestrationSystemInstanceQueryHandler(IOrchestrationSystemInstanceRepository orchestrationSystemRepository)
 {
-    private readonly IOrchestrationSystemRepository _orchestrationSystemRepository = orchestrationSystemRepository;
+    private readonly IOrchestrationSystemInstanceRepository _orchestrationSystemRepository = orchestrationSystemRepository;
 
-    public async Task<OrchestrationSystemDto?> GetOrchestrationSystemByIdAsync(GetOrchestrationSystemByIdQuery query, CancellationToken cancellationToken = default)
+    public async Task<OrchestrationSystemInstanceDto?> GetOrchestrationSystemInstanceByIdAsync(GetOrchestrationSystemInstanceByIdQuery query, CancellationToken cancellationToken = default)
     {
-        var associationId = OrchestrationSystemId.Create(query.Id);
+        var associationId = OrchestrationSystemInstanceId.Create(query.Id);
         var association = await _orchestrationSystemRepository.GetByIdAsync(associationId, includeDeleted: false, cancellationToken);
-        return association is null ? null : ConvertOrchestrationSystemEntitiesToDto(association);
+        return association is null ? null : ConvertOrchestrationSystemInstanceEntitiesToDto(association);
     }
 
-    public async Task<List<OrchestrationSystemDto>> GetAllOrchestrationSystemsAsync(GetOrchestrationSystemsQuery query, CancellationToken cancellationToken = default)
+    public async Task<List<OrchestrationSystemInstanceDto>> GetAllOrchestrationSystemInstancesAsync(GetOrchestrationSystemInstancesQuery query, CancellationToken cancellationToken = default)
     {
         var associations = await _orchestrationSystemRepository.GetAllAsync(query.IncludeDeleted, cancellationToken);
-        return [.. associations.Select(ConvertOrchestrationSystemEntitiesToDto)];
+        return [.. associations.Select(ConvertOrchestrationSystemInstanceEntitiesToDto)];
     }
 
-    public static OrchestrationSystemDto ConvertOrchestrationSystemEntitiesToDto(OrchestrationSystem association) => new()
+    public static OrchestrationSystemInstanceDto ConvertOrchestrationSystemInstanceEntitiesToDto(OrchestrationSystemInstance association) => new()
     {
         Id = association.Id.Value,
         OrchestrationId = association.OrchestrationId.Value,
-        SystemId = association.SystemId.Value,
+        SystemInstanceId = association.SystemInstanceId.Value,
         CreatedAtUtc = association.CreatedAtUtc,
         UpdatedAtUtc = association.UpdatedAtUtc,
         IsDeleted = association.IsDeleted

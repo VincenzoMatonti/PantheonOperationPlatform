@@ -426,7 +426,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("orchestration_lifecycle_operations", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationSystem", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationSystemInstance", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -451,9 +451,9 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("orchestration_id");
 
-                    b.Property<Guid>("SystemId")
+                    b.Property<Guid>("SystemInstanceId")
                         .HasColumnType("uuid")
-                        .HasColumnName("system_id");
+                        .HasColumnName("system_instance_id");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
@@ -463,28 +463,28 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("orchestration_database_id");
 
-                    b.Property<int>("system_database_id")
+                    b.Property<int>("system_instance_database_id")
                         .HasColumnType("integer")
-                        .HasColumnName("system_database_id");
+                        .HasColumnName("system_instance_database_id");
 
                     b.HasKey("id")
-                        .HasName("pk_orchestration_systems");
+                        .HasName("pk_orchestration_system_instances");
 
                     b.HasIndex("Id")
                         .IsUnique()
-                        .HasDatabaseName("ux_orchestration_systems_association_id");
+                        .HasDatabaseName("ux_orchestration_system_instances_association_id");
 
-                    b.HasIndex("OrchestrationId", "SystemId")
-                        .HasDatabaseName("ix_orchestration_systems_guid_pair");
+                    b.HasIndex("OrchestrationId", "SystemInstanceId")
+                        .HasDatabaseName("ix_orchestration_system_instances_guid_pair");
 
                     b.HasIndex("orchestration_database_id", "OrchestrationId");
 
-                    b.HasIndex("orchestration_database_id", "system_database_id")
-                        .HasDatabaseName("ix_orchestration_systems_database_pair");
+                    b.HasIndex("orchestration_database_id", "system_instance_database_id")
+                        .HasDatabaseName("ix_orchestration_system_instances_database_pair");
 
-                    b.HasIndex("system_database_id", "SystemId");
+                    b.HasIndex("system_instance_database_id", "SystemInstanceId");
 
-                    b.ToTable("orchestration_systems", (string)null);
+                    b.ToTable("orchestration_system_instances", (string)null);
                 });
 
             modelBuilder.Entity("Athena.Domain.Orchestration.Registry.Entities.Orchestration", b =>
@@ -540,109 +540,6 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ux_orchestrations_name");
 
                     b.ToTable("orchestrations", (string)null);
-                });
-
-            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycle", b =>
-                {
-                    b.Property<int>("system_database_id")
-                        .HasColumnType("integer")
-                        .HasColumnName("system_database_id");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc");
-
-                    b.Property<int>("DesiredState")
-                        .HasColumnType("integer")
-                        .HasColumnName("desired_state");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_deleted");
-
-                    b.Property<int>("OperationalStatus")
-                        .HasColumnType("integer")
-                        .HasColumnName("operational_status");
-
-                    b.Property<Guid>("SystemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("system_id");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at_utc");
-
-                    b.HasKey("system_database_id")
-                        .HasName("pk_system_lifecycles");
-
-                    b.HasIndex("system_database_id", "SystemId")
-                        .IsUnique();
-
-                    b.ToTable("system_lifecycles", (string)null);
-                });
-
-            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycleOperation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime?>("CompletedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_at_utc");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text")
-                        .HasColumnName("error_message");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_deleted");
-
-                    b.Property<Guid?>("OrchestrationLifecycleOperationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("orchestration_lifecycle_operation_id");
-
-                    b.Property<DateTime?>("StartedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("started_at_utc");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("SystemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("system_id");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
-                        .HasColumnName("type");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at_utc");
-
-                    b.Property<int>("system_database_id")
-                        .HasColumnType("integer")
-                        .HasColumnName("system_database_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_system_lifecycle_operations");
-
-                    b.HasIndex("OrchestrationLifecycleOperationId")
-                        .HasDatabaseName("ix_system_lifecycle_operations_parent_operation");
-
-                    b.HasIndex("system_database_id", "CreatedAtUtc")
-                        .HasDatabaseName("ix_system_lifecycle_operations_system_created");
-
-                    b.HasIndex("system_database_id", "SystemId");
-
-                    b.ToTable("system_lifecycle_operations", (string)null);
                 });
 
             modelBuilder.Entity("Athena.Domain.System.Registry.Entities.System", b =>
@@ -708,15 +605,15 @@ namespace Athena.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<int>("AvailabilityStatus")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(3)
-                        .HasColumnName("availability_status");
-
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at_utc");
+
+                    b.Property<int>("DesiredState")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("desired_state");
 
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -731,6 +628,12 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
                         .HasColumnName("name");
+
+                    b.Property<int>("OperationalStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("operational_status");
 
                     b.Property<int>("RegistrationStatus")
                         .HasColumnType("integer")
@@ -777,6 +680,55 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ux_system_instances_workload_name");
 
                     b.ToTable("system_instances", (string)null);
+                });
+
+            modelBuilder.Entity("Athena.Domain.System.Registry.Entities.SystemInstanceOperation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at_utc");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<DateTime?>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at_utc");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("operation_status");
+
+                    b.Property<Guid>("SystemInstanceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("system_instance_id");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("operation_type");
+
+                    b.Property<int>("system_instance_database_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("system_instance_database_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_system_instance_operations");
+
+                    b.HasIndex("system_instance_database_id", "SystemInstanceId", "CreatedAtUtc")
+                        .HasDatabaseName("ix_system_instance_operations_instance_created");
+
+                    b.ToTable("system_instance_operations", (string)null);
                 });
 
             modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>
@@ -845,67 +797,6 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ux_workloads_block_name");
 
                     b.ToTable("workloads", (string)null);
-                });
-
-            modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc");
-
-                    b.Property<string>("Environment")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("environment");
-
-                    b.Property<string>("RuntimeProvider")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("runtime_provider");
-
-                    b.Property<string>("RuntimeResourceId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("runtime_resource_id");
-
-                    b.Property<string>("RuntimeResourceName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("runtime_resource_name");
-
-                    b.Property<Guid>("SystemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("system_id");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at_utc");
-
-                    b.Property<int>("system_database_id")
-                        .HasColumnType("integer")
-                        .HasColumnName("system_database_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_system_runtime_instances");
-
-                    b.HasIndex("system_database_id", "Environment")
-                        .HasDatabaseName("ix_system_runtime_instances_system_environment");
-
-                    b.HasIndex("system_database_id", "SystemId");
-
-                    b.HasIndex("RuntimeProvider", "Environment", "RuntimeResourceId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_system_runtime_instances_resource");
-
-                    b.ToTable("system_runtime_instances", (string)null);
                 });
 
             modelBuilder.Entity("Athena.Domain.Block.Registry.Entities.Block", b =>
@@ -1001,7 +892,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationSystem", b =>
+            modelBuilder.Entity("Athena.Domain.Orchestration.Management.Entities.OrchestrationSystemInstance", b =>
                 {
                     b.HasOne("Athena.Domain.Orchestration.Registry.Entities.Orchestration", null)
                         .WithMany()
@@ -1010,34 +901,9 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
+                    b.HasOne("Athena.Domain.System.Registry.Entities.SystemInstance", null)
                         .WithMany()
-                        .HasForeignKey("system_database_id", "SystemId")
-                        .HasPrincipalKey("id", "Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycle", b =>
-                {
-                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
-                        .WithOne()
-                        .HasForeignKey("Athena.Domain.System.Management.Entities.SystemLifecycle", "system_database_id", "SystemId")
-                        .HasPrincipalKey("Athena.Domain.System.Registry.Entities.System", "id", "Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Athena.Domain.System.Management.Entities.SystemLifecycleOperation", b =>
-                {
-                    b.HasOne("Athena.Domain.Orchestration.Management.Entities.OrchestrationLifecycleOperation", null)
-                        .WithMany()
-                        .HasForeignKey("OrchestrationLifecycleOperationId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
-                        .WithMany()
-                        .HasForeignKey("system_database_id", "SystemId")
+                        .HasForeignKey("system_instance_database_id", "SystemInstanceId")
                         .HasPrincipalKey("id", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1131,21 +997,21 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>
+            modelBuilder.Entity("Athena.Domain.System.Registry.Entities.SystemInstanceOperation", b =>
                 {
-                    b.HasOne("Athena.Domain.Block.Registry.Entities.Block", null)
+                    b.HasOne("Athena.Domain.System.Registry.Entities.SystemInstance", null)
                         .WithMany()
-                        .HasForeignKey("block_database_id", "BlockId")
+                        .HasForeignKey("system_instance_database_id", "SystemInstanceId")
                         .HasPrincipalKey("id", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Athena.Infrastructure.Persistence.Runtime.SystemRuntimeInstance", b =>
+            modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>
                 {
-                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
+                    b.HasOne("Athena.Domain.Block.Registry.Entities.Block", null)
                         .WithMany()
-                        .HasForeignKey("system_database_id", "SystemId")
+                        .HasForeignKey("block_database_id", "BlockId")
                         .HasPrincipalKey("id", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

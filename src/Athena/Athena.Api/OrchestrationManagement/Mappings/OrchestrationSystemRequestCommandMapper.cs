@@ -3,20 +3,20 @@ using Athena.Application.OrchestrationManagement.Commands;
 
 namespace Athena.Api.OrchestrationManagement.Mappings;
 
-public static class OrchestrationSystemRequestCommandMapper
+public static class OrchestrationSystemInstanceRequestCommandMapper
 {
-    public static CreateOrchestrationSystemCommand ToCreateCommand(CreateOrchestrationSystemRequest request)
+    public static CreateOrchestrationSystemInstanceCommand ToCreateCommand(CreateOrchestrationSystemInstanceRequest request)
     {
-        return new CreateOrchestrationSystemCommand { OrchestrationId = request.OrchestrationId, SystemId = request.SystemId };
+        return new CreateOrchestrationSystemInstanceCommand { OrchestrationId = request.OrchestrationId, SystemInstanceId = request.SystemInstanceId };
     }
 
-    public static DeleteOrchestrationSystemCommand ToDeleteCommand(Guid id)
+    public static DeleteOrchestrationSystemInstanceCommand ToDeleteCommand(Guid id)
     {
-        return new DeleteOrchestrationSystemCommand { Id = id };
+        return new DeleteOrchestrationSystemInstanceCommand { Id = id };
     }
 
-    public static RestoreOrchestrationSystemCommand ToRestoreCommand(Guid id)
+    public static RestoreOrchestrationSystemInstanceCommand ToRestoreCommand(Guid id)
     {
-        return new RestoreOrchestrationSystemCommand { Id = id };
+        return new RestoreOrchestrationSystemInstanceCommand { Id = id };
     }
 }

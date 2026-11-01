@@ -49,14 +49,14 @@ public class GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusReques
     public string Status { get; init; } = string.Empty;
 }
 
-public class CreateOrchestrationSystemRequest
+public class CreateOrchestrationSystemInstanceRequest
 {
     public Guid OrchestrationId { get; init; }
 
-    public Guid SystemId { get; init; }
+    public Guid SystemInstanceId { get; init; }
 }
 
-public class GetOrchestrationSystemsRequest
+public class GetOrchestrationSystemInstancesRequest
 {
     public bool IncludeDeleted { get; init; }
 }

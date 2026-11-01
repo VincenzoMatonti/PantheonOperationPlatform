@@ -2,6 +2,7 @@ using Athena.Application.Common.Services;
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.DTOs;
 using Athena.Application.OrchestrationManagement.Exceptions;
+using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 
 
@@ -11,7 +12,7 @@ public class OrchestrationLifecycleOperationUseCaseHandler(
     OrchestrationLifecycleOperationCommandHandler commandHandler,
     OrchestrationLifecycleOperationQueryHandler queryHandler,
     OrchestrationLifecycleQueryHandler lifecycleQueryHandler,
-    ApplicationExceptionService exceptionService)
+    ApplicationExceptionService exceptionService) : IOrchestrationLifecycleOperations
 {
     private readonly OrchestrationLifecycleOperationCommandHandler _commandHandler = commandHandler;
     private readonly OrchestrationLifecycleOperationQueryHandler _queryHandler = queryHandler;

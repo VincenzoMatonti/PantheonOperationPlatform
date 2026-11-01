@@ -1,19 +1,17 @@
 using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
 using Athena.Application.Common.Interfaces;
-using Athena.Application.Common.Interfaces.Runtime;
+using Athena.Application.SystemManagement.Contracts;
 using Athena.Domain.Block.Registry.Repositories;
 using Athena.Domain.Company.Repositories;
 using Athena.Domain.Ecosystem.Registry.Repositories;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.Repositories;
-using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.Workload.Registry.Repositories;
 using Athena.Infrastructure.Persistence;
 using Athena.Infrastructure.Repositories;
 using Athena.Infrastructure.Seeding;
-using Athena.Infrastructure.Services.Runtime;
-using Athena.Infrastructure.Services.Runtime.Providers.Docker;
+using Athena.Infrastructure.Services.ProcessManagement;
 using Athena.Infrastructure.Services.Synchronization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,17 +25,15 @@ public static class DependencyInjectionExtension
     {
         AddDatabase(services, configuration);
         AddRepositories(services);
-        AddRuntimeServices(services);
+        AddExecutionAgent(services);
         AddSynchronizationServices(services);
         AddAthenaSeeder(services);
         return services;
     }
 
-    public static async Task InitializeAthenaDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
+    public static async Task SeedAthenaAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
     {
         await using var scope = services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AthenaDbContext>();
-        await dbContext.Database.MigrateAsync(cancellationToken);
         var seeder = scope.ServiceProvider.GetRequiredService<AthenaSeeder>();
         await seeder.SeedAsync(cancellationToken);
     }
@@ -53,29 +49,27 @@ public static class DependencyInjectionExtension
     private static IServiceCollection AddRepositories(IServiceCollection services)
     {
         services.AddScoped<ISystemRepository, SystemRepository>();
-        services.AddScoped<ISystemLifecycleRepository, SystemLifecycleRepository>();
-        services.AddScoped<ISystemLifecycleOperationRepository, SystemLifecycleOperationRepository>();
         services.AddScoped<IOrchestrationRepository, OrchestrationRepository>();
         services.AddScoped<IOrchestrationLifecycleRepository, OrchestrationLifecycleRepository>();
         services.AddScoped<IOrchestrationLifecycleOperationRepository, OrchestrationLifecycleOperationRepository>();
-        services.AddScoped<IOrchestrationSystemRepository, OrchestrationSystemRepository>();
+        services.AddScoped<IOrchestrationSystemInstanceRepository, OrchestrationSystemInstanceRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IEcosystemRepository, EcosystemRepository>();
         services.AddScoped<IBlockRepository, BlockRepository>();
         services.AddScoped<IWorkloadRepository, WorkloadRepository>();
         services.AddScoped<ISystemInstanceRepository, SystemInstanceRepository>();
+        services.AddScoped<ISystemInstanceOperationRepository, SystemInstanceOperationRepository>();
         return services;
     }
 
-    private static IServiceCollection AddRuntimeServices(IServiceCollection services)
+    private static IServiceCollection AddExecutionAgent(IServiceCollection services)
     {
-        services.AddScoped<ISystemRuntimeInstanceRegistry, SystemRuntimeInstanceRegistry>();
-        services.AddScoped<IRuntimeProviderResolver, RuntimeProviderResolver>();
-        services.AddScoped<IRuntimeProvider, DockerRuntimeProvider>();
-        services.AddScoped<IRuntimeHealthCheck, DockerRuntimeHealthCheck>();
-        services.AddScoped<IRuntimeLogReader, DockerRuntimeLogReader>();
-        services.AddScoped<IRuntimeDiscoveryService, DockerRuntimeDiscoveryService>();
+        services.AddHttpClient<ISystemInstanceExecutionAgent, SystemInstanceExecutionAgentClient>((sp, client) =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+
         return services;
     }
 

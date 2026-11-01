@@ -13,5 +13,7 @@ public enum ApplicationCoreErrorType
     Validation,
     NotFound,
     Conflict,
+    BadGateway,
+    ServiceUnavailable,
     Internal
 }

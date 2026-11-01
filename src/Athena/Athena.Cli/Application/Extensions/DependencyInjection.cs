@@ -9,12 +9,10 @@ public static class DependencyInjection
     public static IServiceCollection AddAthenaCliApplication(this IServiceCollection services)
     {
         services.AddTransient<SystemRegistryService>();
-        services.AddTransient<SystemManagementService>();
-        services.AddTransient<SystemDiagnosticService>();
-        services.AddScoped<SystemRuntimeInstancesService>();
+        services.AddScoped<SystemInstancesService>();
         services.AddTransient<OrchestrationRegistryService>();
         services.AddScoped<OrchestrationManagementService>();
-        services.AddScoped<OrchestrationSystemManagementService>();        
+        services.AddScoped<OrchestrationSystemInstanceManagementService>();
         return services;
     }
 }

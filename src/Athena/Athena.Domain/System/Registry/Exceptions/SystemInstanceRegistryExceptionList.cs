@@ -99,31 +99,3 @@ public class SystemInstanceDeletedCannotBeModifiedException(Guid instanceId)
         $"System instance with ID '{instanceId}' has been deleted and cannot be modified.")
 {
 }
-
-public class SystemInstanceAlreadyAvailableException(Guid instanceId)
-    : SystemInstanceRegistryException(
-        SystemInstanceRegistryErrorCode.SystemInstanceAlreadyAvailable,
-        $"System instance with ID '{instanceId}' is already available.")
-{
-}
-
-public class SystemInstanceAlreadyUnavailableException(Guid instanceId)
-    : SystemInstanceRegistryException(
-        SystemInstanceRegistryErrorCode.SystemInstanceAlreadyUnavailable,
-        $"System instance with ID '{instanceId}' is already unavailable.")
-{
-}
-
-public class SystemInstanceAlreadyAvailabilityUnknownException(Guid instanceId)
-    : SystemInstanceRegistryException(
-        SystemInstanceRegistryErrorCode.SystemInstanceAlreadyAvailabilityUnknown,
-        $"Availability status of system instance with ID '{instanceId}' is already unknown.")
-{
-}
-
-public class SystemInstanceAlreadyInErrorException(Guid instanceId)
-    : SystemInstanceRegistryException(
-        SystemInstanceRegistryErrorCode.SystemInstanceAlreadyInError,
-        $"System instance with ID '{instanceId}' is already in error.")
-{
-}

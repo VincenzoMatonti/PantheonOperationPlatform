@@ -5,17 +5,17 @@ using Athena.Domain.System.Registry.ValueObjects;
 
 namespace Athena.Domain.Orchestration.Management.Repositories;
 
-public interface IOrchestrationSystemRepository
+public interface IOrchestrationSystemInstanceRepository
 {
-    Task<OrchestrationSystem?> GetByIdAsync(OrchestrationSystemId id, bool includeDeleted = false, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<OrchestrationSystem>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<OrchestrationSystem>> GetByOrchestrationIdAsync(OrchestrationId orchestrationId, bool includeDeleted = false, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<OrchestrationSystem>> GetBySystemIdAsync(SystemId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default);
-    Task<OrchestrationSystem?> GetByOrchestrationAndSystemAsync(OrchestrationId orchestrationId, SystemId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default);
-    Task<bool> ExistsAsync(OrchestrationSystemId id, CancellationToken cancellationToken = default);
-    Task<bool> AssociationExistsAsync(OrchestrationId orchestrationId, SystemId systemId, bool includeDeleted = true, CancellationToken cancellationToken = default);
-    Task AddAsync(OrchestrationSystem association, CancellationToken cancellationToken = default);
+    Task<OrchestrationSystemInstance?> GetByIdAsync(OrchestrationSystemInstanceId id, bool includeDeleted = false, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetByOrchestrationIdAsync(OrchestrationId orchestrationId, bool includeDeleted = false, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetBySystemInstanceIdAsync(SystemInstanceId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default);
+    Task<OrchestrationSystemInstance?> GetByOrchestrationAndSystemInstanceAsync(OrchestrationId orchestrationId, SystemInstanceId systemInstanceId, bool includeDeleted = false, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(OrchestrationSystemInstanceId id, CancellationToken cancellationToken = default);
+    Task<bool> AssociationExistsAsync(OrchestrationId orchestrationId, SystemInstanceId systemId, bool includeDeleted = true, CancellationToken cancellationToken = default);
+    Task AddAsync(OrchestrationSystemInstance association, CancellationToken cancellationToken = default);
     Task UpdateAsync(
-    OrchestrationSystem association,
+    OrchestrationSystemInstance association,
     CancellationToken cancellationToken = default);
 }

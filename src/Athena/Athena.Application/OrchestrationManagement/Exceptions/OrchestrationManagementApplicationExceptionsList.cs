@@ -54,17 +54,17 @@ public class OrchestrationLifecycleOperationAlreadyExistsException(Guid operatio
     public Guid OperationId { get; } = operationId;
 }
 
-public class OrchestrationSystemNotFoundException(Guid id) : OrchestrationManagementApplicationException(
-        OrchestrationManagementApplicationErrorCode.OrchestrationSystemNotFound, $"Orchestration-system association '{id}' was not found.")
+public class OrchestrationSystemInstanceNotFoundException(Guid id) : OrchestrationManagementApplicationException(
+        OrchestrationManagementApplicationErrorCode.OrchestrationSystemInstanceNotFound, $"Orchestration-system association '{id}' was not found.")
 {
     public Guid Id { get; } = id;
 }
 
-public class OrchestrationSystemAlreadyExistsException(Guid orchestrationId, Guid systemId)
-    : OrchestrationManagementApplicationException(OrchestrationManagementApplicationErrorCode.OrchestrationSystemAlreadyExists,
+public class OrchestrationSystemInstanceAlreadyExistsException(Guid orchestrationId, Guid systemId)
+    : OrchestrationManagementApplicationException(OrchestrationManagementApplicationErrorCode.OrchestrationSystemInstanceAlreadyExists,
          $"An association between orchestration '{orchestrationId}' and system '{systemId}' already exists.")
 {
     public Guid OrchestrationId { get; } = orchestrationId;
 
-    public Guid SystemId { get; } = systemId;
+    public Guid SystemInstanceId { get; } = systemId;
 }

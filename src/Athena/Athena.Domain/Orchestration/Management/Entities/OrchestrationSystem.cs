@@ -5,13 +5,13 @@ using Athena.Domain.System.Registry.ValueObjects;
 
 namespace Athena.Domain.Orchestration.Management.Entities;
 
-public class OrchestrationSystem
+public class OrchestrationSystemInstance
 {
-    public OrchestrationSystemId Id { get; private set; } = null!;
+    public OrchestrationSystemInstanceId Id { get; private set; } = null!;
 
     public OrchestrationId OrchestrationId { get; private set; } = null!;
 
-    public SystemId SystemId { get; private set; } = null!;
+    public SystemInstanceId SystemInstanceId { get; private set; } = null!;
 
     public DateTime CreatedAtUtc { get; private set; }
 
@@ -19,15 +19,15 @@ public class OrchestrationSystem
 
     public bool IsDeleted { get; private set; }
 
-    public static OrchestrationSystem Create(OrchestrationId orchestrationId, SystemId systemId)
+    public static OrchestrationSystemInstance Create(OrchestrationId orchestrationId, SystemInstanceId systemInstanceId)
     {
-        if (orchestrationId is null) throw new OrchestrationSystemOrchestrationIdRequiredException();
-        if (systemId is null) throw new OrchestrationSystemSystemIdRequiredException();
-        return new OrchestrationSystem
+        if (orchestrationId is null) throw new OrchestrationSystemInstanceOrchestrationIdRequiredException();
+        if (systemInstanceId is null) throw new OrchestrationSystemInstanceSystemInstanceIdRequiredException();
+        return new OrchestrationSystemInstance
         {
-            Id = OrchestrationSystemId.New(),
+            Id = OrchestrationSystemInstanceId.New(),
             OrchestrationId = orchestrationId,
-            SystemId = systemId,
+            SystemInstanceId = systemInstanceId,
             CreatedAtUtc = DateTime.UtcNow,
             IsDeleted = false
         };
@@ -35,14 +35,14 @@ public class OrchestrationSystem
 
     public void Delete()
     {
-        if (IsDeleted) throw new OrchestrationSystemAlreadyDeletedException(Id);
+        if (IsDeleted) throw new OrchestrationSystemInstanceAlreadyDeletedException(Id);
         IsDeleted = true;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
     public void Restore()
     {
-        if (!IsDeleted) throw new OrchestrationSystemAlreadyRestoredException(Id);
+        if (!IsDeleted) throw new OrchestrationSystemInstanceAlreadyRestoredException(Id);
         IsDeleted = false;
         UpdatedAtUtc = DateTime.UtcNow;
     }

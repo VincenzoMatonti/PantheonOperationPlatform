@@ -15,7 +15,7 @@ internal static class Program
         builder.Services.AddAthenaApi();
 
         var app = builder.Build();
-        await app.Services.InitializeAthenaDatabaseAsync();
+        await app.Services.SeedAthenaAsync();
         app.UseAthenaApi();
         await app.RunAsync();
     }

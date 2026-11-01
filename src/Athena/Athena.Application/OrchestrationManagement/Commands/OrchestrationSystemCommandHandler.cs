@@ -8,43 +8,43 @@ using Athena.Domain.System.Registry.ValueObjects;
 
 namespace Athena.Application.OrchestrationManagement.Commands;
 
-public class OrchestrationSystemCommandHandler(IOrchestrationSystemRepository orchestrationSystemRepository)
+public class OrchestrationSystemInstanceCommandHandler(IOrchestrationSystemInstanceRepository orchestrationSystemRepository)
 {
-    private readonly IOrchestrationSystemRepository _orchestrationSystemRepository = orchestrationSystemRepository;
+    private readonly IOrchestrationSystemInstanceRepository _orchestrationSystemRepository = orchestrationSystemRepository;
 
-    public async Task<OrchestrationSystemDto> CreateOrchestrationSystemAsync(CreateOrchestrationSystemCommand command, CancellationToken cancellationToken = default)
+    public async Task<OrchestrationSystemInstanceDto> CreateOrchestrationSystemInstanceAsync(CreateOrchestrationSystemInstanceCommand command, CancellationToken cancellationToken = default)
     {
         var orchestrationId = OrchestrationId.Create(command.OrchestrationId);
-        var systemId = SystemId.Create(command.SystemId);
-        var associationExists = await _orchestrationSystemRepository.AssociationExistsAsync(orchestrationId, systemId, includeDeleted: true, cancellationToken);
-        if (associationExists) throw new OrchestrationSystemAlreadyExistsException(command.OrchestrationId, command.SystemId);
-        var association = OrchestrationSystem.Create(orchestrationId, systemId);
+        var systemInstanceId = SystemInstanceId.Create(command.SystemInstanceId);
+        var associationExists = await _orchestrationSystemRepository.AssociationExistsAsync(orchestrationId, systemInstanceId, includeDeleted: true, cancellationToken);
+        if (associationExists) throw new OrchestrationSystemInstanceAlreadyExistsException(command.OrchestrationId, command.SystemInstanceId);
+        var association = OrchestrationSystemInstance.Create(orchestrationId, systemInstanceId);
         await _orchestrationSystemRepository.AddAsync(association, cancellationToken);
-        return ConvertOrchestrationSystemEntitiesToDto(association);
+        return ConvertOrchestrationSystemInstanceEntitiesToDto(association);
     }
 
-    public Task<OrchestrationSystemDto?> DeleteOrchestrationSystemAsync(DeleteOrchestrationSystemCommand command, CancellationToken cancellationToken = default) =>
-        UpdateOrchestrationSystemAsync(command.Id, association => association.Delete(), includeDeleted: false, cancellationToken);
+    public Task<OrchestrationSystemInstanceDto?> DeleteOrchestrationSystemInstanceAsync(DeleteOrchestrationSystemInstanceCommand command, CancellationToken cancellationToken = default) =>
+        UpdateOrchestrationSystemInstanceAsync(command.Id, association => association.Delete(), includeDeleted: false, cancellationToken);
 
-    public Task<OrchestrationSystemDto?> RestoreOrchestrationSystemAsync(RestoreOrchestrationSystemCommand command, CancellationToken cancellationToken = default) =>
-        UpdateOrchestrationSystemAsync(command.Id, association => association.Restore(), includeDeleted: true, cancellationToken);
+    public Task<OrchestrationSystemInstanceDto?> RestoreOrchestrationSystemInstanceAsync(RestoreOrchestrationSystemInstanceCommand command, CancellationToken cancellationToken = default) =>
+        UpdateOrchestrationSystemInstanceAsync(command.Id, association => association.Restore(), includeDeleted: true, cancellationToken);
 
-    private async Task<OrchestrationSystemDto?> UpdateOrchestrationSystemAsync(
-        Guid id, Action<OrchestrationSystem> update, bool includeDeleted, CancellationToken cancellationToken)
+    private async Task<OrchestrationSystemInstanceDto?> UpdateOrchestrationSystemInstanceAsync(
+        Guid id, Action<OrchestrationSystemInstance> update, bool includeDeleted, CancellationToken cancellationToken)
     {
-        var associationId = OrchestrationSystemId.Create(id);
+        var associationId = OrchestrationSystemInstanceId.Create(id);
         var association = await _orchestrationSystemRepository.GetByIdAsync(associationId, includeDeleted, cancellationToken);
         if (association is null) return null;
         update(association);
-        _ = _orchestrationSystemRepository.UpdateAsync(association, cancellationToken);
-        return ConvertOrchestrationSystemEntitiesToDto(association);
+        await _orchestrationSystemRepository.UpdateAsync(association, cancellationToken);
+        return ConvertOrchestrationSystemInstanceEntitiesToDto(association);
     }
 
-    public static OrchestrationSystemDto ConvertOrchestrationSystemEntitiesToDto(OrchestrationSystem association) => new()
+    public static OrchestrationSystemInstanceDto ConvertOrchestrationSystemInstanceEntitiesToDto(OrchestrationSystemInstance association) => new()
     {
         Id = association.Id.Value,
         OrchestrationId = association.OrchestrationId.Value,
-        SystemId = association.SystemId.Value,
+        SystemInstanceId = association.SystemInstanceId.Value,
         CreatedAtUtc = association.CreatedAtUtc,
         UpdatedAtUtc = association.UpdatedAtUtc,
         IsDeleted = association.IsDeleted

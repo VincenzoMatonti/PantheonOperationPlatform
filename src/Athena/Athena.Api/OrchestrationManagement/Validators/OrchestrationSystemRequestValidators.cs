@@ -4,15 +4,15 @@ using FluentValidation;
 
 namespace Athena.Api.OrchestrationManagement.Validators;
 
-public class CreateOrchestrationSystemRequestValidator : AbstractValidator<CreateOrchestrationSystemRequest>
+public class CreateOrchestrationSystemInstanceRequestValidator : AbstractValidator<CreateOrchestrationSystemInstanceRequest>
 {
-    public CreateOrchestrationSystemRequestValidator()
+    public CreateOrchestrationSystemInstanceRequestValidator()
     {
         RuleFor(x => x.OrchestrationId)
             .NotEmpty()
             .WithMessage("The orchestration ID is required.");
 
-        RuleFor(x => x.SystemId)
+        RuleFor(x => x.SystemInstanceId)
             .NotEmpty()
             .WithMessage("The system ID is required.");
     }

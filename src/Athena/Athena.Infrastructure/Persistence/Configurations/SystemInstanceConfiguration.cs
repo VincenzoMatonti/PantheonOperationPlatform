@@ -36,8 +36,8 @@ public sealed class SystemInstanceConfiguration : IEntityTypeConfiguration<Syste
         builder.HasIndex("workload_database_id", nameof(SystemInstance.WorkloadId), nameof(SystemInstance.Name)).IsUnique().HasDatabaseName("ux_system_instances_workload_name");
         // Registration status.
         builder.Property(instance => instance.RegistrationStatus).HasConversion<int>().HasColumnName("registration_status").IsRequired();
-        // Availability status.
-        builder.Property(instance => instance.AvailabilityStatus).HasConversion<int>().HasColumnName("availability_status").HasDefaultValue(SystemInstanceAvailabilityStatus.Unknown).IsRequired();
+        builder.Property(instance => instance.DesiredState).HasConversion<int>().HasColumnName("desired_state").HasDefaultValue(SystemInstanceDesiredState.Unknown).IsRequired();
+        builder.Property(instance => instance.OperationalStatus).HasConversion<int>().HasColumnName("operational_status").HasDefaultValue(SystemInstanceOperationalStatus.Unknown).IsRequired();
         // Audit fields.
         builder.Property(instance => instance.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
         builder.Property(instance => instance.UpdatedAtUtc).HasColumnName("updated_at_utc");

@@ -3,9 +3,9 @@ using Athena.Cli.Presentation.Outputs.Orchestrations;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystems.Commands;
+namespace Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystemInstances.Commands;
 
-public class DeleteOrchestrationSystemCommand(OrchestrationSystemManagementService service) : AsyncCommand<DeleteOrchestrationSystemCommand.Settings>
+public class DeleteOrchestrationSystemInstanceCommand(OrchestrationSystemInstanceManagementService service) : AsyncCommand<DeleteOrchestrationSystemInstanceCommand.Settings>
 {
     public class Settings : CommandSettings
     {
@@ -19,7 +19,7 @@ public class DeleteOrchestrationSystemCommand(OrchestrationSystemManagementServi
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         var association = await service.DeleteAsync(settings.Id, cancellationToken);
-        OrchestrationSystemManagementOutput.Write(association);
+        OrchestrationSystemInstanceManagementOutput.Write(association);
         return 0;
     }
 }

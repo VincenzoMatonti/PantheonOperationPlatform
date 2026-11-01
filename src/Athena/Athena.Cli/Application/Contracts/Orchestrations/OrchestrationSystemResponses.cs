@@ -1,12 +1,12 @@
 namespace Athena.Cli.Application.Contracts.Orchestrations;
 
-public class OrchestrationSystemResponse
+public class OrchestrationSystemInstanceResponse
 {
     public Guid Id { get; init; }
 
     public Guid OrchestrationId { get; init; }
 
-    public Guid SystemId { get; init; }
+    public Guid SystemInstanceId { get; init; }
 
     public DateTime CreatedAtUtc { get; init; }
 

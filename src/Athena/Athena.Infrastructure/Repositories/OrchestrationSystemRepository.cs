@@ -8,100 +8,100 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Athena.Infrastructure.Repositories;
 
-public class OrchestrationSystemRepository(AthenaDbContext context) : IOrchestrationSystemRepository
+public class OrchestrationSystemInstanceRepository(AthenaDbContext context) : IOrchestrationSystemInstanceRepository
 {
-    public async Task<OrchestrationSystem?> GetByIdAsync(
-        OrchestrationSystemId id, bool includeDeleted = false, CancellationToken cancellationToken = default)
+    public async Task<OrchestrationSystemInstance?> GetByIdAsync(
+        OrchestrationSystemInstanceId id, bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
-        var query = context.OrchestrationSystems.AsQueryable();
+        var query = context.OrchestrationSystemInstances.AsQueryable();
         if (!includeDeleted) query = query.Where(association => !association.IsDeleted);
         return await query.FirstOrDefaultAsync(association => association.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<OrchestrationSystem>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
-        var query = context.OrchestrationSystems.AsQueryable();
+        var query = context.OrchestrationSystemInstances.AsQueryable();
         if (!includeDeleted) query = query.Where(association => !association.IsDeleted);
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<OrchestrationSystem>> GetByOrchestrationIdAsync(
+    public async Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetByOrchestrationIdAsync(
         OrchestrationId orchestrationId, bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(orchestrationId);
-        var query = context.OrchestrationSystems.AsQueryable();
+        var query = context.OrchestrationSystemInstances.AsQueryable();
         if (!includeDeleted) query = query.Where(association => !association.IsDeleted);
         return await query.Where(association => association.OrchestrationId == orchestrationId).ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<OrchestrationSystem>> GetBySystemIdAsync(
-        SystemId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetBySystemInstanceIdAsync(
+        SystemInstanceId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(systemId);
-        var query = context.OrchestrationSystems.AsQueryable();
+        var query = context.OrchestrationSystemInstances.AsQueryable();
         if (!includeDeleted) query = query.Where(association => !association.IsDeleted);
-        return await query.Where(association => association.SystemId == systemId).ToListAsync(cancellationToken);
+        return await query.Where(association => association.SystemInstanceId == systemId).ToListAsync(cancellationToken);
     }
 
-    public async Task<OrchestrationSystem?> GetByOrchestrationAndSystemAsync(
-        OrchestrationId orchestrationId, SystemId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default)
+    public async Task<OrchestrationSystemInstance?> GetByOrchestrationAndSystemInstanceAsync(
+        OrchestrationId orchestrationId, SystemInstanceId systemInstanceId, bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(orchestrationId);
-        ArgumentNullException.ThrowIfNull(systemId);
-        var query = context.OrchestrationSystems.AsQueryable();
+        ArgumentNullException.ThrowIfNull(systemInstanceId);
+        var query = context.OrchestrationSystemInstances.AsQueryable();
         if (!includeDeleted) query = query.Where(association => !association.IsDeleted);
         return await query.FirstOrDefaultAsync(
-            association => association.OrchestrationId == orchestrationId && association.SystemId == systemId, cancellationToken);
+            association => association.OrchestrationId == orchestrationId && association.SystemInstanceId == systemInstanceId, cancellationToken);
     }
 
-    public async Task<bool> ExistsAsync(OrchestrationSystemId id, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(OrchestrationSystemInstanceId id, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(id);
-        return await context.OrchestrationSystems.AnyAsync(association => association.Id == id && !association.IsDeleted, cancellationToken);
+        return await context.OrchestrationSystemInstances.AnyAsync(association => association.Id == id && !association.IsDeleted, cancellationToken);
     }
 
     public async Task<bool> AssociationExistsAsync(
-        OrchestrationId orchestrationId, SystemId systemId, bool includeDeleted = true, CancellationToken cancellationToken = default)
+        OrchestrationId orchestrationId, SystemInstanceId systemId, bool includeDeleted = true, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(orchestrationId);
         ArgumentNullException.ThrowIfNull(systemId);
-        var query = context.OrchestrationSystems.AsQueryable();
+        var query = context.OrchestrationSystemInstances.AsQueryable();
         if (!includeDeleted) query = query.Where(association => !association.IsDeleted);
-        return await query.AnyAsync(association => association.OrchestrationId == orchestrationId && association.SystemId == systemId, cancellationToken);
+        return await query.AnyAsync(association => association.OrchestrationId == orchestrationId && association.SystemInstanceId == systemId, cancellationToken);
     }
 
-    public async Task AddAsync(OrchestrationSystem association, CancellationToken cancellationToken = default)
+    public async Task AddAsync(OrchestrationSystemInstance association, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(association);
         var orchestrationDatabaseId = await GetOrchestrationDatabaseIdAsync(association.OrchestrationId, cancellationToken) ??
             throw new InvalidOperationException($"Orchestration '{association.OrchestrationId.Value}' does not exist.");
-        var systemDatabaseId = await GetSystemDatabaseIdAsync(association.SystemId, cancellationToken) ??
-            throw new InvalidOperationException($"System '{association.SystemId.Value}' does not exist.");
-        await context.OrchestrationSystems.AddAsync(association, cancellationToken);
+        var systemInstanceDatabaseId = await GetSystemInstanceDatabaseIdAsync(association.SystemInstanceId, cancellationToken) ??
+            throw new InvalidOperationException($"SystemInstance '{association.SystemInstanceId.Value}' does not exist.");
+        await context.OrchestrationSystemInstances.AddAsync(association, cancellationToken);
         var entry = context.Entry(association);
         entry.Property<int>("orchestration_database_id").CurrentValue = orchestrationDatabaseId;
-        entry.Property<int>("system_database_id").CurrentValue = systemDatabaseId;
+        entry.Property<int>("system_instance_database_id").CurrentValue = systemInstanceDatabaseId;
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpdateAsync(OrchestrationSystem association, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(OrchestrationSystemInstance association, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(association);
         var orchestrationDatabaseId = await GetOrchestrationDatabaseIdAsync(association.OrchestrationId, cancellationToken) ??
             throw new InvalidOperationException($"Orchestration '{association.OrchestrationId.Value}' does not exist.");
 
-        var systemDatabaseId = await GetSystemDatabaseIdAsync(association.SystemId, cancellationToken) ??
-            throw new InvalidOperationException($"System '{association.SystemId.Value}' does not exist.");
+        var systemInstanceDatabaseId = await GetSystemInstanceDatabaseIdAsync(association.SystemInstanceId, cancellationToken) ??
+            throw new InvalidOperationException($"SystemInstance '{association.SystemInstanceId.Value}' does not exist.");
 
         var entry = context.Entry(association);
         if (entry.State == EntityState.Detached)
         {
-            context.OrchestrationSystems.Update(association);
+            context.OrchestrationSystemInstances.Update(association);
             entry = context.Entry(association);
         }
 
         entry.Property<int>("orchestration_database_id").CurrentValue = orchestrationDatabaseId;
-        entry.Property<int>("system_database_id").CurrentValue = systemDatabaseId;
+        entry.Property<int>("system_instance_database_id").CurrentValue = systemInstanceDatabaseId;
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -113,11 +113,11 @@ public class OrchestrationSystemRepository(AthenaDbContext context) : IOrchestra
             .Select(orchestration => (int?)EF.Property<int>(orchestration, "id")).SingleOrDefaultAsync(cancellationToken);
     }
 
-    private async Task<int?> GetSystemDatabaseIdAsync(SystemId systemId, CancellationToken cancellationToken)
+    private async Task<int?> GetSystemInstanceDatabaseIdAsync(SystemInstanceId systemInstanceId, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(systemId);
-        return await context.Systems
-            .Where(system => system.Id == systemId && !system.IsDeleted)
-            .Select(system => (int?)EF.Property<int>(system, "id")).SingleOrDefaultAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(systemInstanceId);
+        return await context.SystemInstances
+            .Where(instance => instance.Id == systemInstanceId && !instance.IsDeleted)
+            .Select(instance => (int?)EF.Property<int>(instance, "id")).SingleOrDefaultAsync(cancellationToken);
     }
 }

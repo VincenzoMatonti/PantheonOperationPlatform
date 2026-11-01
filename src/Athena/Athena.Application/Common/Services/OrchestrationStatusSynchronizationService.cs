@@ -1,122 +1,111 @@
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.Enums;
 using Athena.Application.OrchestrationManagement.Exceptions;
+using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.UseCases;
-using Athena.Application.SystemManagement.Queries;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.ValueObjects;
+using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.System.Registry.ValueObjects;
 
 namespace Athena.Application.Common.Services;
 
-public class OrchestrationStatusSynchronizationService(
-    IOrchestrationSystemRepository orchestrationSystemRepository,
+public sealed class OrchestrationStatusSynchronizationService(
+    IOrchestrationSystemInstanceRepository associationRepository,
+    ISystemInstanceRepository systemInstanceRepository,
     OrchestrationLifecycleQueryHandler orchestrationLifecycleQueryHandler,
-    OrchestrationLifecycleUseCaseHandler orchestrationLifecycleUseCaseHandler,
-    SystemManagementQueryHandler systemManagementQueryHandler)
+    OrchestrationLifecycleUseCaseHandler orchestrationLifecycleUseCaseHandler) : IOrchestrationStatusSynchronizer
 {
-    private readonly IOrchestrationSystemRepository _orchestrationSystemRepository = orchestrationSystemRepository;
-    private readonly OrchestrationLifecycleQueryHandler _orchestrationLifecycleQueryHandler = orchestrationLifecycleQueryHandler;
-    private readonly OrchestrationLifecycleUseCaseHandler _orchestrationLifecycleUseCaseHandler = orchestrationLifecycleUseCaseHandler;
-    private readonly SystemManagementQueryHandler _systemManagementQueryHandler = systemManagementQueryHandler;
-
-    public async Task SynchronizeForSystemsAsync(IEnumerable<Guid> systemIds, CancellationToken cancellationToken = default, Guid? excludedOrchestrationId = null)
+    public async Task SynchronizeForSystemInstancesAsync(
+        IEnumerable<Guid> systemInstanceIds,
+        CancellationToken cancellationToken = default,
+        Guid? excludedOrchestrationId = null)
     {
-        ArgumentNullException.ThrowIfNull(systemIds);
+        ArgumentNullException.ThrowIfNull(systemInstanceIds);
         var affectedOrchestrationIds = new HashSet<Guid>();
-        foreach (var systemId in systemIds.Distinct())
+        foreach (var systemInstanceId in systemInstanceIds.Distinct())
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var associations = await _orchestrationSystemRepository.GetBySystemIdAsync(SystemId.Create(systemId), cancellationToken: cancellationToken);
+            var associations = await associationRepository.GetBySystemInstanceIdAsync(
+                SystemInstanceId.Create(systemInstanceId),
+                cancellationToken: cancellationToken);
             foreach (var association in associations)
             {
-                var orchestrationId = association.OrchestrationId.Value;
-                if (orchestrationId != excludedOrchestrationId) affectedOrchestrationIds.Add(orchestrationId);
+                if (association.OrchestrationId.Value != excludedOrchestrationId)
+                    affectedOrchestrationIds.Add(association.OrchestrationId.Value);
             }
         }
 
         foreach (var orchestrationId in affectedOrchestrationIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var associations = await _orchestrationSystemRepository.GetByOrchestrationIdAsync(OrchestrationId.Create(orchestrationId), cancellationToken: cancellationToken);
-            var systemStatuses = new List<string>();
-            var systemDesiredStates = new List<string>();
+            var associations = await associationRepository.GetByOrchestrationIdAsync(
+                OrchestrationId.Create(orchestrationId),
+                cancellationToken: cancellationToken);
+            var operationalStatuses = new List<string>();
+            var desiredStates = new List<string>();
             foreach (var association in associations)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var lifecycle = await _systemManagementQueryHandler.GetSystemLifecycleBySystemIdAsync(
-                    new GetSystemLifecycleBySystemIdQuery { SystemId = association.SystemId.Value }, cancellationToken);
-                if (lifecycle is null)
-                {
-                    systemStatuses.Add("Unknown");
-                    systemDesiredStates.Add("Unknown");
-                    continue;
-                }
-
-                systemStatuses.Add(lifecycle.OperationalStatus);
-                systemDesiredStates.Add(lifecycle.DesiredState);
+                var instance = await systemInstanceRepository.GetByIdAsync(association.SystemInstanceId, cancellationToken);
+                operationalStatuses.Add(instance?.OperationalStatus.ToString() ?? "Unknown");
+                desiredStates.Add(instance?.DesiredState.ToString() ?? "Unknown");
             }
 
+            var targetStatus = DetermineOperationalStatus(operationalStatuses);
+            var targetDesiredState = DetermineDesiredState(desiredStates);
+            var lifecycle = await orchestrationLifecycleQueryHandler.GetOrchestrationLifecycleByIdAsync(
+                new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId },
+                cancellationToken) ?? throw new OrchestrationLifecycleNotFoundException(orchestrationId);
 
-            var targetStatus = DetermineOperationalStatus(systemStatuses);
-            var targetDesiredState = DetermineDesiredState(systemDesiredStates);
-            var lifecycleQuery = new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId };
-            var orchestrationLifecycle = await _orchestrationLifecycleQueryHandler.GetOrchestrationLifecycleByIdAsync(lifecycleQuery, cancellationToken) ??
-            throw new OrchestrationLifecycleNotFoundException(orchestrationId);
-
-            // Synchronize operational status.
-            if (orchestrationLifecycle.OperationalStatus != targetStatus)
+            if (lifecycle.OperationalStatus != targetStatus)
             {
                 switch (targetStatus)
                 {
                     case OrchestrationOperationalStatus.Running:
-                        await _orchestrationLifecycleUseCaseHandler.MarkOrchestrationRunningAsync(new MarkOrchestrationRunningCommand { OrchestrationId = orchestrationId }, cancellationToken);
+                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationRunningAsync(
+                            new MarkOrchestrationRunningCommand { OrchestrationId = orchestrationId }, cancellationToken);
                         break;
-
                     case OrchestrationOperationalStatus.Stopped:
-                        await _orchestrationLifecycleUseCaseHandler.MarkOrchestrationStoppedAsync(new MarkOrchestrationStoppedCommand { OrchestrationId = orchestrationId }, cancellationToken);
+                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationStoppedAsync(
+                            new MarkOrchestrationStoppedCommand { OrchestrationId = orchestrationId }, cancellationToken);
                         break;
-
                     case OrchestrationOperationalStatus.Failed:
-                        await _orchestrationLifecycleUseCaseHandler.MarkOrchestrationFailedAsync(new MarkOrchestrationFailedCommand { OrchestrationId = orchestrationId }, cancellationToken);
+                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationFailedAsync(
+                            new MarkOrchestrationFailedCommand { OrchestrationId = orchestrationId }, cancellationToken);
                         break;
-
                     case OrchestrationOperationalStatus.Unknown:
-                        await _orchestrationLifecycleUseCaseHandler.MarkOrchestrationOperationalStatusUnknownAsync(
+                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationOperationalStatusUnknownAsync(
                             new MarkOrchestrationOperationalStatusUnknownCommand { OrchestrationId = orchestrationId }, cancellationToken);
                         break;
-
                     default:
                         throw new InvalidOperationException($"Unsupported orchestration operational status '{targetStatus}'.");
                 }
             }
 
-            // Synchronize desired state without executing runtime operations.
-            if (orchestrationLifecycle.DesiredState != targetDesiredState)
+            if (lifecycle.DesiredState != targetDesiredState)
             {
-                await _orchestrationLifecycleUseCaseHandler.SetOrchestrationDesiredStateAsync(
+                await orchestrationLifecycleUseCaseHandler.SetOrchestrationDesiredStateAsync(
                     new SetOrchestrationDesiredStateCommand { OrchestrationId = orchestrationId, DesiredState = targetDesiredState }, cancellationToken);
             }
-
         }
     }
 
-    private static OrchestrationOperationalStatus DetermineOperationalStatus(List<string> systemStatuses)
+    private static OrchestrationOperationalStatus DetermineOperationalStatus(IReadOnlyCollection<string> statuses)
     {
-        if (systemStatuses.Count == 0) return OrchestrationOperationalStatus.Unknown;
-        if (systemStatuses.Any(status => status == "Failed")) return OrchestrationOperationalStatus.Failed;
-        if (systemStatuses.All(status => status == "Running")) return OrchestrationOperationalStatus.Running;
-        if (systemStatuses.All(status => status == "Stopped")) return OrchestrationOperationalStatus.Stopped;
+        if (statuses.Count == 0) return OrchestrationOperationalStatus.Unknown;
+        if (statuses.Any(status => status is "Failed" or "Unreachable")) return OrchestrationOperationalStatus.Failed;
+        if (statuses.All(status => status == "Running")) return OrchestrationOperationalStatus.Running;
+        if (statuses.All(status => status == "Stopped")) return OrchestrationOperationalStatus.Stopped;
         return OrchestrationOperationalStatus.Unknown;
     }
 
-    private static OrchestrationDesiredState DetermineDesiredState(List<string> systemDesiredStates)
+    private static OrchestrationDesiredState DetermineDesiredState(IReadOnlyCollection<string> states)
     {
-        if (systemDesiredStates.Count == 0) return OrchestrationDesiredState.Unknown;
-        if (systemDesiredStates.Any(status => status == "Failed")) return OrchestrationDesiredState.Unknown;
-        if (systemDesiredStates.All(status => status == "Running")) return OrchestrationDesiredState.Running;
-        if (systemDesiredStates.All(status => status == "Stopped")) return OrchestrationDesiredState.Stopped;
+        if (states.Count == 0) return OrchestrationDesiredState.Unknown;
+        if (states.All(state => state == "Running")) return OrchestrationDesiredState.Running;
+        if (states.All(state => state == "Stopped")) return OrchestrationDesiredState.Stopped;
         return OrchestrationDesiredState.Unknown;
     }
 }

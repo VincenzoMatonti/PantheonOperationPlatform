@@ -14,13 +14,16 @@ public abstract class OrchestrationManagementApplicationException(OrchestrationM
                 => ApplicationCoreErrorType.Validation,
 
             OrchestrationManagementApplicationErrorCode.OrchestrationNotFound or OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleNotFound or
-            OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationNotFound or OrchestrationManagementApplicationErrorCode.OrchestrationSystemNotFound
+            OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationNotFound or OrchestrationManagementApplicationErrorCode.OrchestrationSystemInstanceNotFound
                 => ApplicationCoreErrorType.NotFound,
 
             OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleAlreadyExists or
             OrchestrationManagementApplicationErrorCode.OrchestrationLifecycleOperationAlreadyExists or
-            OrchestrationManagementApplicationErrorCode.OrchestrationSystemAlreadyExists 
+            OrchestrationManagementApplicationErrorCode.OrchestrationSystemInstanceAlreadyExists
                 => ApplicationCoreErrorType.Conflict,
+
+            OrchestrationManagementApplicationErrorCode.SystemInstanceOperationsFailed
+                => ApplicationCoreErrorType.Internal,
 
             _ => ApplicationCoreErrorType.Internal
         };
@@ -39,6 +42,7 @@ public enum OrchestrationManagementApplicationErrorCode
     OrchestrationLifecycleNotFound = 7,
     OrchestrationLifecycleOperationNotFound = 8,
     OrchestrationLifecycleOperationAlreadyExists = 9,
-    OrchestrationSystemNotFound = 10,
-    OrchestrationSystemAlreadyExists = 11
+    OrchestrationSystemInstanceNotFound = 10,
+    OrchestrationSystemInstanceAlreadyExists = 11,
+    SystemInstanceOperationsFailed = 12
 }

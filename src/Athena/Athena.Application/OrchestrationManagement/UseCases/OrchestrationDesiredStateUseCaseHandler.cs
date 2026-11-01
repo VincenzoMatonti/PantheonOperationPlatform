@@ -6,10 +6,10 @@ using Athena.Application.OrchestrationManagement.Queries;
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 
-public class OrchestrationDesiredStateUseCaseHandler(OrchestrationLifecycleUseCaseHandler lifecycleHandler, OrchestrationRuntimeUseCaseHandler runtimeHandler)
+public class OrchestrationDesiredStateUseCaseHandler(OrchestrationLifecycleUseCaseHandler lifecycleHandler, OrchestrationProcessUseCaseHandler processHandler)
 {
     private readonly OrchestrationLifecycleUseCaseHandler _lifecycleHandler = lifecycleHandler;
-    private readonly OrchestrationRuntimeUseCaseHandler _runtimeHandler = runtimeHandler;
+    private readonly OrchestrationProcessUseCaseHandler _processHandler = processHandler;
 
     public async Task<OrchestrationLifecycleDto> SetOrchestrationDesiredStateAsync(SetOrchestrationDesiredStateCommand command, CancellationToken cancellationToken = default)
     {
@@ -17,7 +17,7 @@ public class OrchestrationDesiredStateUseCaseHandler(OrchestrationLifecycleUseCa
         switch (command.DesiredState)
         {
             case OrchestrationDesiredState.Running:
-                await _runtimeHandler.ExecuteOrchestrationRuntimeOperationAsync(
+                await _processHandler.ExecuteOrchestrationOperationAsync(
                     new CreateOrchestrationLifecycleOperationCommand
                     {
                         Id = Guid.NewGuid(),
@@ -27,7 +27,7 @@ public class OrchestrationDesiredStateUseCaseHandler(OrchestrationLifecycleUseCa
                 break;
 
             case OrchestrationDesiredState.Stopped:
-                await _runtimeHandler.ExecuteOrchestrationRuntimeOperationAsync(
+                await _processHandler.ExecuteOrchestrationOperationAsync(
                     new CreateOrchestrationLifecycleOperationCommand
                     {
                         Id = Guid.NewGuid(),

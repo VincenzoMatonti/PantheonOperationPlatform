@@ -16,5 +16,7 @@ public sealed class SystemSynchronizationHostedService(
         await using var scope = scopeFactory.CreateAsyncScope();
         var synchronizationService = scope.ServiceProvider.GetRequiredService<SystemSynchronizationService>();
         await synchronizationService.SynchronizeAsync(cancellationToken);
+        var endpointSynchronizationService = scope.ServiceProvider.GetRequiredService<SystemEndpointSynchronizationService>();
+        await endpointSynchronizationService.SynchronizeAsync(cancellationToken);
     }
 }

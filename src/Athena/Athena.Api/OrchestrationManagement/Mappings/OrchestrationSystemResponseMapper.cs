@@ -3,35 +3,35 @@ using Athena.Application.OrchestrationManagement.DTOs;
 
 namespace Athena.Api.OrchestrationManagement.Mappings;
 
-public static class OrchestrationSystemResponseMapper
+public static class OrchestrationSystemInstanceResponseMapper
 {
-    public static OrchestrationSystemCommandResponse ToCommandResponse(OrchestrationSystemDto dto)
+    public static OrchestrationSystemInstanceCommandResponse ToCommandResponse(OrchestrationSystemInstanceDto dto)
     {
-        return new OrchestrationSystemCommandResponse
+        return new OrchestrationSystemInstanceCommandResponse
         {
             Id = dto.Id,
             OrchestrationId = dto.OrchestrationId,
-            SystemId = dto.SystemId,
+            SystemInstanceId = dto.SystemInstanceId,
             CreatedAtUtc = dto.CreatedAtUtc,
             UpdatedAtUtc = dto.UpdatedAtUtc,
             IsDeleted = dto.IsDeleted
         };
     }
 
-    public static OrchestrationSystemQueryResponse ToQueryResponse(OrchestrationSystemDto dto)
+    public static OrchestrationSystemInstanceQueryResponse ToQueryResponse(OrchestrationSystemInstanceDto dto)
     {
-        return new OrchestrationSystemQueryResponse
+        return new OrchestrationSystemInstanceQueryResponse
         {
             Id = dto.Id,
             OrchestrationId = dto.OrchestrationId,
-            SystemId = dto.SystemId,
+            SystemInstanceId = dto.SystemInstanceId,
             CreatedAtUtc = dto.CreatedAtUtc,
             UpdatedAtUtc = dto.UpdatedAtUtc,
             IsDeleted = dto.IsDeleted
         };
     }
 
-    public static IReadOnlyList<OrchestrationSystemQueryResponse> ToQueryResponses(IEnumerable<OrchestrationSystemDto> dtos)
+    public static IReadOnlyList<OrchestrationSystemInstanceQueryResponse> ToQueryResponses(IEnumerable<OrchestrationSystemInstanceDto> dtos)
     {
         return [.. dtos.Select(ToQueryResponse)];
     }

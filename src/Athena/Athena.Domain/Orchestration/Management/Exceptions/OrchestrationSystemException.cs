@@ -2,25 +2,25 @@ using Athena.Domain.Common;
 
 namespace Athena.Domain.Orchestration.Management.Exceptions;
 
-public abstract class OrchestrationSystemException(OrchestrationSystemErrorCode code, string message)
-    : DomainException<OrchestrationSystemErrorCode>(code, message, MapErrorType(code))
+public abstract class OrchestrationSystemInstanceException(OrchestrationSystemInstanceErrorCode code, string message)
+    : DomainException<OrchestrationSystemInstanceErrorCode>(code, message, MapErrorType(code))
 {
-    private static DomainErrorType MapErrorType(OrchestrationSystemErrorCode code)
+    private static DomainErrorType MapErrorType(OrchestrationSystemInstanceErrorCode code)
     {
         return code switch
         {
-            OrchestrationSystemErrorCode.OrchestrationIdRequired or OrchestrationSystemErrorCode.SystemIdRequired => DomainErrorType.Validation,
+            OrchestrationSystemInstanceErrorCode.OrchestrationIdRequired or OrchestrationSystemInstanceErrorCode.SystemInstanceIdRequired => DomainErrorType.Validation,
             _ => DomainErrorType.Conflict
         };
     }
 }
 
-public enum OrchestrationSystemErrorCode
+public enum OrchestrationSystemInstanceErrorCode
 {
     OrchestrationIdRequired = 1,
-    SystemIdRequired = 2,
+    SystemInstanceIdRequired = 2,
 
-    OrchestrationSystemAlreadyDeleted = 10,
-    OrchestrationSystemDeletedCannotBeModified = 11,
-    OrchestrationSystemAlreadyRestored = 12
+    OrchestrationSystemInstanceAlreadyDeleted = 10,
+    OrchestrationSystemInstanceDeletedCannotBeModified = 11,
+    OrchestrationSystemInstanceAlreadyRestored = 12
 }

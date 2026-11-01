@@ -15,12 +15,12 @@ public class OrchestrationManagementCommandController(
     OrchestrationLifecycleUseCaseHandler lifecycleHandler,
     OrchestrationDesiredStateUseCaseHandler desiredStateHandler,
     OrchestrationLifecycleOperationUseCaseHandler operationHandler,
-    OrchestrationRuntimeUseCaseHandler runtimeHandler) : ControllerBase
+    OrchestrationProcessUseCaseHandler processHandler) : ControllerBase
 {
     private readonly OrchestrationLifecycleUseCaseHandler _lifecycleHandler = lifecycleHandler;
     private readonly OrchestrationLifecycleOperationUseCaseHandler _operationHandler = operationHandler;
     private readonly OrchestrationDesiredStateUseCaseHandler _desiredStateHandler = desiredStateHandler;
-    private readonly OrchestrationRuntimeUseCaseHandler _runtimeHandler = runtimeHandler;
+    private readonly OrchestrationProcessUseCaseHandler _processHandler = processHandler;
 
     // =====================================================================
     // ORCHESTRATION LIFECYCLE COMMANDS
@@ -139,11 +139,11 @@ public class OrchestrationManagementCommandController(
     [ProducesResponseType(
     typeof(ApiResponse<OrchestrationLifecycleOperationCommandResponse>),
     StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> ExecuteRuntimeOperation(
+    public async Task<ActionResult<ApiResponse<OrchestrationLifecycleOperationCommandResponse>>> ExecuteOperation(
         Guid orchestrationId, [FromBody] CreateOrchestrationLifecycleOperationRequest request, CancellationToken cancellationToken)
     {
         var command = OrchestrationLifecycleOperationRequestCommandMapper.ToCreateOperationCommand(orchestrationId, request);
-        var result = await _runtimeHandler.ExecuteOrchestrationRuntimeOperationAsync(command, cancellationToken);
+        var result = await _processHandler.ExecuteOrchestrationOperationAsync(command, cancellationToken);
         var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

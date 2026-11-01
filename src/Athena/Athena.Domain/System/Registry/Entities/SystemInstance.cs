@@ -12,7 +12,8 @@ public class SystemInstance
     public WorkloadId WorkloadId { get; private set; } = null!;
     public SystemInstanceName Name { get; private set; } = null!;
     public SystemInstanceRegistrationStatus RegistrationStatus { get; private set; }
-    public SystemInstanceAvailabilityStatus AvailabilityStatus { get; private set; }
+    public SystemInstanceDesiredState DesiredState { get; private set; }
+    public SystemInstanceOperationalStatus OperationalStatus { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -30,8 +31,9 @@ public class SystemInstance
             SystemId = systemId,
             WorkloadId = workloadId,
             Name = name,
-            RegistrationStatus = SystemInstanceRegistrationStatus.Registered,
-            AvailabilityStatus = SystemInstanceAvailabilityStatus.Unknown,
+            RegistrationStatus = SystemInstanceRegistrationStatus.Unregistered,
+            DesiredState = SystemInstanceDesiredState.Unknown,
+            OperationalStatus = SystemInstanceOperationalStatus.Unknown,
             CreatedAtUtc = DateTime.UtcNow,
             IsDeleted = false
         };
@@ -49,68 +51,60 @@ public class SystemInstance
     public void Register()
     {
         EnsureNotDeleted();
-        if (RegistrationStatus == SystemInstanceRegistrationStatus.Registered) throw new SystemInstanceAlreadyRegisteredException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Registered)
+            throw new SystemInstanceAlreadyRegisteredException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Disabled)
+            throw new SystemInstanceDisabledCannotBeModifiedException(Id.Value);
         RegistrationStatus = SystemInstanceRegistrationStatus.Registered;
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Unknown;
         Touch();
     }
 
     public void Unregister()
     {
         EnsureNotDeleted();
-        if (RegistrationStatus == SystemInstanceRegistrationStatus.Unregistered) throw new SystemInstanceAlreadyUnregisteredException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Unregistered)
+            throw new SystemInstanceAlreadyUnregisteredException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Disabled)
+            throw new SystemInstanceDisabledCannotBeModifiedException(Id.Value);
         RegistrationStatus = SystemInstanceRegistrationStatus.Unregistered;
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Unknown;
         Touch();
     }
 
     public void Enable()
     {
         EnsureNotDeleted();
-        if (RegistrationStatus == SystemInstanceRegistrationStatus.Registered) throw new SystemInstanceAlreadyEnabledException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Registered)
+            throw new SystemInstanceAlreadyEnabledException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Unregistered)
+            throw new SystemInstanceNotRegisteredException(Id.Value);
         RegistrationStatus = SystemInstanceRegistrationStatus.Registered;
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Unknown;
         Touch();
     }
 
     public void Disable()
     {
         EnsureNotDeleted();
-        if (RegistrationStatus == SystemInstanceRegistrationStatus.Disabled) throw new SystemInstanceAlreadyDisabledException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Disabled)
+            throw new SystemInstanceAlreadyDisabledException(Id.Value);
+        if (RegistrationStatus == SystemInstanceRegistrationStatus.Unregistered)
+            throw new SystemInstanceNotRegisteredException(Id.Value);
         RegistrationStatus = SystemInstanceRegistrationStatus.Disabled;
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Unknown;
         Touch();
     }
 
-    public void MarkAvailable()
+    public void SetDesiredState(SystemInstanceDesiredState desiredState)
     {
         EnsureRegistered();
-        if (AvailabilityStatus == SystemInstanceAvailabilityStatus.Available) throw new SystemInstanceAlreadyAvailableException(Id.Value);
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Available;
+        if (!Enum.IsDefined(desiredState)) throw new ArgumentOutOfRangeException(nameof(desiredState));
+        DesiredState = desiredState;
         Touch();
     }
 
-    public void MarkUnavailable()
+    public void SetOperationalStatus(SystemInstanceOperationalStatus operationalStatus)
     {
-        EnsureRegistered();
-        if (AvailabilityStatus == SystemInstanceAvailabilityStatus.Unavailable) throw new SystemInstanceAlreadyUnavailableException(Id.Value);
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Unavailable;
-        Touch();
-    }
-
-    public void MarkAvailabilityUnknown()
-    {
-        EnsureRegistered();
-        if (AvailabilityStatus == SystemInstanceAvailabilityStatus.Unknown) throw new SystemInstanceAlreadyAvailabilityUnknownException(Id.Value);
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Unknown;
-        Touch();
-    }
-
-    public void MarkError()
-    {
-        EnsureRegistered();
-        if (AvailabilityStatus == SystemInstanceAvailabilityStatus.Error) throw new SystemInstanceAlreadyInErrorException(Id.Value);
-        AvailabilityStatus = SystemInstanceAvailabilityStatus.Error;
+        EnsureNotDeleted();
+        if (!Enum.IsDefined(operationalStatus)) throw new ArgumentOutOfRangeException(nameof(operationalStatus));
+        OperationalStatus = operationalStatus;
         Touch();
     }
 

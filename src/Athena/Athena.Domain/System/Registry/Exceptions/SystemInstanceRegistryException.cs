@@ -43,10 +43,5 @@ public enum SystemInstanceRegistryErrorCode
     SystemInstanceAlreadyEnabled = 24,
     SystemInstanceAlreadyDisabled = 25,
     SystemInstanceDisabledCannotBeModified = 26,
-    SystemInstanceDeletedCannotBeModified = 27,
-
-    SystemInstanceAlreadyAvailable = 30,
-    SystemInstanceAlreadyUnavailable = 31,
-    SystemInstanceAlreadyAvailabilityUnknown = 32,
-    SystemInstanceAlreadyInError = 33
+    SystemInstanceDeletedCannotBeModified = 27
 }

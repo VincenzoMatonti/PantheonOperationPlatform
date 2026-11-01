@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Athena.Domain.Company.Entities;
-using Athena.Domain.System.Management.Entities;
-using Athena.Infrastructure.Persistence.Runtime;
 using Athena.Domain.Orchestration.Management.Entities;
 using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 using RegisteredOrchestration = Athena.Domain.Orchestration.Registry.Entities.Orchestration;
 using RegisteredSystemInstance = Athena.Domain.System.Registry.Entities.SystemInstance;
+using RegisteredSystemInstanceOperation = Athena.Domain.System.Registry.Entities.SystemInstanceOperation;
 using Athena.Domain.Ecosystem.Registry.Entities;
 using Athena.Domain.Block.Registry.Entities;
 using Athena.Domain.Workload.Registry.Entities;
@@ -18,19 +17,17 @@ namespace Athena.Infrastructure.Persistence;
 public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbContext(options)
 {
     public DbSet<RegisteredSystem> Systems => Set<RegisteredSystem>();
-    public DbSet<SystemLifecycle> SystemLifecycles => Set<SystemLifecycle>();
-    public DbSet<SystemLifecycleOperation> SystemLifecycleOperations => Set<SystemLifecycleOperation>();
     public DbSet<RegisteredOrchestration> Orchestrations => Set<RegisteredOrchestration>();
     public DbSet<OrchestrationLifecycle> OrchestrationLifecycles => Set<OrchestrationLifecycle>();
     public DbSet<OrchestrationLifecycleOperation> OrchestrationLifecycleOperations => Set<OrchestrationLifecycleOperation>();
-    public DbSet<OrchestrationSystem> OrchestrationSystems => Set<OrchestrationSystem>();
-    public DbSet<SystemRuntimeInstance> SystemRuntimeInstances => Set<SystemRuntimeInstance>();
+    public DbSet<OrchestrationSystemInstance> OrchestrationSystemInstances => Set<OrchestrationSystemInstance>();
     public DbSet<Group> Groups => Set<Group>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Ecosystem> Ecosystems => Set<Ecosystem>();
     public DbSet<Block> Blocks => Set<Block>();
     public DbSet<Workload> Workloads => Set<Workload>();
     public DbSet<RegisteredSystemInstance> SystemInstances => Set<RegisteredSystemInstance>();
+    public DbSet<RegisteredSystemInstanceOperation> SystemInstanceOperations => Set<RegisteredSystemInstanceOperation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

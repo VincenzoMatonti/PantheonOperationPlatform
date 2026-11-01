@@ -13,7 +13,7 @@ public interface ISystemInstanceRepository
     Task<IReadOnlyList<SystemInstance>> GetBySystemIdAsync(SystemId systemId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SystemInstance>> GetByWorkloadIdAsync(WorkloadId workloadId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SystemInstance>> GetByRegistrationStatusAsync(SystemInstanceRegistrationStatus status, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<SystemInstance>> GetByAvailabilityStatusAsync(SystemInstanceAvailabilityStatus status, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SystemInstance>> GetByOperationalStatusAsync(SystemInstanceOperationalStatus status, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SystemInstance>> GetByDeletionStatusAsync(bool isDeleted, CancellationToken cancellationToken = default);
     Task<bool> ExistsByIdAsync(SystemInstanceId id, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNameAsync(WorkloadId workloadId, SystemInstanceName name, CancellationToken cancellationToken = default);

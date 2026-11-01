@@ -1,4 +1,4 @@
-using Athena.Cli.Presentation.Inputs.Systems.Management;
+using Athena.Cli.Presentation.Inputs.Systems.Instances;
 using Athena.Cli.Presentation.Inputs.Systems.Registry.Commands;
 using Athena.Cli.Presentation.Inputs.Systems.Registry.Queries;
 using Spectre.Console.Cli;
@@ -38,8 +38,7 @@ public static class SystemRegistryInputHandler
                 registry.AddCommand<DeleteSystemCommand>("delete").WithDescription("Delete a system.");
             });
 
-            // Management is a sibling of registry.
-            systems.AddSystemManagementCommands();
+            systems.AddSystemInstanceCommands();
         });
     }
 }

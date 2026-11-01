@@ -1,4 +1,5 @@
 using Athena.Application.OrchestrationManagement.DTOs;
+using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Domain.Orchestration.Management.Entities;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.ValueObjects;
@@ -9,7 +10,7 @@ using DomainOperationalStatus = Athena.Domain.Orchestration.Management.Enums.Orc
 
 namespace Athena.Application.OrchestrationManagement.Queries;
 
-public class OrchestrationLifecycleQueryHandler(IOrchestrationLifecycleRepository orchestrationLifecycleRepository)
+public class OrchestrationLifecycleQueryHandler(IOrchestrationLifecycleRepository orchestrationLifecycleRepository) : IOrchestrationLifecycleQueries
 {
     private readonly IOrchestrationLifecycleRepository _orchestrationLifecycleRepository = orchestrationLifecycleRepository;
 

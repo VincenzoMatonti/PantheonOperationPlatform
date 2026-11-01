@@ -42,9 +42,9 @@ public class SystemInstanceRepository(AthenaDbContext context) : ISystemInstance
         return await ActiveInstances.Where(instance => instance.RegistrationStatus == status).ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SystemInstance>> GetByAvailabilityStatusAsync(SystemInstanceAvailabilityStatus status, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SystemInstance>> GetByOperationalStatusAsync(SystemInstanceOperationalStatus status, CancellationToken cancellationToken = default)
     {
-        return await ActiveInstances.Where(instance => instance.AvailabilityStatus == status).ToListAsync(cancellationToken);
+        return await ActiveInstances.Where(instance => instance.OperationalStatus == status).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<SystemInstance>> GetByDeletionStatusAsync(bool isDeleted, CancellationToken cancellationToken = default)
@@ -64,7 +64,22 @@ public class SystemInstanceRepository(AthenaDbContext context) : ISystemInstance
 
     public async Task AddAsync(SystemInstance systemInstance, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(systemInstance);
+        var systemDatabaseId = await context.Systems
+            .Where(system => system.Id == systemInstance.SystemId && !system.IsDeleted)
+            .Select(system => (int?)EF.Property<int>(system, "id"))
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"System '{systemInstance.SystemId.Value}' does not exist.");
+        var workloadDatabaseId = await context.Workloads
+            .Where(workload => workload.Id == systemInstance.WorkloadId && !workload.IsDeleted)
+            .Select(workload => (int?)EF.Property<int>(workload, "id"))
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Workload '{systemInstance.WorkloadId.Value}' does not exist.");
+
         await context.SystemInstances.AddAsync(systemInstance, cancellationToken);
+        var entry = context.Entry(systemInstance);
+        entry.Property<int>("system_database_id").CurrentValue = systemDatabaseId;
+        entry.Property<int>("workload_database_id").CurrentValue = workloadDatabaseId;
         await context.SaveChangesAsync(cancellationToken);
     }
 

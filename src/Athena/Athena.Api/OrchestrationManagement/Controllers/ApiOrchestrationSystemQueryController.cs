@@ -10,28 +10,28 @@ using Microsoft.AspNetCore.Mvc;
 namespace Athena.Api.OrchestrationManagement.Controllers;
 
 [ApiController]
-[Route("api/orchestrations/management/systems")]
-public class OrchestrationSystemQueryController(OrchestrationSystemUseCaseHandler handler) : ControllerBase
+[Route("api/orchestrations/management/system-instances")]
+public class OrchestrationSystemInstanceQueryController(OrchestrationSystemInstanceUseCaseHandler handler) : ControllerBase
 {
-    private readonly OrchestrationSystemUseCaseHandler _handler = handler;
+    private readonly OrchestrationSystemInstanceUseCaseHandler _handler = handler;
 
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemQueryResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<OrchestrationSystemQueryResponse>>> GetById(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationSystemInstanceQueryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationSystemInstanceQueryResponse>>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var query = OrchestrationSystemRequestQueryMapper.ToGetByIdQuery(id);
-        var result = await _handler.GetOrchestrationSystemByIdAsync(query, cancellationToken);
-        var response = OrchestrationSystemResponseMapper.ToQueryResponse(result);
+        var query = OrchestrationSystemInstanceRequestQueryMapper.ToGetByIdQuery(id);
+        var result = await _handler.GetOrchestrationSystemInstanceByIdAsync(query, cancellationToken);
+        var response = OrchestrationSystemInstanceResponseMapper.ToQueryResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationSystemQueryResponse>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationSystemQueryResponse>>>> GetAll([FromQuery] GetOrchestrationSystemsRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationSystemInstanceQueryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationSystemInstanceQueryResponse>>>> GetAll([FromQuery] GetOrchestrationSystemInstancesRequest request, CancellationToken cancellationToken)
     {
-        var query = OrchestrationSystemRequestQueryMapper.ToGetAllQuery(request);
-        var result = await _handler.GetAllOrchestrationSystemsAsync(query, cancellationToken);
-        var response = OrchestrationSystemResponseMapper.ToQueryResponses(result);
+        var query = OrchestrationSystemInstanceRequestQueryMapper.ToGetAllQuery(request);
+        var result = await _handler.GetAllOrchestrationSystemInstancesAsync(query, cancellationToken);
+        var response = OrchestrationSystemInstanceResponseMapper.ToQueryResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 }

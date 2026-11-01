@@ -3,9 +3,9 @@ using Spectre.Console;
 
 namespace Athena.Cli.Presentation.Outputs.Orchestrations;
 
-public static class OrchestrationSystemManagementOutput
+public static class OrchestrationSystemInstanceManagementOutput
 {
-    public static void Write(OrchestrationSystemResponse association)
+    public static void Write(OrchestrationSystemInstanceResponse association)
     {
         AnsiConsole.Write(new Rule("[bold mediumorchid]ORCHESTRATION ↔ SYSTEM[/]").RuleStyle("mediumorchid").LeftJustified());
         var summary = new Grid().AddColumn().AddColumn();
@@ -16,7 +16,7 @@ public static class OrchestrationSystemManagementOutput
                                      .AddColumn("[bold]Entity[/]").AddColumn("[bold]ID[/]");
         identifiers.AddRow("[bold]Association[/]", $"[white]{association.Id}[/]");
         identifiers.AddRow("[bold]Orchestration[/]", $"[deepskyblue1]{association.OrchestrationId}[/]");
-        identifiers.AddRow("[bold]System[/]", $"[green]{association.SystemId}[/]");
+        identifiers.AddRow("[bold]System[/]", $"[green]{association.SystemInstanceId}[/]");
         AnsiConsole.Write(identifiers);
         var metadata = new Table().Border(TableBorder.Simple).BorderColor(Color.Grey).HideHeaders().AddColumn("Property").AddColumn("Value");
         metadata.AddRow("[dim]Created (UTC)[/]", $"[white]{FormatDate(association.CreatedAtUtc)}[/]");
@@ -25,7 +25,7 @@ public static class OrchestrationSystemManagementOutput
         AnsiConsole.Write(metadata);
     }
 
-    public static void WriteMany(IEnumerable<OrchestrationSystemResponse> associations)
+    public static void WriteMany(IEnumerable<OrchestrationSystemInstanceResponse> associations)
     {
         var items = associations.ToList();
         if (items.Count == 0)
@@ -43,7 +43,7 @@ public static class OrchestrationSystemManagementOutput
 
         foreach (var association in items)
         {
-            table.AddRow($"[dim]{association.Id}[/]", $"[deepskyblue1]{association.OrchestrationId}[/]", $"[green]{association.SystemId}[/]",
+            table.AddRow($"[dim]{association.Id}[/]", $"[deepskyblue1]{association.OrchestrationId}[/]", $"[green]{association.SystemInstanceId}[/]",
                 FormatDate(association.CreatedAtUtc), association.IsDeleted ? "[red]Yes[/]" : "[green]No[/]");
         }
 

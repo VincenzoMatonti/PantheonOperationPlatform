@@ -3,15 +3,15 @@ using Athena.Application.OrchestrationManagement.Queries;
 
 namespace Athena.Api.OrchestrationManagement.Mappings;
 
-public static class OrchestrationSystemRequestQueryMapper
+public static class OrchestrationSystemInstanceRequestQueryMapper
 {
-    public static GetOrchestrationSystemByIdQuery ToGetByIdQuery(Guid id)
+    public static GetOrchestrationSystemInstanceByIdQuery ToGetByIdQuery(Guid id)
     {
-        return new GetOrchestrationSystemByIdQuery { Id = id };
+        return new GetOrchestrationSystemInstanceByIdQuery { Id = id };
     }
 
-    public static GetOrchestrationSystemsQuery ToGetAllQuery(GetOrchestrationSystemsRequest request)
+    public static GetOrchestrationSystemInstancesQuery ToGetAllQuery(GetOrchestrationSystemInstancesRequest request)
     {
-        return new GetOrchestrationSystemsQuery { IncludeDeleted = request.IncludeDeleted };
+        return new GetOrchestrationSystemInstancesQuery { IncludeDeleted = request.IncludeDeleted };
     }
 }

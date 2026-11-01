@@ -3,9 +3,9 @@ using Athena.Cli.Presentation.Outputs.Orchestrations;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystems.Queries;
+namespace Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystemInstances.Queries;
 
-public class GetOrchestrationSystemCommand(OrchestrationSystemManagementService service) : AsyncCommand<GetOrchestrationSystemCommand.Settings>
+public class GetOrchestrationSystemInstanceCommand(OrchestrationSystemInstanceManagementService service) : AsyncCommand<GetOrchestrationSystemInstanceCommand.Settings>
 {
     public class Settings : CommandSettings
     {
@@ -19,7 +19,7 @@ public class GetOrchestrationSystemCommand(OrchestrationSystemManagementService 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         var association = await service.GetByIdAsync(settings.Id, cancellationToken);
-        OrchestrationSystemManagementOutput.Write(association);
+        OrchestrationSystemInstanceManagementOutput.Write(association);
         return 0;
     }
 }

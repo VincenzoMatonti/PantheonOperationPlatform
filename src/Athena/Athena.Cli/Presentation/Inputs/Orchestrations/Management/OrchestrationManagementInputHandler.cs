@@ -2,8 +2,8 @@ using Athena.Cli.Presentation.Inputs.Orchestrations.Management.Lifecycle.Command
 using Athena.Cli.Presentation.Inputs.Orchestrations.Management.Lifecycle.Queries;
 using Athena.Cli.Presentation.Inputs.Orchestrations.Management.Operations.Commands;
 using Athena.Cli.Presentation.Inputs.Orchestrations.Management.Operations.Queries;
-using Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystems.Commands;
-using Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystems.Queries;
+using Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystemInstances.Commands;
+using Athena.Cli.Presentation.Inputs.Orchestrations.Management.OrchestrationSystemInstances.Queries;
 using Spectre.Console.Cli;
 
 namespace Athena.Cli.Presentation.Inputs.Orchestrations.Management;
@@ -55,7 +55,7 @@ public static class OrchestrationManagementInputHandler
                 operations.AddCommand<GetDeletedOrchestrationLifecycleOperationsCommand>("deleted");
 
                 // Commands
-                operations.AddCommand<ExecuteOrchestrationRuntimeOperationCommand>("execute");
+                operations.AddCommand<ExecuteOrchestrationOperationCommand>("execute");
                 operations.AddCommand<CreateOrchestrationLifecycleOperationCommand>("create");
                 operations.AddCommand<StartOrchestrationLifecycleOperationCommand>("start");
                 operations.AddCommand<CompleteOrchestrationLifecycleOperationCommand>("complete");
@@ -64,18 +64,18 @@ public static class OrchestrationManagementInputHandler
                 operations.AddCommand<DeleteOrchestrationLifecycleOperationCommand>("delete");
             });
 
-            management.AddBranch("orchestration-system", systems =>
+            management.AddBranch("system-instances", systems =>
             {
-                systems.SetDescription("Query and manage orchestration-system associations.");
+                systems.SetDescription("Assign SystemInstances to orchestrations.");
 
                 // Queries
-                systems.AddCommand<GetOrchestrationSystemCommand>("get");
-                systems.AddCommand<ListOrchestrationSystemsCommand>("list");
+                systems.AddCommand<GetOrchestrationSystemInstanceCommand>("get");
+                systems.AddCommand<ListOrchestrationSystemInstancesCommand>("list");
 
                 // Commands
-                systems.AddCommand<CreateOrchestrationSystemCommand>("create");
-                systems.AddCommand<DeleteOrchestrationSystemCommand>("delete");
-                systems.AddCommand<RestoreOrchestrationSystemCommand>("restore");
+                systems.AddCommand<CreateOrchestrationSystemInstanceCommand>("create");
+                systems.AddCommand<DeleteOrchestrationSystemInstanceCommand>("delete");
+                systems.AddCommand<RestoreOrchestrationSystemInstanceCommand>("restore");
             });
         });
 

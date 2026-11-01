@@ -77,13 +77,13 @@ public class OrchestrationLifecycleOperationQueryResponse
     public bool IsDeleted { get; init; }
 }
 
-public class OrchestrationSystemCommandResponse
+public class OrchestrationSystemInstanceCommandResponse
 {
     public Guid Id { get; init; }
 
     public Guid OrchestrationId { get; init; }
 
-    public Guid SystemId { get; init; }
+    public Guid SystemInstanceId { get; init; }
 
     public DateTime CreatedAtUtc { get; init; }
 
@@ -92,13 +92,13 @@ public class OrchestrationSystemCommandResponse
     public bool IsDeleted { get; init; }
 }
 
-public class OrchestrationSystemQueryResponse
+public class OrchestrationSystemInstanceQueryResponse
 {
     public Guid Id { get; init; }
 
     public Guid OrchestrationId { get; init; }
 
-    public Guid SystemId { get; init; }
+    public Guid SystemInstanceId { get; init; }
 
     public DateTime CreatedAtUtc { get; init; }
 

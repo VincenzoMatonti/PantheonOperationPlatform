@@ -1,17 +1,17 @@
 namespace Athena.Application.OrchestrationManagement.Commands;
 
-public class CreateOrchestrationSystemCommand
+public class CreateOrchestrationSystemInstanceCommand
 {
     public Guid OrchestrationId { get; set; }
-    public Guid SystemId { get; set; }
+    public Guid SystemInstanceId { get; set; }
 }
 
-public class DeleteOrchestrationSystemCommand
+public class DeleteOrchestrationSystemInstanceCommand
 {
     public Guid Id { get; set; }
 }
 
-public class RestoreOrchestrationSystemCommand
+public class RestoreOrchestrationSystemInstanceCommand
 {
     public Guid Id { get; set; }
 }
