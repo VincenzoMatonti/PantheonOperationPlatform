@@ -8,6 +8,13 @@ using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.UseCases;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.SystemManagement.Contracts;
+using Athena.Application.WorkloadManagement.Contracts;
+using Athena.Application.WorkloadManagement.UseCases;
+using Athena.Application.BlockManagement.Contracts;
+using Athena.Application.BlockManagement.UseCases;
+using Athena.Application.EcosystemManagement.Contracts;
+using Athena.Application.EcosystemManagement.UseCases;
+using Athena.Application.OrchestrationManagement.Services;
 using Athena.Application.OrchestrationRegistry.Commands;
 using Athena.Application.OrchestrationRegistry.Queries;
 using Athena.Application.OrchestrationRegistry.UseCases;
@@ -38,6 +45,12 @@ public static class AthenaApplicationExtensions
         services.AddScoped<SystemInstanceProcessManagementService>();
         services.AddScoped<SystemInstanceProcessUseCaseHandler>();
         services.AddScoped<ISystemInstanceProcessCoordinator>(sp => sp.GetRequiredService<SystemInstanceProcessManagementService>());
+        services.AddScoped<WorkloadManagementUseCaseHandler>();
+        services.AddScoped<IWorkloadManagement>(sp => sp.GetRequiredService<WorkloadManagementUseCaseHandler>());
+        services.AddScoped<BlockManagementUseCaseHandler>();
+        services.AddScoped<IBlockManagement>(sp => sp.GetRequiredService<BlockManagementUseCaseHandler>());
+        services.AddScoped<EcosystemManagementUseCaseHandler>();
+        services.AddScoped<IEcosystemManagement>(sp => sp.GetRequiredService<EcosystemManagementUseCaseHandler>());
         return services;
     }
 
@@ -68,6 +81,7 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationSystemInstanceQueryHandler>();
         services.AddScoped<OrchestrationSystemInstanceUseCaseHandler>();
         services.AddScoped<OrchestrationStatusSynchronizationService>();
+        services.AddScoped<IOrchestrationResourceCoordinator, OrchestrationResourceCoordinator>();
         services.AddScoped<IOrchestrationLifecycleQueries>(sp => sp.GetRequiredService<OrchestrationLifecycleQueryHandler>());
         services.AddScoped<IOrchestrationLifecycleCommands>(sp => sp.GetRequiredService<OrchestrationLifecycleUseCaseHandler>());
         services.AddScoped<IOrchestrationLifecycleOperations>(sp => sp.GetRequiredService<OrchestrationLifecycleOperationUseCaseHandler>());

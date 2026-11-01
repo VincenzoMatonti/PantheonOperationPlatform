@@ -1,5 +1,5 @@
-using Athena.Domain.System.Registry.Entities;
-using Athena.Domain.System.Registry.Repositories;
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.System.Registry.ValueObjects;
 using Athena.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

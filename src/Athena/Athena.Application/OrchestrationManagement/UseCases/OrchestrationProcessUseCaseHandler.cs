@@ -20,7 +20,8 @@ public class OrchestrationProcessUseCaseHandler(
     IOrchestrationLifecycleOperations orchestrationLifecycleOperationUseCaseHandler,
     IOrchestrationStatusSynchronizer orchestrationStatusSynchronizationService,
     IOrchestrationSystemInstanceRepository orchestrationSystemRepository,
-    ISystemInstanceProcessCoordinator processManagementService)
+    ISystemInstanceProcessCoordinator processManagementService,
+    IOrchestrationResourceCoordinator resourceCoordinator)
 {
 
     private readonly ApplicationExceptionService _exceptionService = exceptionService;
@@ -30,6 +31,7 @@ public class OrchestrationProcessUseCaseHandler(
     private readonly IOrchestrationStatusSynchronizer _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
     private readonly IOrchestrationSystemInstanceRepository _orchestrationSystemRepository = orchestrationSystemRepository;
     private readonly ISystemInstanceProcessCoordinator _processManagementService = processManagementService;
+    private readonly IOrchestrationResourceCoordinator _resourceCoordinator = resourceCoordinator;
 
     public async Task<OrchestrationLifecycleOperationDto> ExecuteOrchestrationOperationAsync(CreateOrchestrationLifecycleOperationCommand command, CancellationToken cancellationToken = default)
     {
@@ -43,7 +45,6 @@ public class OrchestrationProcessUseCaseHandler(
             var orchestrationId = OrchestrationId.Create(command.OrchestrationId);
             associations = (await _orchestrationSystemRepository.GetByOrchestrationIdAsync(
                     orchestrationId, cancellationToken: cancellationToken))
-                .OrderBy(association => association.SystemInstanceId.Value)
                 .ToArray();
             if (associations.Count == 0)
                 throw new InvalidOperationException($"Orchestration '{command.OrchestrationId}' has no active SystemInstance associations.");
@@ -76,38 +77,11 @@ public class OrchestrationProcessUseCaseHandler(
             else if (command.Type == OrchestrationLifecycleOperationType.Stop)
                 await _orchestrationLifecycleUseCaseHandler.MarkOrchestrationStoppingAsync(new MarkOrchestrationStoppingCommand { OrchestrationId = command.OrchestrationId }, cancellationToken);
 
-            var failures = new Dictionary<Guid, Exception>();
-            var successfulInstanceIds = new List<Guid>(associations.Count);
-            foreach (var association in associations)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                try
-                {
-                    switch (command.Type)
-                    {
-                        case OrchestrationLifecycleOperationType.Start:
-                            await _processManagementService.StartAsync(association.SystemInstanceId.Value, cancellationToken);
-                            break;
-                        case OrchestrationLifecycleOperationType.Stop:
-                            await _processManagementService.StopAsync(association.SystemInstanceId.Value, cancellationToken);
-                            break;
-                        case OrchestrationLifecycleOperationType.Restart:
-                            await _processManagementService.RestartAsync(association.SystemInstanceId.Value, cancellationToken);
-                            break;
-                        default:
-                            throw new InvalidOperationTypeException(command.Type.ToString());
-                    }
-
-                    successfulInstanceIds.Add(association.SystemInstanceId.Value);
-                }
-                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
-                {
-                    failures.Add(association.SystemInstanceId.Value, exception);
-                }
-            }
-
-            if (failures.Count > 0)
-                throw new OrchestrationSystemInstanceOperationsFailedException(command.OrchestrationId, failures);
+            var successfulInstanceIds = await _resourceCoordinator.ExecuteAsync(
+                command.OrchestrationId,
+                associations.Select(association => association.SystemInstanceId.Value).ToArray(),
+                command.Type.ToString(),
+                cancellationToken);
 
             operation = await _orchestrationLifecycleOperationUseCaseHandler.CompleteOrchestrationLifecycleOperationAsync(
                 new CompleteOrchestrationLifecycleOperationCommand { Id = operation.Id }, cancellationToken);

@@ -6,7 +6,7 @@ namespace Athena.Cli.Infrastructure.Services.Systems;
 
 public sealed class AthenaSystemInstancesClient(AthenaApiClient apiClient) : ISystemInstances
 {
-    private const string BasePath = "api/system-instances";
+    private const string BasePath = "api/system-instances/management";
     private readonly AthenaApiClient _apiClient = apiClient;
 
     public Task<IReadOnlyList<SystemInstanceProcessResponse>> GetAllAsync(CancellationToken cancellationToken = default) =>

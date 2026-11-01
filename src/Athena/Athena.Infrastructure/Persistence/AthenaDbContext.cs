@@ -4,7 +4,14 @@ using Athena.Domain.Orchestration.Management.Entities;
 using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 using RegisteredOrchestration = Athena.Domain.Orchestration.Registry.Entities.Orchestration;
 using RegisteredSystemInstance = Athena.Domain.System.Registry.Entities.SystemInstance;
-using RegisteredSystemInstanceOperation = Athena.Domain.System.Registry.Entities.SystemInstanceOperation;
+using SystemInstanceLifecycle = Athena.Domain.System.Management.Entities.SystemInstanceLifecycle;
+using SystemInstanceOperation = Athena.Domain.System.Management.Entities.SystemInstanceOperation;
+using WorkloadLifecycle = Athena.Domain.Workload.Management.Entities.WorkloadLifecycle;
+using WorkloadOperation = Athena.Domain.Workload.Management.Entities.WorkloadOperation;
+using BlockLifecycle = Athena.Domain.Block.Management.Entities.BlockLifecycle;
+using BlockOperation = Athena.Domain.Block.Management.Entities.BlockOperation;
+using EcosystemLifecycle = Athena.Domain.Ecosystem.Management.Entities.EcosystemLifecycle;
+using EcosystemOperation = Athena.Domain.Ecosystem.Management.Entities.EcosystemOperation;
 using Athena.Domain.Ecosystem.Registry.Entities;
 using Athena.Domain.Block.Registry.Entities;
 using Athena.Domain.Workload.Registry.Entities;
@@ -27,7 +34,14 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
     public DbSet<Block> Blocks => Set<Block>();
     public DbSet<Workload> Workloads => Set<Workload>();
     public DbSet<RegisteredSystemInstance> SystemInstances => Set<RegisteredSystemInstance>();
-    public DbSet<RegisteredSystemInstanceOperation> SystemInstanceOperations => Set<RegisteredSystemInstanceOperation>();
+    public DbSet<SystemInstanceLifecycle> SystemInstanceLifecycles => Set<SystemInstanceLifecycle>();
+    public DbSet<SystemInstanceOperation> SystemInstanceOperations => Set<SystemInstanceOperation>();
+    public DbSet<WorkloadLifecycle> WorkloadLifecycles => Set<WorkloadLifecycle>();
+    public DbSet<WorkloadOperation> WorkloadOperations => Set<WorkloadOperation>();
+    public DbSet<BlockLifecycle> BlockLifecycles => Set<BlockLifecycle>();
+    public DbSet<BlockOperation> BlockOperations => Set<BlockOperation>();
+    public DbSet<EcosystemLifecycle> EcosystemLifecycles => Set<EcosystemLifecycle>();
+    public DbSet<EcosystemOperation> EcosystemOperations => Set<EcosystemOperation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

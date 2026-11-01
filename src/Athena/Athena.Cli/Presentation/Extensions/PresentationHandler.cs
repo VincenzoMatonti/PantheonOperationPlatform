@@ -1,6 +1,9 @@
 using Athena.Cli.Presentation.Help;
 using Athena.Cli.Presentation.Inputs.Orchestrations.Registry;
 using Athena.Cli.Presentation.Inputs.Systems.Registry;
+using Athena.Cli.Presentation.Inputs.Workloads;
+using Athena.Cli.Presentation.Inputs.Blocks;
+using Athena.Cli.Presentation.Inputs.Ecosystems;
 using Spectre.Console.Cli;
 using Spectre.Console.Cli.Help;
 
@@ -12,6 +15,9 @@ public static class PresentationHandler
     {
         config.AddSystemCommands();
         config.AddOrchestrationCommands();
+        config.AddWorkloadManagementCommands();
+        config.AddBlockManagementCommands();
+        config.AddEcosystemManagementCommands();
         return config;
     }
 

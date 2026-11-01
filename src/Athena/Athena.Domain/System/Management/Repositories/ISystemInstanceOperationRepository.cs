@@ -1,11 +1,11 @@
-using Athena.Domain.System.Registry.Entities;
+using Athena.Domain.System.Management.Entities;
 using Athena.Domain.System.Registry.ValueObjects;
 
-namespace Athena.Domain.System.Registry.Repositories;
+namespace Athena.Domain.System.Management.Repositories;
 
 public interface ISystemInstanceOperationRepository
 {
     Task AddAsync(SystemInstanceOperation operation, CancellationToken cancellationToken = default);
     Task UpdateAsync(SystemInstanceOperation operation, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<SystemInstanceOperation>> GetBySystemInstanceIdAsync(SystemInstanceId systemInstanceId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SystemInstanceOperation>> GetBySystemInstanceIdAsync(SystemInstanceId id, CancellationToken cancellationToken = default);
 }

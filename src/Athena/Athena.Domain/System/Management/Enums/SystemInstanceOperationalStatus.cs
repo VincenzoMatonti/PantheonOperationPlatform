@@ -1,4 +1,4 @@
-namespace Athena.Domain.System.Registry.Enums;
+namespace Athena.Domain.System.Management.Enums;
 
 public enum SystemInstanceOperationalStatus
 {

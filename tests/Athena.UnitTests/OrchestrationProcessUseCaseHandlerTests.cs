@@ -29,7 +29,8 @@ public sealed class OrchestrationProcessUseCaseHandlerTests
             operations,
             new NoOpStatusSynchronizer(),
             new EmptySystemInstanceAssociations(),
-            new UnusedProcessCoordinator());
+            new UnusedProcessCoordinator(),
+            new UnusedResourceCoordinator());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => handler.ExecuteOrchestrationOperationAsync(
             new CreateOrchestrationLifecycleOperationCommand
@@ -124,6 +125,9 @@ public sealed class OrchestrationProcessUseCaseHandlerTests
 
     private sealed class UnusedProcessCoordinator : ISystemInstanceProcessCoordinator
     {
+        public Task<SystemInstanceProcessDto?> GetByIdAsync(Guid systemInstanceId, CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("No process should be queried without associations.");
+
         public Task EnsureOperableAsync(Guid systemInstanceId, CancellationToken cancellationToken = default) =>
             throw new InvalidOperationException("No process should be coordinated without associations.");
 
@@ -135,5 +139,14 @@ public sealed class OrchestrationProcessUseCaseHandlerTests
 
         public Task<SystemInstanceExecutionStatus> RestartAsync(Guid systemInstanceId, CancellationToken cancellationToken = default) =>
             throw new InvalidOperationException("No process should be coordinated without associations.");
+    }
+
+    private sealed class UnusedResourceCoordinator : IOrchestrationResourceCoordinator
+    {
+        public Task<IReadOnlyList<Guid>> ExecuteAsync(Guid orchestrationId, IReadOnlyCollection<Guid> systemInstanceIds, string operationType, CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("No resources should be coordinated without associations.");
+
+        public Task<OrchestrationResourceLifecycleSummary> GetLifecycleSummaryAsync(IEnumerable<Guid> systemInstanceIds, CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("No resources should be summarized without associations.");
     }
 }

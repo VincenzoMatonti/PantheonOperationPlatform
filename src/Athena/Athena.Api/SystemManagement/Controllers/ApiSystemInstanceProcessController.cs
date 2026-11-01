@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Athena.Api.SystemManagement.Controllers;
 
 [ApiController]
-[Route("api/system-instances")]
+[Route("api/system-instances/management")]
 public class ApiSystemInstanceProcessController(SystemInstanceProcessUseCaseHandler service) : ControllerBase
 {
     private readonly SystemInstanceProcessUseCaseHandler _service = service;

@@ -1,5 +1,5 @@
-using Athena.Domain.System.Registry.Enums;
 using Athena.Domain.System.Registry.Exceptions;
+using Athena.Domain.System.Registry.Enums;
 using Athena.Domain.System.Registry.ValueObjects;
 using Athena.Domain.Workload.Registry.ValueObjects;
 
@@ -12,8 +12,6 @@ public class SystemInstance
     public WorkloadId WorkloadId { get; private set; } = null!;
     public SystemInstanceName Name { get; private set; } = null!;
     public SystemInstanceRegistrationStatus RegistrationStatus { get; private set; }
-    public SystemInstanceDesiredState DesiredState { get; private set; }
-    public SystemInstanceOperationalStatus OperationalStatus { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -32,8 +30,6 @@ public class SystemInstance
             WorkloadId = workloadId,
             Name = name,
             RegistrationStatus = SystemInstanceRegistrationStatus.Unregistered,
-            DesiredState = SystemInstanceDesiredState.Unknown,
-            OperationalStatus = SystemInstanceOperationalStatus.Unknown,
             CreatedAtUtc = DateTime.UtcNow,
             IsDeleted = false
         };
@@ -89,22 +85,6 @@ public class SystemInstance
         if (RegistrationStatus == SystemInstanceRegistrationStatus.Unregistered)
             throw new SystemInstanceNotRegisteredException(Id.Value);
         RegistrationStatus = SystemInstanceRegistrationStatus.Disabled;
-        Touch();
-    }
-
-    public void SetDesiredState(SystemInstanceDesiredState desiredState)
-    {
-        EnsureRegistered();
-        if (!Enum.IsDefined(desiredState)) throw new ArgumentOutOfRangeException(nameof(desiredState));
-        DesiredState = desiredState;
-        Touch();
-    }
-
-    public void SetOperationalStatus(SystemInstanceOperationalStatus operationalStatus)
-    {
-        EnsureNotDeleted();
-        if (!Enum.IsDefined(operationalStatus)) throw new ArgumentOutOfRangeException(nameof(operationalStatus));
-        OperationalStatus = operationalStatus;
         Touch();
     }
 

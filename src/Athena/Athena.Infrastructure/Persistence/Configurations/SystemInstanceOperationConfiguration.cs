@@ -1,3 +1,5 @@
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Management.Enums;
 using Athena.Domain.System.Registry.Entities;
 using Athena.Domain.System.Registry.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +18,7 @@ public sealed class SystemInstanceOperationConfiguration : IEntityTypeConfigurat
             .HasConversion(id => id.Value, value => SystemInstanceId.Create(value))
             .HasColumnName("system_instance_id")
             .IsRequired();
-        builder.Property<int>("system_instance_database_id")
-            .HasColumnName("system_instance_database_id")
-            .IsRequired();
+        builder.Property<int>("system_instance_database_id").HasColumnName("system_instance_database_id").IsRequired();
         builder.HasOne<SystemInstance>()
             .WithMany()
             .HasForeignKey("system_instance_database_id", nameof(SystemInstanceOperation.SystemInstanceId))

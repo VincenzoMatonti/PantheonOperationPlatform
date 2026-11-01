@@ -42,11 +42,6 @@ public class SystemInstanceRepository(AthenaDbContext context) : ISystemInstance
         return await ActiveInstances.Where(instance => instance.RegistrationStatus == status).ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SystemInstance>> GetByOperationalStatusAsync(SystemInstanceOperationalStatus status, CancellationToken cancellationToken = default)
-    {
-        return await ActiveInstances.Where(instance => instance.OperationalStatus == status).ToListAsync(cancellationToken);
-    }
-
     public async Task<IReadOnlyList<SystemInstance>> GetByDeletionStatusAsync(bool isDeleted, CancellationToken cancellationToken = default)
     {
         return await context.SystemInstances.Where(instance => instance.IsDeleted == isDeleted).ToListAsync(cancellationToken);

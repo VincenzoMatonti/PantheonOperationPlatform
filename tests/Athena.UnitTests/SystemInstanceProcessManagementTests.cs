@@ -6,6 +6,9 @@ using Athena.Domain.System.Registry.Enums;
 using Athena.Domain.System.Registry.Exceptions;
 using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.System.Registry.ValueObjects;
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Management.Enums;
+using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.Workload.Registry.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -25,8 +28,8 @@ public sealed class SystemInstanceProcessManagementTests
 
         Assert.Equal(fixture.InstanceId, result.SystemInstanceId);
         Assert.Equal(fixture.InstanceId, fixture.Agent.LastCommandedInstanceId);
-        Assert.Equal(SystemInstanceDesiredState.Running, fixture.Instance.DesiredState);
-        Assert.Equal(SystemInstanceOperationalStatus.Running, fixture.Instance.OperationalStatus);
+        Assert.Equal(SystemInstanceDesiredState.Running, fixture.Lifecycle.DesiredState);
+        Assert.Equal(SystemInstanceOperationalStatus.Running, fixture.Lifecycle.OperationalStatus);
         var operation = Assert.Single(fixture.Operations.Items);
         Assert.Equal(SystemInstanceOperationType.Start, operation.Type);
         Assert.Equal(SystemInstanceOperationStatus.Completed, operation.Status);
@@ -46,7 +49,7 @@ public sealed class SystemInstanceProcessManagementTests
         var actual = await Assert.ThrowsAsync<HttpRequestException>(() => service.StartAsync(fixture.InstanceId));
 
         Assert.Same(expected, actual);
-        Assert.Equal(SystemInstanceDesiredState.Running, fixture.Instance.DesiredState);
+        Assert.Equal(SystemInstanceDesiredState.Running, fixture.Lifecycle.DesiredState);
         var operation = Assert.Single(fixture.Operations.Items);
         Assert.Equal(SystemInstanceOperationStatus.Failed, operation.Status);
         Assert.Equal("agent unavailable", operation.ErrorMessage);
@@ -62,7 +65,7 @@ public sealed class SystemInstanceProcessManagementTests
 
         await Assert.ThrowsAsync<ExecutionAgentResponseException>(() => service.StartAsync(fixture.InstanceId));
 
-        Assert.Equal(SystemInstanceOperationalStatus.Unknown, fixture.Instance.OperationalStatus);
+        Assert.Equal(SystemInstanceOperationalStatus.Unknown, fixture.Lifecycle.OperationalStatus);
         Assert.Equal(SystemInstanceOperationStatus.Failed, Assert.Single(fixture.Operations.Items).Status);
     }
 
@@ -108,7 +111,7 @@ public sealed class SystemInstanceProcessManagementTests
 
         var created = Assert.Single(fixture.Instances.Items, instance => instance.Id.Value == createdId);
         Assert.Equal(SystemInstanceRegistrationStatus.Unregistered, created.RegistrationStatus);
-        Assert.Equal(SystemInstanceOperationalStatus.Unknown, created.OperationalStatus);
+        Assert.Equal(SystemInstanceOperationalStatus.Unknown, Assert.Single(fixture.Lifecycles.Items, lifecycle => lifecycle.Id.Value == createdId).OperationalStatus);
         Assert.Equal(SystemInstanceOperationStatus.Failed, Assert.Single(fixture.Operations.Items).Status);
     }
 
@@ -118,7 +121,7 @@ public sealed class SystemInstanceProcessManagementTests
         var fixture = new Fixture();
         fixture.Instance.Register();
         fixture.Agent.Status = Status(fixture.InstanceId, "Running", true);
-        fixture.Agent.OnCommand = () => fixture.Instances.FailUpdates = true;
+        fixture.Agent.OnCommand = () => fixture.Lifecycles.FailUpdates = true;
         var service = fixture.CreateService();
 
         await Assert.ThrowsAsync<IOException>(() => service.StartAsync(fixture.InstanceId));
@@ -136,6 +139,7 @@ public sealed class SystemInstanceProcessManagementTests
             WorkloadId.Create(Guid.NewGuid()),
             SystemInstanceName.Create("second"));
         fixture.Instances.Items.Add(otherInstance);
+        fixture.Lifecycles.Items.Add(SystemInstanceLifecycle.Create(otherInstance.Id));
         fixture.Agent.CommandFailure = new HttpRequestException("agent unavailable");
         var synchronization = new SystemSynchronizationService(
             fixture.CreateService(),
@@ -144,8 +148,8 @@ public sealed class SystemInstanceProcessManagementTests
         await synchronization.SynchronizeAsync();
 
         Assert.Equal(2, fixture.Agent.CommandedInstanceIds.Count);
-        Assert.Equal(SystemInstanceOperationalStatus.Unreachable, fixture.Instance.OperationalStatus);
-        Assert.Equal(SystemInstanceOperationalStatus.Unreachable, otherInstance.OperationalStatus);
+        Assert.Equal(SystemInstanceOperationalStatus.Unreachable, fixture.Lifecycles.Items.Single(lifecycle => lifecycle.Id == fixture.Instance.Id).OperationalStatus);
+        Assert.Equal(SystemInstanceOperationalStatus.Unreachable, fixture.Lifecycles.Items.Single(lifecycle => lifecycle.Id == otherInstance.Id).OperationalStatus);
     }
 
     [Fact]
@@ -167,8 +171,10 @@ public sealed class SystemInstanceProcessManagementTests
         public Guid InstanceId { get; } = Guid.NewGuid();
         public SystemInstance Instance { get; }
         public InMemorySystemInstanceRepository Instances { get; } = new();
+        public InMemorySystemInstanceLifecycleRepository Lifecycles { get; } = new();
         public InMemorySystemInstanceOperationRepository Operations { get; } = new();
         public FakeExecutionAgent Agent { get; } = new();
+        public SystemInstanceLifecycle Lifecycle => Lifecycles.Items.Single(item => item.Id.Value == InstanceId);
 
         public Fixture()
         {
@@ -178,10 +184,11 @@ public sealed class SystemInstanceProcessManagementTests
                 WorkloadId.Create(Guid.NewGuid()),
                 SystemInstanceName.Create("unit-test"));
             Instances.Items.Add(Instance);
+            Lifecycles.Items.Add(SystemInstanceLifecycle.Create(Instance.Id));
         }
 
         public SystemInstanceProcessManagementService CreateService() =>
-            new(Agent, Instances, Operations);
+            new(Agent, Instances, Lifecycles, Operations);
     }
 
     private sealed class FakeExecutionAgent : ISystemInstanceExecutionAgent
@@ -232,7 +239,6 @@ public sealed class SystemInstanceProcessManagementTests
     private sealed class InMemorySystemInstanceRepository : ISystemInstanceRepository
     {
         public List<SystemInstance> Items { get; } = [];
-        public bool FailUpdates { get; set; }
 
         public Task<SystemInstance?> GetByIdAsync(SystemInstanceId id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
@@ -252,9 +258,6 @@ public sealed class SystemInstanceProcessManagementTests
         public Task<IReadOnlyList<SystemInstance>> GetByRegistrationStatusAsync(SystemInstanceRegistrationStatus status, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<SystemInstance>>(Items.Where(item => item.RegistrationStatus == status).ToArray());
 
-        public Task<IReadOnlyList<SystemInstance>> GetByOperationalStatusAsync(SystemInstanceOperationalStatus status, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<SystemInstance>>(Items.Where(item => item.OperationalStatus == status).ToArray());
-
         public Task<IReadOnlyList<SystemInstance>> GetByDeletionStatusAsync(bool isDeleted, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<SystemInstance>>(Items.Where(item => item.IsDeleted == isDeleted).ToArray());
 
@@ -270,7 +273,27 @@ public sealed class SystemInstanceProcessManagementTests
             return Task.CompletedTask;
         }
 
-        public Task UpdateAsync(SystemInstance systemInstance, CancellationToken cancellationToken = default)
+        public Task UpdateAsync(SystemInstance systemInstance, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class InMemorySystemInstanceLifecycleRepository : ISystemInstanceLifecycleRepository
+    {
+        public List<SystemInstanceLifecycle> Items { get; } = [];
+        public bool FailUpdates { get; set; }
+        public Task<SystemInstanceLifecycle?> GetByIdAsync(SystemInstanceId id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
+        public Task<IReadOnlyList<SystemInstanceLifecycle>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<SystemInstanceLifecycle>>(Items.ToArray());
+        public Task<IReadOnlyList<SystemInstanceLifecycle>> GetByDesiredStateAsync(SystemInstanceDesiredState state, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<SystemInstanceLifecycle>>(Items.Where(item => item.DesiredState == state).ToArray());
+        public Task<IReadOnlyList<SystemInstanceLifecycle>> GetByOperationalStatusAsync(SystemInstanceOperationalStatus status, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<SystemInstanceLifecycle>>(Items.Where(item => item.OperationalStatus == status).ToArray());
+        public Task AddAsync(SystemInstanceLifecycle lifecycle, CancellationToken cancellationToken = default)
+        {
+            Items.Add(lifecycle);
+            return Task.CompletedTask;
+        }
+        public Task UpdateAsync(SystemInstanceLifecycle lifecycle, CancellationToken cancellationToken = default)
         {
             if (FailUpdates) throw new IOException("local persistence failed");
             return Task.CompletedTask;

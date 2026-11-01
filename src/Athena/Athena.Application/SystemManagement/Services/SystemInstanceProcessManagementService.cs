@@ -5,6 +5,9 @@ using Athena.Domain.System.Registry.Enums;
 using Athena.Domain.System.Registry.Exceptions;
 using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.System.Registry.ValueObjects;
+using Athena.Domain.System.Management.Entities;
+using Athena.Domain.System.Management.Enums;
+using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.Workload.Registry.ValueObjects;
 
 namespace Athena.Application.SystemManagement.Services;
@@ -12,19 +15,27 @@ namespace Athena.Application.SystemManagement.Services;
 public sealed class SystemInstanceProcessManagementService(
     ISystemInstanceExecutionAgent executionAgent,
     ISystemInstanceRepository systemInstanceRepository,
+    ISystemInstanceLifecycleRepository lifecycleRepository,
     ISystemInstanceOperationRepository operationRepository) : ISystemInstanceProcessCoordinator
 {
     private readonly ISystemInstanceExecutionAgent _executionAgent = executionAgent;
     private readonly ISystemInstanceRepository _repository = systemInstanceRepository;
+    private readonly ISystemInstanceLifecycleRepository _lifecycleRepository = lifecycleRepository;
     private readonly ISystemInstanceOperationRepository _operationRepository = operationRepository;
 
-    public async Task<IReadOnlyList<SystemInstanceProcessDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
-        (await _repository.GetAllAsync(cancellationToken)).Select(ToDto).ToArray();
+    public async Task<IReadOnlyList<SystemInstanceProcessDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var instances = await _repository.GetAllAsync(cancellationToken);
+        var results = new List<SystemInstanceProcessDto>(instances.Count);
+        foreach (var instance in instances)
+            results.Add(ToDto(instance, await GetRequiredLifecycleAsync(instance.Id, cancellationToken)));
+        return results;
+    }
 
     public async Task<SystemInstanceProcessDto?> GetByIdAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
     {
         var instance = await FindAsync(systemInstanceId, cancellationToken);
-        return instance is null ? null : ToDto(instance);
+        return instance is null ? null : ToDto(instance, await GetRequiredLifecycleAsync(instance.Id, cancellationToken));
     }
 
     public async Task<SystemInstanceExecutionStatus> CreateAsync(
@@ -45,6 +56,7 @@ public sealed class SystemInstanceProcessManagementService(
             WorkloadId.Create(request.WorkloadId.Value),
             SystemInstanceName.Create(request.Name ?? string.Empty));
         await _repository.AddAsync(instance, cancellationToken);
+        await _lifecycleRepository.AddAsync(SystemInstanceLifecycle.Create(instance.Id), cancellationToken);
 
         return await RecordOperationAsync(
             instance,
@@ -53,8 +65,9 @@ public sealed class SystemInstanceProcessManagementService(
             response => ValidateStatus(response, instance.Id.Value),
             async response =>
             {
-                instance.SetOperationalStatus(ParseOperationalStatus(response.State));
-                await _repository.UpdateAsync(instance, CancellationToken.None);
+                var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
+                lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
+                await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
             },
             cancellationToken);
     }
@@ -75,8 +88,10 @@ public sealed class SystemInstanceProcessManagementService(
             async response =>
             {
                 instance.Register();
-                instance.SetOperationalStatus(ParseOperationalStatus(response.State));
+                var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
+                lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
                 await _repository.UpdateAsync(instance, CancellationToken.None);
+                await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
             },
             cancellationToken);
     }
@@ -101,6 +116,9 @@ public sealed class SystemInstanceProcessManagementService(
             response => ValidateStatus(response, systemInstanceId),
             async _ =>
             {
+                var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
+                lifecycle.Delete();
+                await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
                 instance.Delete();
                 await _repository.UpdateAsync(instance, CancellationToken.None);
             },
@@ -112,16 +130,18 @@ public sealed class SystemInstanceProcessManagementService(
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
         var response = await _executionAgent.GetStatusAsync(systemInstanceId, cancellationToken);
         ValidateStatus(response, systemInstanceId);
-        instance.SetOperationalStatus(ParseOperationalStatus(response.State));
-        await _repository.UpdateAsync(instance, CancellationToken.None);
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
+        lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
+        await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
         return response;
     }
 
     public async Task MarkUnreachableAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
     {
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
-        instance.SetOperationalStatus(SystemInstanceOperationalStatus.Unreachable);
-        await _repository.UpdateAsync(instance, cancellationToken);
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
+        lifecycle.SetOperationalStatus(SystemInstanceOperationalStatus.Unreachable);
+        await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
     }
 
     public async Task<SystemInstanceExecutionHealth> GetHealthAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
@@ -171,6 +191,7 @@ public sealed class SystemInstanceProcessManagementService(
     {
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
         EnsureRegistered(instance);
+        _ = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
     }
 
     private async Task<SystemInstanceExecutionStatus> ExecuteOperationAsync(
@@ -184,8 +205,9 @@ public sealed class SystemInstanceProcessManagementService(
         EnsureRegistered(instance);
         cancellationToken.ThrowIfCancellationRequested();
 
-        instance.SetDesiredState(desiredState);
-        await _repository.UpdateAsync(instance, cancellationToken);
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
+        lifecycle.SetDesiredState(desiredState);
+        await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
 
         return await RecordOperationAsync(
             instance,
@@ -194,8 +216,9 @@ public sealed class SystemInstanceProcessManagementService(
             response => ValidateStatus(response, systemInstanceId),
             async response =>
             {
-                instance.SetOperationalStatus(ParseOperationalStatus(response.State));
-                await _repository.UpdateAsync(instance, CancellationToken.None);
+                var currentLifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
+                currentLifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
+                await _lifecycleRepository.UpdateAsync(currentLifecycle, CancellationToken.None);
             },
             cancellationToken);
     }
@@ -284,6 +307,10 @@ public sealed class SystemInstanceProcessManagementService(
     private async Task<SystemInstance> GetRequiredAsync(Guid id, CancellationToken cancellationToken) =>
         await FindAsync(id, cancellationToken) ?? throw new SystemInstanceNotFoundException(id);
 
+    private async Task<SystemInstanceLifecycle> GetRequiredLifecycleAsync(SystemInstanceId id, CancellationToken cancellationToken) =>
+        await _lifecycleRepository.GetByIdAsync(id, cancellationToken)
+        ?? throw new InvalidOperationException($"SystemInstance lifecycle '{id.Value}' does not exist.");
+
     private static void EnsureCanRegister(SystemInstance instance)
     {
         if (instance.RegistrationStatus == SystemInstanceRegistrationStatus.Registered)
@@ -303,9 +330,9 @@ public sealed class SystemInstanceProcessManagementService(
     private static SystemInstanceExecutionCommandRequest ToAgentRequest(SystemInstance instance, string? details) =>
         new(instance.Id.Value, instance.SystemId.Value, instance.WorkloadId.Value, instance.Name.Value, details);
 
-    private static SystemInstanceProcessDto ToDto(SystemInstance instance) =>
+    private static SystemInstanceProcessDto ToDto(SystemInstance instance, SystemInstanceLifecycle lifecycle) =>
         new(instance.Id.Value, instance.SystemId.Value, instance.WorkloadId.Value, instance.Name.Value,
-            instance.RegistrationStatus.ToString(), instance.DesiredState.ToString(), instance.OperationalStatus.ToString(),
+            instance.RegistrationStatus.ToString(), lifecycle.DesiredState.ToString(), lifecycle.OperationalStatus.ToString(),
             instance.CreatedAtUtc, instance.UpdatedAtUtc);
 
     private static void ValidateStatus(SystemInstanceExecutionStatus status, Guid requestedId)
