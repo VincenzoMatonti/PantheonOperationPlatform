@@ -145,54 +145,40 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
         if (leaseDuration <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(leaseDuration));
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("Claim time must be UTC.", nameof(nowUtc));
 
-        var candidateId = await context.SystemInstanceOperations
-            .Where(operation => operation.Type == SystemInstanceOperationType.Start
-                || operation.Type == SystemInstanceOperationType.Stop
-                || operation.Type == SystemInstanceOperationType.Restart)
-            .Where(operation => operation.Status == SystemInstanceOperationStatus.Pending
-                || operation.Status == SystemInstanceOperationStatus.Running
-                || operation.Status == SystemInstanceOperationStatus.OutcomeUnknown)
-            .Where(operation => operation.Type == SystemInstanceOperationType.Create
-                || operation.Type == SystemInstanceOperationType.Register
-                || operation.Type == SystemInstanceOperationType.Start
-                || operation.Type == SystemInstanceOperationType.Stop
-                || operation.Type == SystemInstanceOperationType.Restart
-                || operation.Type == SystemInstanceOperationType.Remove
-                || operation.Type == SystemInstanceOperationType.Configure
-                || operation.Type == SystemInstanceOperationType.Unregister)
-            .Where(operation => operation.NextAttemptAtUtc == null || operation.NextAttemptAtUtc <= nowUtc)
-            .Where(operation => operation.LeaseExpiresAtUtc == null || operation.LeaseExpiresAtUtc <= nowUtc)
-            .OrderBy(operation => operation.CreatedAtUtc)
-            .Select(operation => operation.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (candidateId == Guid.Empty) return null;
-
-        var updated = await context.SystemInstanceOperations
-            .Where(operation => operation.Id == candidateId
-                && (operation.Status == SystemInstanceOperationStatus.Pending
+        while (true)
+        {
+            var candidate = await context.SystemInstanceOperations
+                .AsNoTracking()
+                .Where(operation => operation.Status == SystemInstanceOperationStatus.Pending
                     || operation.Status == SystemInstanceOperationStatus.Running
                     || operation.Status == SystemInstanceOperationStatus.OutcomeUnknown)
-                && (operation.Type == SystemInstanceOperationType.Create
-                    || operation.Type == SystemInstanceOperationType.Register
-                    || operation.Type == SystemInstanceOperationType.Start
-                    || operation.Type == SystemInstanceOperationType.Stop
-                    || operation.Type == SystemInstanceOperationType.Restart
-                    || operation.Type == SystemInstanceOperationType.Remove
-                    || operation.Type == SystemInstanceOperationType.Configure
-                    || operation.Type == SystemInstanceOperationType.Unregister)
-                && (operation.LeaseExpiresAtUtc == null || operation.LeaseExpiresAtUtc <= nowUtc))
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(operation => operation.LeaseOwner, leaseOwner)
-                .SetProperty(operation => operation.LeaseExpiresAtUtc, nowUtc + leaseDuration)
-                .SetProperty(operation => operation.LastAttemptAtUtc, nowUtc)
-                .SetProperty(operation => operation.AttemptCount, operation => operation.AttemptCount + 1)
-                .SetProperty(operation => operation.Version, operation => operation.Version + 1),
-                cancellationToken);
+                .Where(operation => operation.NextAttemptAtUtc == null || operation.NextAttemptAtUtc <= nowUtc)
+                .Where(operation => operation.LeaseExpiresAtUtc == null || operation.LeaseExpiresAtUtc <= nowUtc)
+                .OrderBy(operation => operation.CreatedAtUtc)
+                .ThenBy(operation => operation.Id)
+                .Select(operation => new { operation.Id, operation.Version })
+                .FirstOrDefaultAsync(cancellationToken);
 
-        return updated == 1
-            ? await GetByIdAsync(candidateId, cancellationToken)
-            : null;
+            if (candidate is null) return null;
+
+            var claimed = await context.SystemInstanceOperations
+                .Where(operation => operation.Id == candidate.Id
+                    && operation.Version == candidate.Version
+                    && (operation.Status == SystemInstanceOperationStatus.Pending
+                        || operation.Status == SystemInstanceOperationStatus.Running
+                        || operation.Status == SystemInstanceOperationStatus.OutcomeUnknown)
+                    && (operation.NextAttemptAtUtc == null || operation.NextAttemptAtUtc <= nowUtc)
+                    && (operation.LeaseExpiresAtUtc == null || operation.LeaseExpiresAtUtc <= nowUtc))
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(operation => operation.LeaseOwner, leaseOwner)
+                    .SetProperty(operation => operation.LeaseExpiresAtUtc, nowUtc + leaseDuration)
+                    .SetProperty(operation => operation.LastAttemptAtUtc, nowUtc)
+                    .SetProperty(operation => operation.AttemptCount, operation => operation.AttemptCount + 1)
+                    .SetProperty(operation => operation.Version, operation => operation.Version + 1),
+                    cancellationToken);
+
+            if (claimed == 1) return await GetByIdAsync(candidate.Id, cancellationToken);
+        }
     }
 
     public async Task<bool> SaveIfLeaseOwnerAsync(
