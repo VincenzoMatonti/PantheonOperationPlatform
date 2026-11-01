@@ -42,8 +42,11 @@ public sealed class EcosystemManagementUseCaseHandler(
         {
             if (!Enum.TryParse<EcosystemDesiredState>(state, true, out var desired) || !Enum.IsDefined(desired))
                 throw Error(EcosystemManagementErrorCode.InvalidDesiredState, $"Desired state '{state}' is invalid.");
-            var lifecycle = await GetRequiredLifecycleAsync(EcosystemId.Create(id), token);
+            var ecosystemId = EcosystemId.Create(id);
+            EnsureRegistered(await GetEcosystemAsync(ecosystemId, token));
+            var lifecycle = await GetRequiredLifecycleAsync(ecosystemId, token);
             lifecycle.SetDesiredState(desired);
+            lifecycle.SetOperationalStatus(EcosystemOperationalStatus.Unknown);
             await lifecycleRepository.UpdateAsync(lifecycle, token);
             return ToDto(lifecycle);
         });
@@ -53,35 +56,21 @@ public sealed class EcosystemManagementUseCaseHandler(
             if (!Enum.TryParse<EcosystemOperationType>(type, true, out var operationType) || !Enum.IsDefined(operationType))
                 throw Error(EcosystemManagementErrorCode.InvalidOperationType, $"Operation type '{type}' is invalid.");
             var ecosystemId = EcosystemId.Create(id);
+            EnsureRegistered(await GetEcosystemAsync(ecosystemId, token));
             var lifecycle = await GetRequiredLifecycleAsync(ecosystemId, token);
             var operation = EcosystemOperation.Create(Guid.NewGuid(), ecosystemId, operationType);
-            await operationRepository.AddAsync(operation, token);
+            var desired = operationType switch
+            {
+                EcosystemOperationType.Start or EcosystemOperationType.Restart => EcosystemDesiredState.Running,
+                EcosystemOperationType.Stop => EcosystemDesiredState.Stopped,
+                _ => throw Error(EcosystemManagementErrorCode.InvalidOperationType, $"Operation type '{type}' is invalid.")
+            };
+            lifecycle.SetDesiredState(desired);
+            lifecycle.SetOperationalStatus(EcosystemOperationalStatus.Unknown);
             operation.Start();
-            await operationRepository.UpdateAsync(operation, CancellationToken.None);
-            try
-            {
-                var (desired, interim, final) = operationType switch
-                {
-                    EcosystemOperationType.Start => (EcosystemDesiredState.Running, EcosystemOperationalStatus.Starting, EcosystemOperationalStatus.Running),
-                    EcosystemOperationType.Stop => (EcosystemDesiredState.Stopped, EcosystemOperationalStatus.Stopping, EcosystemOperationalStatus.Stopped),
-                    EcosystemOperationType.Restart => (EcosystemDesiredState.Running, EcosystemOperationalStatus.Starting, EcosystemOperationalStatus.Running),
-                    _ => throw Error(EcosystemManagementErrorCode.InvalidOperationType, $"Operation type '{type}' is invalid.")
-                };
-                lifecycle.SetDesiredState(desired);
-                lifecycle.SetOperationalStatus(interim);
-                await lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
-                lifecycle.SetOperationalStatus(final);
-                await lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
-                operation.Complete();
-                await operationRepository.UpdateAsync(operation, CancellationToken.None);
-                return ToDto(operation);
-            }
-            catch (Exception exception)
-            {
-                operation.Fail(exception.Message);
-                await operationRepository.UpdateAsync(operation, CancellationToken.None);
-                throw;
-            }
+            operation.Complete();
+            await operationRepository.SaveIntentAsync(operation, lifecycle, token);
+            return ToDto(operation);
         });
     public Task<IReadOnlyList<EcosystemOperationDto>> GetOperationsAsync(Guid id, CancellationToken token = default) =>
         RunAsync<IReadOnlyList<EcosystemOperationDto>>(async () =>
@@ -92,6 +81,13 @@ public sealed class EcosystemManagementUseCaseHandler(
         });
     private async Task<Athena.Domain.Ecosystem.Registry.Entities.Ecosystem> GetEcosystemAsync(EcosystemId id, CancellationToken token) =>
         await ecosystemRepository.GetByIdAsync(id, token) ?? throw new EcosystemNotFoundException(id.Value);
+    private static void EnsureRegistered(Athena.Domain.Ecosystem.Registry.Entities.Ecosystem ecosystem)
+    {
+        if (ecosystem.RegistrationStatus == Athena.Domain.Ecosystem.Registry.Enums.EcosystemRegistrationStatus.Disabled)
+            throw new Athena.Domain.Ecosystem.Registry.Exceptions.EcosystemAlreadyDisabledException(ecosystem.Id.Value);
+        if (ecosystem.RegistrationStatus == Athena.Domain.Ecosystem.Registry.Enums.EcosystemRegistrationStatus.Unregistered)
+            throw new EcosystemNotRegisteredException(ecosystem.Id.Value);
+    }
     private async Task<EcosystemLifecycle> GetRequiredLifecycleAsync(EcosystemId id, CancellationToken token) =>
         await lifecycleRepository.GetByIdAsync(id, token) ?? throw Error(EcosystemManagementErrorCode.EcosystemLifecycleNotFound, $"Lifecycle for ecosystem '{id.Value}' was not found.");
     private Task<T> RunAsync<T>(Func<Task<T>> operation) => exceptionService.ExecuteAsync(operation);

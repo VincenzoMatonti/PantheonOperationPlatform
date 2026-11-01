@@ -14,6 +14,7 @@ public interface IBlockLifecycleRepository
 public interface IBlockOperationRepository
 {
     Task AddAsync(BlockOperation operation, CancellationToken cancellationToken = default);
+    Task SaveIntentAsync(BlockOperation operation, BlockLifecycle lifecycle, CancellationToken cancellationToken = default);
     Task UpdateAsync(BlockOperation operation, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BlockOperation>> GetByBlockIdAsync(BlockId id, CancellationToken cancellationToken = default);
 }

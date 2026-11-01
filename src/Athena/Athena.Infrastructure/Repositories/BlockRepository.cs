@@ -2,6 +2,7 @@ using Athena.Domain.Block.Registry.Entities;
 using Athena.Domain.Block.Registry.Enums;
 using Athena.Domain.Block.Registry.Repositories;
 using Athena.Domain.Block.Registry.ValueObjects;
+using Athena.Domain.Block.Management.Entities;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;
 using Athena.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -37,15 +38,55 @@ public sealed class BlockRepository(AthenaDbContext context) : IBlockRepository
     public async Task<bool> ExistsByNameAsync(BlockName name, CancellationToken cancellationToken = default) => await context.Blocks.AnyAsync(block => block.Name == name, cancellationToken);
 
     // Persistence
-    public async Task AddAsync(Block block, CancellationToken cancellationToken = default)
+    public async Task AddAsync(Block block, BlockLifecycle lifecycle, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(block);
+        ArgumentNullException.ThrowIfNull(lifecycle);
+        if (lifecycle.Id != block.Id)
+            throw new ArgumentException("The lifecycle must belong to the Block being created.", nameof(lifecycle));
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        var ecosystemDatabaseId = await context.Ecosystems
+            .Where(ecosystem => ecosystem.Id == block.EcosystemId && !ecosystem.IsDeleted)
+            .Select(ecosystem => (int?)EF.Property<int>(ecosystem, "id"))
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Ecosystem '{block.EcosystemId.Value}' does not exist.");
+        context.Entry(block).Property<int>("ecosystem_database_id").CurrentValue = ecosystemDatabaseId;
         await context.Blocks.AddAsync(block, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        var blockDatabaseId = await context.Blocks
+            .Where(entity => entity.Id == block.Id)
+            .Select(entity => EF.Property<int>(entity, "id"))
+            .SingleAsync(cancellationToken);
+        context.Entry(lifecycle).Property<int>("block_database_id").CurrentValue = blockDatabaseId;
+        await context.BlockLifecycles.AddAsync(lifecycle, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Block block, CancellationToken cancellationToken = default)
     {
-        context.Blocks.Update(block);
+        var blockEntry = context.Entry(block);
+        if (blockEntry.State == EntityState.Detached) context.Blocks.Update(block);
+        if (block.IsDeleted || block.RegistrationStatus != BlockRegistrationStatus.Registered)
+        {
+            var blockDatabaseId = await context.Blocks
+                .Where(entity => entity.Id == block.Id)
+                .Select(entity => (int?)EF.Property<int>(entity, "id"))
+                .SingleOrDefaultAsync(cancellationToken);
+            if (blockDatabaseId is not null)
+            {
+                var lifecycle = await context.BlockLifecycles.SingleOrDefaultAsync(
+                    entity => EF.Property<int>(entity, "block_database_id") == blockDatabaseId,
+                    cancellationToken);
+                if (lifecycle is not null && !lifecycle.IsDeleted)
+                {
+                    if (block.IsDeleted) lifecycle.Delete();
+                    else lifecycle.SetOperationalStatus(Athena.Domain.Block.Management.Enums.BlockOperationalStatus.Unknown);
+                }
+            }
+        }
         await context.SaveChangesAsync(cancellationToken);
     }
 }

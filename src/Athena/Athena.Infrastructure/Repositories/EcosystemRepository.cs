@@ -3,6 +3,7 @@ using Athena.Domain.Ecosystem.Registry.Entities;
 using Athena.Domain.Ecosystem.Registry.Enums;
 using Athena.Domain.Ecosystem.Registry.Repositories;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;
+using Athena.Domain.Ecosystem.Management.Entities;
 using Athena.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,15 +58,55 @@ public class EcosystemRepository(AthenaDbContext context) : IEcosystemRepository
         return await context.Ecosystems.AnyAsync(ecosystem => ecosystem.Name == name, cancellationToken);
     }
 
-    public async Task AddAsync(Ecosystem ecosystem, CancellationToken cancellationToken = default)
+    public async Task AddAsync(Ecosystem ecosystem, EcosystemLifecycle lifecycle, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(ecosystem);
+        ArgumentNullException.ThrowIfNull(lifecycle);
+        if (lifecycle.Id != ecosystem.Id)
+            throw new ArgumentException("The lifecycle must belong to the Ecosystem being created.", nameof(lifecycle));
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        var companyDatabaseId = await context.Companies
+            .Where(company => company.Id == ecosystem.CompanyId && !company.IsDeleted)
+            .Select(company => (int?)EF.Property<int>(company, "id"))
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Company '{ecosystem.CompanyId.Value}' does not exist.");
+        context.Entry(ecosystem).Property<int>("company_database_id").CurrentValue = companyDatabaseId;
         await context.Ecosystems.AddAsync(ecosystem, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
+
+        var ecosystemDatabaseId = await context.Ecosystems
+            .Where(entity => entity.Id == ecosystem.Id)
+            .Select(entity => EF.Property<int>(entity, "id"))
+            .SingleAsync(cancellationToken);
+        context.Entry(lifecycle).Property<int>("ecosystem_database_id").CurrentValue = ecosystemDatabaseId;
+        await context.EcosystemLifecycles.AddAsync(lifecycle, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Ecosystem ecosystem, CancellationToken cancellationToken = default)
     {
-        context.Ecosystems.Update(ecosystem);
+        var ecosystemEntry = context.Entry(ecosystem);
+        if (ecosystemEntry.State == EntityState.Detached) context.Ecosystems.Update(ecosystem);
+        if (ecosystem.IsDeleted || ecosystem.RegistrationStatus != EcosystemRegistrationStatus.Registered)
+        {
+            var ecosystemDatabaseId = await context.Ecosystems
+                .Where(entity => entity.Id == ecosystem.Id)
+                .Select(entity => (int?)EF.Property<int>(entity, "id"))
+                .SingleOrDefaultAsync(cancellationToken);
+            if (ecosystemDatabaseId is not null)
+            {
+                var lifecycle = await context.EcosystemLifecycles.SingleOrDefaultAsync(
+                    entity => EF.Property<int>(entity, "ecosystem_database_id") == ecosystemDatabaseId,
+                    cancellationToken);
+                if (lifecycle is not null && !lifecycle.IsDeleted)
+                {
+                    if (ecosystem.IsDeleted) lifecycle.Delete();
+                    else lifecycle.SetOperationalStatus(Athena.Domain.Ecosystem.Management.Enums.EcosystemOperationalStatus.Unknown);
+                }
+            }
+        }
         await context.SaveChangesAsync(cancellationToken);
     }
 }

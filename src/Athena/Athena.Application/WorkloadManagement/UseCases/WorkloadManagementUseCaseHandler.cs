@@ -45,8 +45,11 @@ public sealed class WorkloadManagementUseCaseHandler(
         {
             if (!Enum.TryParse<WorkloadDesiredState>(state, true, out var desired) || !Enum.IsDefined(desired))
                 throw Error(WorkloadManagementErrorCode.InvalidDesiredState, $"Desired state '{state}' is invalid.");
-            var lifecycle = await GetRequiredLifecycleAsync(WorkloadId.Create(id), token);
+            var workloadId = WorkloadId.Create(id);
+            EnsureRegistered(await GetWorkloadAsync(workloadId, token));
+            var lifecycle = await GetRequiredLifecycleAsync(workloadId, token);
             lifecycle.SetDesiredState(desired);
+            lifecycle.SetOperationalStatus(WorkloadOperationalStatus.Unknown);
             await lifecycleRepository.UpdateAsync(lifecycle, token);
             return ToDto(lifecycle);
         });
@@ -57,35 +60,21 @@ public sealed class WorkloadManagementUseCaseHandler(
             if (!Enum.TryParse<WorkloadOperationType>(type, true, out var operationType) || !Enum.IsDefined(operationType))
                 throw Error(WorkloadManagementErrorCode.InvalidOperationType, $"Operation type '{type}' is invalid.");
             var workloadId = WorkloadId.Create(id);
+            EnsureRegistered(await GetWorkloadAsync(workloadId, token));
             var lifecycle = await GetRequiredLifecycleAsync(workloadId, token);
             var operation = WorkloadOperation.Create(Guid.NewGuid(), workloadId, operationType);
-            await operationRepository.AddAsync(operation, token);
+            var desired = operationType switch
+            {
+                WorkloadOperationType.Start or WorkloadOperationType.Restart => WorkloadDesiredState.Running,
+                WorkloadOperationType.Stop => WorkloadDesiredState.Stopped,
+                _ => throw Error(WorkloadManagementErrorCode.InvalidOperationType, $"Operation type '{type}' is invalid.")
+            };
+            lifecycle.SetDesiredState(desired);
+            lifecycle.SetOperationalStatus(WorkloadOperationalStatus.Unknown);
             operation.Start();
-            await operationRepository.UpdateAsync(operation, CancellationToken.None);
-            try
-            {
-                var (desired, interim, final) = operationType switch
-                {
-                    WorkloadOperationType.Start => (WorkloadDesiredState.Running, WorkloadOperationalStatus.Starting, WorkloadOperationalStatus.Running),
-                    WorkloadOperationType.Stop => (WorkloadDesiredState.Stopped, WorkloadOperationalStatus.Stopping, WorkloadOperationalStatus.Stopped),
-                    WorkloadOperationType.Restart => (WorkloadDesiredState.Running, WorkloadOperationalStatus.Starting, WorkloadOperationalStatus.Running),
-                    _ => throw Error(WorkloadManagementErrorCode.InvalidOperationType, $"Operation type '{type}' is invalid.")
-                };
-                lifecycle.SetDesiredState(desired);
-                lifecycle.SetOperationalStatus(interim);
-                await lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
-                lifecycle.SetOperationalStatus(final);
-                await lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
-                operation.Complete();
-                await operationRepository.UpdateAsync(operation, CancellationToken.None);
-                return ToDto(operation);
-            }
-            catch (Exception exception)
-            {
-                operation.Fail(exception.Message);
-                await operationRepository.UpdateAsync(operation, CancellationToken.None);
-                throw;
-            }
+            operation.Complete();
+            await operationRepository.SaveIntentAsync(operation, lifecycle, token);
+            return ToDto(operation);
         });
 
     public Task<IReadOnlyList<WorkloadOperationDto>> GetOperationsAsync(Guid id, CancellationToken token = default) =>
@@ -98,6 +87,12 @@ public sealed class WorkloadManagementUseCaseHandler(
 
     private async Task<Athena.Domain.Workload.Registry.Entities.Workload> GetWorkloadAsync(WorkloadId id, CancellationToken token) =>
         await workloadRepository.GetByIdAsync(id, token) ?? throw new WorkloadNotFoundException(id.Value);
+
+    private static void EnsureRegistered(Athena.Domain.Workload.Registry.Entities.Workload workload)
+    {
+        if (workload.RegistrationStatus != Athena.Domain.Workload.Registry.Enums.WorkloadRegistrationStatus.Registered)
+            throw new WorkloadNotRegisteredException(workload.Id.Value);
+    }
 
     private async Task<WorkloadLifecycle> GetRequiredLifecycleAsync(WorkloadId id, CancellationToken token) =>
         await lifecycleRepository.GetByIdAsync(id, token)

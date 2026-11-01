@@ -8,14 +8,14 @@ public class HttpEndpointAvailabilityChecker(HttpClient httpClient) : IEndpointA
     public async Task<bool> CheckAvailabilityAsync(string baseAddress, CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Head, baseAddress);
-        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        if (response.StatusCode is HttpStatusCode.MethodNotAllowed or HttpStatusCode.NotImplemented)
+        using (var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
         {
-            using var getRequest = new HttpRequestMessage(HttpMethod.Get, baseAddress);
-            using var getResponse = await httpClient.SendAsync(getRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            return true;
+            if (response.StatusCode is not (HttpStatusCode.MethodNotAllowed or HttpStatusCode.NotImplemented))
+                return response.IsSuccessStatusCode;
         }
 
-        return true;
+        using var getRequest = new HttpRequestMessage(HttpMethod.Get, baseAddress);
+        using var getResponse = await httpClient.SendAsync(getRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        return getResponse.IsSuccessStatusCode;
     }
 }

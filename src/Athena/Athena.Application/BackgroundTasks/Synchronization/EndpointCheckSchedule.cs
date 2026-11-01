@@ -20,6 +20,20 @@ public class EndpointCheckSchedule
         _results[key] = new EndpointCheckResult(checkedAtUtc, isAvailable);
     }
 
+    public void PruneObsoleteEndpoints(Guid systemId, IReadOnlyList<SystemEndpointDto> endpoints)
+    {
+        var currentKeys = endpoints
+            .Select(endpoint => CreateKey(systemId, endpoint.Name, endpoint.BaseAddress))
+            .ToHashSet(StringComparer.Ordinal);
+        var systemPrefix = $"{systemId:N}:";
+        foreach (var key in _results.Keys)
+        {
+            if (key.StartsWith(systemPrefix, StringComparison.Ordinal)
+                && !currentKeys.Contains(key))
+                _results.TryRemove(key, out _);
+        }
+    }
+
     public string DetermineAvailability(Guid systemId, IReadOnlyList<SystemEndpointDto> endpoints)
     {
         if (endpoints.Count == 0) return "Unknown";

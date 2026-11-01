@@ -1,4 +1,5 @@
 using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
+using Athena.Application.SystemRegistry.Dtos;
 using Athena.Application.SystemRegistry.Commands;
 using Athena.Application.SystemRegistry.UseCases;
 using Athena.Domain.System.Registry.Enums;
@@ -21,39 +22,62 @@ public sealed class SystemEndpointSynchronizationService(
         foreach (var system in systems)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (system.IsDeleted || !string.Equals(system.RegistrationStatus, "Registered", StringComparison.OrdinalIgnoreCase))
+            var isRegistered = !system.IsDeleted
+                && string.Equals(system.RegistrationStatus, "Registered", StringComparison.OrdinalIgnoreCase);
+            endpointCheckSchedule.PruneObsoleteEndpoints(
+                system.Id,
+                isRegistered ? system.Endpoints : Array.Empty<SystemEndpointDto>());
+            if (!isRegistered)
                 continue;
 
-            foreach (var endpoint in system.Endpoints)
+            try
             {
-                if (!endpointCheckSchedule.ShouldCheck(system.Id, endpoint.Name, endpoint.BaseAddress, nowUtc, EndpointCheckInterval))
+                foreach (var endpoint in system.Endpoints)
+                {
+                    if (!endpointCheckSchedule.ShouldCheck(system.Id, endpoint.Name, endpoint.BaseAddress, nowUtc, EndpointCheckInterval))
+                        continue;
+
+                    bool isAvailable;
+                    try
+                    {
+                        isAvailable = await endpointAvailabilityChecker.CheckAvailabilityAsync(endpoint.BaseAddress, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception exception)
+                    {
+                        isAvailable = false;
+                        logger.LogWarning(
+                            exception,
+                            "Endpoint synchronization phase {Phase} failed for endpoint {EndpointName} of system {SystemId}. Cause: {Cause}.",
+                            "check-endpoint",
+                            endpoint.Name,
+                            system.Id,
+                            exception.GetType().Name);
+                    }
+
+                    endpointCheckSchedule.RecordResult(system.Id, endpoint.Name, endpoint.BaseAddress, isAvailable, DateTime.UtcNow);
+                }
+
+                var availabilityStatus = endpointCheckSchedule.DetermineAvailability(system.Id, system.Endpoints);
+                if (string.Equals(system.AvailabilityStatus, availabilityStatus, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                bool isAvailable;
-                try
-                {
-                    isAvailable = await endpointAvailabilityChecker.CheckAvailabilityAsync(endpoint.BaseAddress, cancellationToken);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch (Exception exception)
-                {
-                    isAvailable = false;
-                    logger.LogWarning(exception, "Availability check failed for endpoint {EndpointName} of system {SystemId}.", endpoint.Name, system.Id);
-                }
-
-                endpointCheckSchedule.RecordResult(system.Id, endpoint.Name, endpoint.BaseAddress, isAvailable, nowUtc);
+                await UpdateAvailabilityStatusAsync(system.Id, availabilityStatus, cancellationToken);
+                logger.LogInformation("System {SystemId} endpoint availability changed from {PreviousStatus} to {CurrentStatus}.",
+                    system.Id, system.AvailabilityStatus, availabilityStatus);
             }
-
-            var availabilityStatus = endpointCheckSchedule.DetermineAvailability(system.Id, system.Endpoints);
-            if (string.Equals(system.AvailabilityStatus, availabilityStatus, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            await UpdateAvailabilityStatusAsync(system.Id, availabilityStatus, cancellationToken);
-            logger.LogInformation("System {SystemId} endpoint availability changed from {PreviousStatus} to {CurrentStatus}.",
-                system.Id, system.AvailabilityStatus, availabilityStatus);
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Endpoint synchronization failed for system {SystemId} during phase {Phase}; continuing with the next system.",
+                    system.Id, "update-availability");
+            }
         }
     }
 

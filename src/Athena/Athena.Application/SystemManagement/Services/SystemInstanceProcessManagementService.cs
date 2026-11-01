@@ -55,20 +55,15 @@ public sealed class SystemInstanceProcessManagementService(
             SystemId.Create(request.SystemId.Value),
             WorkloadId.Create(request.WorkloadId.Value),
             SystemInstanceName.Create(request.Name ?? string.Empty));
-        await _repository.AddAsync(instance, cancellationToken);
-        await _lifecycleRepository.AddAsync(SystemInstanceLifecycle.Create(instance.Id), cancellationToken);
+        var lifecycle = SystemInstanceLifecycle.Create(instance.Id);
+        await _repository.AddAsync(instance, lifecycle, cancellationToken);
 
         return await RecordOperationAsync(
             instance,
             SystemInstanceOperationType.Create,
             () => _executionAgent.CreateAsync(ToAgentRequest(instance, request.Details), cancellationToken),
             response => ValidateStatus(response, instance.Id.Value),
-            async response =>
-            {
-                var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
-                lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
-                await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
-            },
+            static _ => Task.CompletedTask,
             cancellationToken);
     }
 
@@ -85,13 +80,10 @@ public sealed class SystemInstanceProcessManagementService(
             SystemInstanceOperationType.Register,
             () => _executionAgent.RegisterAsync(ToAgentRequest(instance, request.Details), cancellationToken),
             response => ValidateStatus(response, instance.Id.Value),
-            async response =>
+            async _ =>
             {
                 instance.Register();
-                var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
-                lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
                 await _repository.UpdateAsync(instance, CancellationToken.None);
-                await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
             },
             cancellationToken);
     }
@@ -114,14 +106,7 @@ public sealed class SystemInstanceProcessManagementService(
             SystemInstanceOperationType.Remove,
             () => _executionAgent.RemoveAsync(systemInstanceId, cancellationToken),
             response => ValidateStatus(response, systemInstanceId),
-            async _ =>
-            {
-                var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
-                lifecycle.Delete();
-                await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
-                instance.Delete();
-                await _repository.UpdateAsync(instance, CancellationToken.None);
-            },
+            static _ => Task.CompletedTask,
             cancellationToken);
     }
 
@@ -130,18 +115,64 @@ public sealed class SystemInstanceProcessManagementService(
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
         var response = await _executionAgent.GetStatusAsync(systemInstanceId, cancellationToken);
         ValidateStatus(response, systemInstanceId);
-        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
+        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+            return response;
+
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
+        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+            return response;
         lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
-        await _lifecycleRepository.UpdateAsync(lifecycle, CancellationToken.None);
+        await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
         return response;
     }
 
     public async Task MarkUnreachableAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
     {
+        await MarkStatusUnobservableAsync(systemInstanceId, SystemInstanceOperationalStatus.Unreachable, cancellationToken);
+    }
+
+    public async Task<bool> SynchronizeStatusAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
+    {
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
+        if (instance.RegistrationStatus != SystemInstanceRegistrationStatus.Registered)
+            return false;
+
         var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
-        lifecycle.SetOperationalStatus(SystemInstanceOperationalStatus.Unreachable);
+        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+            return false;
+
+        var response = await _executionAgent.GetStatusAsync(systemInstanceId, cancellationToken);
+        ValidateStatus(response, systemInstanceId);
+        var observedStatus = ParseOperationalStatus(response.State);
+
+        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+            return false;
+
+        lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
+        var changed = lifecycle.OperationalStatus != observedStatus;
+        lifecycle.SetOperationalStatus(observedStatus);
         await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
+        return changed;
+    }
+
+    public async Task<bool> MarkStatusUnobservableAsync(
+        Guid systemInstanceId,
+        SystemInstanceOperationalStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        if (status is not (SystemInstanceOperationalStatus.Unknown or SystemInstanceOperationalStatus.Unreachable))
+            throw new ArgumentOutOfRangeException(nameof(status), "Only Unknown and Unreachable describe an unobservable SystemInstance.");
+
+        var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
+        if (instance.RegistrationStatus != SystemInstanceRegistrationStatus.Registered
+            || await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+            return false;
+
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
+        var changed = lifecycle.OperationalStatus != status;
+        lifecycle.SetOperationalStatus(status);
+        await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
+        return changed;
     }
 
     public async Task<SystemInstanceExecutionHealth> GetHealthAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
@@ -207,19 +238,13 @@ public sealed class SystemInstanceProcessManagementService(
 
         var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
         lifecycle.SetDesiredState(desiredState);
-        await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
 
         return await RecordOperationAsync(
             instance,
             operationType,
             () => operation(systemInstanceId, cancellationToken),
             response => ValidateStatus(response, systemInstanceId),
-            async response =>
-            {
-                var currentLifecycle = await GetRequiredLifecycleAsync(instance.Id, CancellationToken.None);
-                currentLifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
-                await _lifecycleRepository.UpdateAsync(currentLifecycle, CancellationToken.None);
-            },
+            static _ => Task.CompletedTask,
             cancellationToken);
     }
 
@@ -228,13 +253,13 @@ public sealed class SystemInstanceProcessManagementService(
         SystemInstanceOperationType operationType,
         Func<Task<T>> execute,
         Action<T> validate,
-        Func<T, Task> applyResult,
+        Func<T, Task> applyAcceptedResult,
         CancellationToken cancellationToken)
     {
         var operation = SystemInstanceOperation.Create(instance.Id, operationType);
-        await _operationRepository.AddAsync(operation, cancellationToken);
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
         operation.Start();
-        await _operationRepository.UpdateAsync(operation, CancellationToken.None);
+        await _operationRepository.AddWithLifecycleAsync(operation, lifecycle, cancellationToken);
 
         T result;
         try
@@ -244,25 +269,32 @@ public sealed class SystemInstanceProcessManagementService(
         }
         catch (Exception exception)
         {
-            await FailOperationPreservingExceptionAsync(operation, exception);
+            if (IsDefiniteAgentCommandFailure(exception))
+                await FailOperationPreservingExceptionAsync(operation, exception);
             ExceptionDispatchInfo.Capture(exception).Throw();
             throw;
         }
 
         try
         {
-            await applyResult(result);
+            await applyAcceptedResult(result);
         }
-        catch (Exception persistenceException)
+        catch (Exception localStateException)
         {
-            await CompleteOperationPreservingExceptionAsync(operation, persistenceException);
-            ExceptionDispatchInfo.Capture(persistenceException).Throw();
-            throw;
+            throw new AggregateException(
+                $"Execution agent accepted operation '{operation.Id}', but the corresponding local registry update could not be persisted.",
+                localStateException);
         }
-
-        operation.Complete();
-        await _operationRepository.UpdateAsync(operation, CancellationToken.None);
         return result;
+    }
+
+    private static bool IsDefiniteAgentCommandFailure(Exception exception)
+    {
+        if (exception is ExecutionAgentNotConfiguredException)
+            return true;
+
+        return exception is HttpRequestException { StatusCode: { } statusCode }
+            && (int)statusCode is >= 400 and < 500;
     }
 
     private async Task FailOperationPreservingExceptionAsync(SystemInstanceOperation operation, Exception originalException)
@@ -276,22 +308,6 @@ public sealed class SystemInstanceProcessManagementService(
         {
             throw new AggregateException(
                 $"Operation '{operation.Id}' failed and its failure status could not be persisted.",
-                originalException,
-                persistenceException);
-        }
-    }
-
-    private async Task CompleteOperationPreservingExceptionAsync(SystemInstanceOperation operation, Exception originalException)
-    {
-        operation.Complete();
-        try
-        {
-            await _operationRepository.UpdateAsync(operation, CancellationToken.None);
-        }
-        catch (Exception persistenceException)
-        {
-            throw new AggregateException(
-                $"The remote operation '{operation.Id}' succeeded, but local state persistence and operation completion both failed.",
                 originalException,
                 persistenceException);
         }

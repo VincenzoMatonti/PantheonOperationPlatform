@@ -25,6 +25,7 @@ public interface IEcosystemManagement
     Task<EcosystemLifecycleDto?> GetLifecycleAsync(Guid ecosystemId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<EcosystemLifecycleDto>> GetLifecyclesAsync(CancellationToken cancellationToken = default);
     Task<EcosystemLifecycleDto> SetDesiredStateAsync(Guid ecosystemId, string desiredState, CancellationToken cancellationToken = default);
+    // Completion confirms that intent was persisted; it does not operate the Ecosystem.
     Task<EcosystemOperationDto> ExecuteOperationAsync(Guid ecosystemId, string operationType, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<EcosystemOperationDto>> GetOperationsAsync(Guid ecosystemId, CancellationToken cancellationToken = default);
 }

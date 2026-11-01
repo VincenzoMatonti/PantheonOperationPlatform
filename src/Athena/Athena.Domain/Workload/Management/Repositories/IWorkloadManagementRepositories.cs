@@ -15,6 +15,7 @@ public interface IWorkloadLifecycleRepository
 public interface IWorkloadOperationRepository
 {
     Task AddAsync(WorkloadOperation operation, CancellationToken cancellationToken = default);
+    Task SaveIntentAsync(WorkloadOperation operation, WorkloadLifecycle lifecycle, CancellationToken cancellationToken = default);
     Task UpdateAsync(WorkloadOperation operation, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<WorkloadOperation>> GetByWorkloadIdAsync(WorkloadId id, CancellationToken cancellationToken = default);
 }

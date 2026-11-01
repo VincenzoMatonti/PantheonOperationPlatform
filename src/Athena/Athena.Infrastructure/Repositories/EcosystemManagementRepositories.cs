@@ -12,7 +12,7 @@ public sealed class EcosystemLifecycleRepository(AthenaDbContext context) : IEco
     {
         var dbId = await FindDatabaseIdAsync(id, cancellationToken);
         if (dbId is null) return null;
-        return await context.EcosystemLifecycles.SingleOrDefaultAsync(x => EF.Property<int>(x, "ecosystem_database_id") == dbId && !x.IsDeleted, cancellationToken);
+        return await context.EcosystemLifecycles.SingleOrDefaultAsync(x => EF.Property<int>(x, "ecosystem_database_id") == dbId, cancellationToken);
     }
     public async Task<IReadOnlyList<EcosystemLifecycle>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await context.EcosystemLifecycles.Where(x => !x.IsDeleted).ToListAsync(cancellationToken);
@@ -43,6 +43,28 @@ public sealed class EcosystemOperationRepository(AthenaDbContext context) : IEco
             .Select(x => (int?)EF.Property<int>(x, "id")).SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"Ecosystem '{operation.EcosystemId.Value}' does not exist.");
         context.Entry(operation).Property<int>("ecosystem_database_id").CurrentValue = dbId;
+        await context.EcosystemOperations.AddAsync(operation, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task SaveIntentAsync(
+        EcosystemOperation operation,
+        EcosystemLifecycle lifecycle,
+        CancellationToken cancellationToken = default)
+    {
+        if (operation.EcosystemId != lifecycle.Id)
+            throw new ArgumentException("The lifecycle must belong to the operation's Ecosystem.", nameof(lifecycle));
+
+        var dbId = await context.Ecosystems.Where(x => x.Id == operation.EcosystemId)
+            .Select(x => (int?)EF.Property<int>(x, "id")).SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Ecosystem '{operation.EcosystemId.Value}' does not exist.");
+        context.Entry(operation).Property<int>("ecosystem_database_id").CurrentValue = dbId;
+        var lifecycleEntry = context.Entry(lifecycle);
+        if (lifecycleEntry.State == EntityState.Detached)
+        {
+            context.EcosystemLifecycles.Update(lifecycle);
+            lifecycleEntry = context.Entry(lifecycle);
+        }
+        lifecycleEntry.Property<int>("ecosystem_database_id").CurrentValue = dbId;
         await context.EcosystemOperations.AddAsync(operation, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }

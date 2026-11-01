@@ -2,6 +2,7 @@ using Athena.Domain.Block.Registry.ValueObjects;
 using WorkloadEntity = Athena.Domain.Workload.Registry.Entities.Workload;
 using Athena.Domain.Workload.Registry.Enums;
 using Athena.Domain.Workload.Registry.ValueObjects;
+using Athena.Domain.Workload.Management.Entities;
 
 namespace Athena.Domain.Workload.Registry.Repositories;
 
@@ -16,6 +17,6 @@ public interface IWorkloadRepository
     Task<IReadOnlyList<WorkloadEntity>> GetByDeletionStatusAsync(bool isDeleted, CancellationToken cancellationToken = default);
     Task<bool> ExistsByIdAsync(WorkloadId id, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNameAsync(BlockId blockId, WorkloadName name, CancellationToken cancellationToken = default);
-    Task AddAsync(WorkloadEntity workload, CancellationToken cancellationToken = default);
+    Task AddAsync(WorkloadEntity workload, WorkloadLifecycle lifecycle, CancellationToken cancellationToken = default);
     Task UpdateAsync(WorkloadEntity workload, CancellationToken cancellationToken = default);
 }

@@ -2,6 +2,7 @@ using BlockEntity = Athena.Domain.Block.Registry.Entities.Block;
 using Athena.Domain.Block.Registry.Enums;
 using Athena.Domain.Block.Registry.ValueObjects;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;
+using Athena.Domain.Block.Management.Entities;
 
 namespace Athena.Domain.Block.Registry.Repositories;
 
@@ -23,6 +24,6 @@ public interface IBlockRepository
     Task<bool> ExistsByNameAsync(BlockName name, CancellationToken cancellationToken = default);
 
     // Persistence
-    Task AddAsync(BlockEntity block, CancellationToken cancellationToken = default);
+    Task AddAsync(BlockEntity block, BlockLifecycle lifecycle, CancellationToken cancellationToken = default);
     Task UpdateAsync(BlockEntity block, CancellationToken cancellationToken = default);
 }

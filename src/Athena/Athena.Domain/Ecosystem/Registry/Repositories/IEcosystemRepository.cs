@@ -2,6 +2,7 @@ using Athena.Domain.Company.ValueObjects;
 using EcosystemEntity = Athena.Domain.Ecosystem.Registry.Entities.Ecosystem;
 using Athena.Domain.Ecosystem.Registry.Enums;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;
+using Athena.Domain.Ecosystem.Management.Entities;
 
 namespace Athena.Domain.Ecosystem.Registry.Repositories;
 
@@ -23,6 +24,6 @@ public interface IEcosystemRepository
     Task<bool> ExistsByNameAsync(EcosystemName name, CancellationToken cancellationToken = default);
 
     // Persistence
-    Task AddAsync(EcosystemEntity ecosystem, CancellationToken cancellationToken = default);
+    Task AddAsync(EcosystemEntity ecosystem, EcosystemLifecycle lifecycle, CancellationToken cancellationToken = default);
     Task UpdateAsync(EcosystemEntity ecosystem, CancellationToken cancellationToken = default);
 }

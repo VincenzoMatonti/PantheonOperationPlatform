@@ -14,6 +14,7 @@ public interface IEcosystemLifecycleRepository
 public interface IEcosystemOperationRepository
 {
     Task AddAsync(EcosystemOperation operation, CancellationToken cancellationToken = default);
+    Task SaveIntentAsync(EcosystemOperation operation, EcosystemLifecycle lifecycle, CancellationToken cancellationToken = default);
     Task UpdateAsync(EcosystemOperation operation, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<EcosystemOperation>> GetByEcosystemIdAsync(EcosystemId id, CancellationToken cancellationToken = default);
 }

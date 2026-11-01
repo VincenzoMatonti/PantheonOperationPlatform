@@ -25,6 +25,7 @@ public interface IBlockManagement
     Task<BlockLifecycleDto?> GetLifecycleAsync(Guid blockId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BlockLifecycleDto>> GetLifecyclesAsync(CancellationToken cancellationToken = default);
     Task<BlockLifecycleDto> SetDesiredStateAsync(Guid blockId, string desiredState, CancellationToken cancellationToken = default);
+    // Completion confirms that intent was persisted; it does not operate the Block.
     Task<BlockOperationDto> ExecuteOperationAsync(Guid blockId, string operationType, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BlockOperationDto>> GetOperationsAsync(Guid blockId, CancellationToken cancellationToken = default);
 }

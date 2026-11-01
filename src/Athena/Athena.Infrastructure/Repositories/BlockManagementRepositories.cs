@@ -12,7 +12,7 @@ public sealed class BlockLifecycleRepository(AthenaDbContext context) : IBlockLi
     {
         var dbId = await FindDatabaseIdAsync(id, cancellationToken);
         if (dbId is null) return null;
-        return await context.BlockLifecycles.SingleOrDefaultAsync(x => EF.Property<int>(x, "block_database_id") == dbId && !x.IsDeleted, cancellationToken);
+        return await context.BlockLifecycles.SingleOrDefaultAsync(x => EF.Property<int>(x, "block_database_id") == dbId, cancellationToken);
     }
     public async Task<IReadOnlyList<BlockLifecycle>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await context.BlockLifecycles.Where(x => !x.IsDeleted).ToListAsync(cancellationToken);
@@ -43,6 +43,28 @@ public sealed class BlockOperationRepository(AthenaDbContext context) : IBlockOp
             .Select(x => (int?)EF.Property<int>(x, "id")).SingleOrDefaultAsync(cancellationToken)
             ?? throw new InvalidOperationException($"Block '{operation.BlockId.Value}' does not exist.");
         context.Entry(operation).Property<int>("block_database_id").CurrentValue = dbId;
+        await context.BlockOperations.AddAsync(operation, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task SaveIntentAsync(
+        BlockOperation operation,
+        BlockLifecycle lifecycle,
+        CancellationToken cancellationToken = default)
+    {
+        if (operation.BlockId != lifecycle.Id)
+            throw new ArgumentException("The lifecycle must belong to the operation's Block.", nameof(lifecycle));
+
+        var dbId = await context.Blocks.Where(x => x.Id == operation.BlockId)
+            .Select(x => (int?)EF.Property<int>(x, "id")).SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Block '{operation.BlockId.Value}' does not exist.");
+        context.Entry(operation).Property<int>("block_database_id").CurrentValue = dbId;
+        var lifecycleEntry = context.Entry(lifecycle);
+        if (lifecycleEntry.State == EntityState.Detached)
+        {
+            context.BlockLifecycles.Update(lifecycle);
+            lifecycleEntry = context.Entry(lifecycle);
+        }
+        lifecycleEntry.Property<int>("block_database_id").CurrentValue = dbId;
         await context.BlockOperations.AddAsync(operation, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
