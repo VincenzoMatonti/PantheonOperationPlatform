@@ -2,6 +2,7 @@ using Athena.Application.OrchestrationManagement.DTOs;
 using Athena.Domain.Orchestration.Management.Entities;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Management.ValueObjects;
+using Athena.Domain.Orchestration.Registry.ValueObjects;
 
 namespace Athena.Application.OrchestrationManagement.Queries;
 
@@ -20,6 +21,16 @@ public class OrchestrationSystemInstanceQueryHandler(IOrchestrationSystemInstanc
     {
         var associations = await _orchestrationSystemRepository.GetAllAsync(query.IncludeDeleted, cancellationToken);
         return [.. associations.Select(ConvertOrchestrationSystemInstanceEntitiesToDto)];
+    }
+
+    public async Task<IReadOnlyList<OrchestrationSystemInstanceDto>> GetByOrchestrationIdAsync(
+        GetOrchestrationSystemInstancesByOrchestrationIdQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var orchestrationId = OrchestrationId.Create(query.OrchestrationId);
+        var associations = await _orchestrationSystemRepository.GetByOrchestrationIdAsync(
+            orchestrationId, includeDeleted: false, cancellationToken);
+        return associations.Select(ConvertOrchestrationSystemInstanceEntitiesToDto).ToArray();
     }
 
     public static OrchestrationSystemInstanceDto ConvertOrchestrationSystemInstanceEntitiesToDto(OrchestrationSystemInstance association) => new()

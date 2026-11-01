@@ -8,6 +8,11 @@ public interface ISystemInstanceOperationRepository
 {
     Task AddAsync(SystemInstanceOperation operation, CancellationToken cancellationToken = default);
     Task AddWithLifecycleAsync(SystemInstanceOperation operation, SystemInstanceLifecycle lifecycle, CancellationToken cancellationToken = default);
+    Task AddWithRegistryAsync(
+        SystemInstanceOperation operation,
+        SystemInstance systemInstance,
+        SystemInstanceLifecycle lifecycle,
+        CancellationToken cancellationToken = default);
     Task SaveWithLifecycleAsync(
         SystemInstanceOperation operation,
         SystemInstanceLifecycle lifecycle,
@@ -22,6 +27,7 @@ public interface ISystemInstanceOperationRepository
     Task<bool> SaveWithLifecycleIfLeaseOwnerAsync(
         SystemInstanceOperation operation,
         SystemInstanceLifecycle lifecycle,
+        SystemInstance? systemInstance,
         string leaseOwner,
         CancellationToken cancellationToken = default);
     Task<SystemInstanceOperation?> GetByIdAsync(Guid operationId, CancellationToken cancellationToken = default);

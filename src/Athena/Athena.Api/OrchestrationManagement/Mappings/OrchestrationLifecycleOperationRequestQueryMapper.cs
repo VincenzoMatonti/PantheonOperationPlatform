@@ -6,6 +6,12 @@ namespace Athena.Api.OrchestrationManagement.Mappings;
 
 public static class OrchestrationLifecycleOperationRequestQueryMapper
 {
+    public static GetAllOrchestrationLifecycleOperationsQuery ToGetAllQuery() => new();
+    public static GetPendingOrchestrationLifecycleOperationsQuery ToGetPendingQuery() => new();
+    public static GetRunningOrchestrationLifecycleOperationsQuery ToGetRunningQuery() => new();
+    public static GetFailedOrchestrationLifecycleOperationsQuery ToGetFailedQuery() => new();
+    public static GetDeletedOrchestrationLifecycleOperationsQuery ToGetDeletedQuery() => new();
+
     public static GetOrchestrationLifecycleOperationByIdQuery ToGetByIdQuery(Guid operationId)
     {
         return new GetOrchestrationLifecycleOperationByIdQuery { Id = operationId };
@@ -14,6 +20,17 @@ public static class OrchestrationLifecycleOperationRequestQueryMapper
     public static GetOrchestrationLifecycleOperationsByOrchestrationIdQuery ToGetByOrchestrationIdQuery(GetOrchestrationLifecycleOperationsByOrchestrationIdRequest request)
     {
         return new GetOrchestrationLifecycleOperationsByOrchestrationIdQuery { OrchestrationId = request.OrchestrationId };
+    }
+
+    public static GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusQuery ToGetByOrchestrationIdAndStatusQuery(
+        Guid orchestrationId,
+        GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequest request)
+    {
+        return new GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusQuery
+        {
+            OrchestrationId = orchestrationId,
+            Status = Enum.TryParse<OrchestrationLifecycleOperationStatus>(request.Status, true, out var status) ? status : default
+        };
     }
 
     public static GetOrchestrationLifecycleOperationsByTypeQuery ToGetByTypeQuery(GetOrchestrationLifecycleOperationsByTypeRequest request)
@@ -32,13 +49,4 @@ public static class OrchestrationLifecycleOperationRequestQueryMapper
         };
     }
 
-    public static GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusQuery ToGetByOrchestrationIdAndStatusQuery(
-        GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequest request)
-    {
-        return new GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusQuery
-        {
-            OrchestrationId = request.OrchestrationId,
-            Status = Enum.TryParse<OrchestrationLifecycleOperationStatus>(request.Status, true, out var status) ? status : default
-        };
-    }
 }

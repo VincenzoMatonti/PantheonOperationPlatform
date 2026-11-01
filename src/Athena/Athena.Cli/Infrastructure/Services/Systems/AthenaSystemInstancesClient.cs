@@ -24,11 +24,11 @@ public sealed class AthenaSystemInstancesClient(AthenaApiClient apiClient) : ISy
         }
     }
 
-    public Task<SystemInstanceStatusResponse> CreateAsync(CreateSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
-        _apiClient.PostAsync<CreateSystemInstanceRequest, SystemInstanceStatusResponse>(BasePath, request, cancellationToken);
+    public Task<SystemInstanceOperationResponse> CreateAsync(CreateSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<CreateSystemInstanceRequest, SystemInstanceOperationResponse>(BasePath, request, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> RegisterAsync(RegisterSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
-        _apiClient.PostAsync<RegisterSystemInstanceRequest, SystemInstanceStatusResponse>($"{BasePath}/register", request, cancellationToken);
+    public Task<SystemInstanceOperationResponse> RegisterAsync(RegisterSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<RegisterSystemInstanceRequest, SystemInstanceOperationResponse>($"{BasePath}/register", request, cancellationToken);
 
     public Task<SystemInstanceOperationResponse> StartAsync(Guid id, CancellationToken cancellationToken = default) =>
         _apiClient.PostAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}/start", cancellationToken);
@@ -39,9 +39,17 @@ public sealed class AthenaSystemInstancesClient(AthenaApiClient apiClient) : ISy
     public Task<SystemInstanceOperationResponse> RestartAsync(Guid id, CancellationToken cancellationToken = default) =>
         _apiClient.PostAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}/restart", cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> RemoveAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _apiClient.DeleteAsync<SystemInstanceStatusResponse>($"{BasePath}/{id}", cancellationToken);
+    public Task<SystemInstanceOperationResponse> RemoveAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _apiClient.DeleteAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}", cancellationToken);
 
+    public Task<SystemInstanceOperationResponse> UnregisterAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}/unregister", cancellationToken);
+
+    public Task<SystemInstanceOperationResponse> ConfigureAsync(Guid id, string configurationReference, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<ConfigureSystemInstanceRequest, SystemInstanceOperationResponse>(
+            $"{BasePath}/{id}/configure",
+            new ConfigureSystemInstanceRequest(configurationReference),
+            cancellationToken);
     public Task<SystemInstanceStatusResponse> GetStatusAsync(Guid id, CancellationToken cancellationToken = default) =>
         _apiClient.GetAsync<SystemInstanceStatusResponse>($"{BasePath}/{id}/status", cancellationToken);
 

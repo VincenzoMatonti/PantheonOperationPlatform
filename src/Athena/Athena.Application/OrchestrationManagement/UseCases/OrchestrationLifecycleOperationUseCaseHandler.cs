@@ -59,6 +59,11 @@ public class OrchestrationLifecycleOperationUseCaseHandler(
     public Task<List<OrchestrationLifecycleOperationDto>> GetAllOrchestrationLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetAllOrchestrationLifecycleOperationsAsync(cancellationToken));
 
+    public Task<List<OrchestrationLifecycleOperationDto>> GetAllOrchestrationLifecycleOperationsAsync(
+        GetAllOrchestrationLifecycleOperationsQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetAllOrchestrationLifecycleOperationsAsync(cancellationToken);
+
     public Task<List<OrchestrationLifecycleOperationDto>> GetOrchestrationLifecycleOperationsByOrchestrationIdAsync(
     GetOrchestrationLifecycleOperationsByOrchestrationIdQuery query, CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetOrchestrationLifecycleOperationsByOrchestrationIdAsync(query, cancellationToken));
@@ -87,13 +92,32 @@ public class OrchestrationLifecycleOperationUseCaseHandler(
     public Task<List<OrchestrationLifecycleOperationDto>> GetPendingOrchestrationLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetPendingOrchestrationLifecycleOperationsAsync(cancellationToken));
 
+    public Task<List<OrchestrationLifecycleOperationDto>> GetPendingOrchestrationLifecycleOperationsAsync(
+        GetPendingOrchestrationLifecycleOperationsQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetPendingOrchestrationLifecycleOperationsAsync(cancellationToken);
+
     public Task<List<OrchestrationLifecycleOperationDto>> GetRunningOrchestrationLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetRunningOrchestrationLifecycleOperationsAsync(cancellationToken));
+
+    public Task<List<OrchestrationLifecycleOperationDto>> GetRunningOrchestrationLifecycleOperationsAsync(
+        GetRunningOrchestrationLifecycleOperationsQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetRunningOrchestrationLifecycleOperationsAsync(cancellationToken);
 
     public Task<List<OrchestrationLifecycleOperationDto>> GetFailedOrchestrationLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetFailedOrchestrationLifecycleOperationsAsync(cancellationToken));
 
+    public Task<List<OrchestrationLifecycleOperationDto>> GetFailedOrchestrationLifecycleOperationsAsync(
+        GetFailedOrchestrationLifecycleOperationsQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetFailedOrchestrationLifecycleOperationsAsync(cancellationToken);
+
     public Task<List<OrchestrationLifecycleOperationDto>> GetDeletedOrchestrationLifecycleOperationsAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetDeletedOrchestrationLifecycleOperationsAsync(cancellationToken));
 
+    public Task<List<OrchestrationLifecycleOperationDto>> GetDeletedOrchestrationLifecycleOperationsAsync(
+        GetDeletedOrchestrationLifecycleOperationsQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetDeletedOrchestrationLifecycleOperationsAsync(cancellationToken);
 }

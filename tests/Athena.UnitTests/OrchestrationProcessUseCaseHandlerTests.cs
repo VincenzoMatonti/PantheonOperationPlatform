@@ -28,7 +28,7 @@ public sealed class OrchestrationProcessUseCaseHandlerTests
             commands,
             operations,
             new NoOpStatusSynchronizer(),
-            new EmptySystemInstanceAssociations(),
+            new EmptySystemInstanceQueries(),
             new UnusedProcessCoordinator(),
             new UnusedResourceCoordinator());
 
@@ -93,34 +93,12 @@ public sealed class OrchestrationProcessUseCaseHandlerTests
             Guid? excludedOrchestrationId = null) => Task.CompletedTask;
     }
 
-    private sealed class EmptySystemInstanceAssociations : IOrchestrationSystemInstanceRepository
+    private sealed class EmptySystemInstanceQueries : IOrchestrationSystemInstanceQueries
     {
-        public Task<OrchestrationSystemInstance?> GetByIdAsync(OrchestrationSystemInstanceId id, bool includeDeleted = false, CancellationToken cancellationToken = default) =>
-            Task.FromResult<OrchestrationSystemInstance?>(null);
-
-        public Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetAllAsync(bool includeDeleted = false, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyCollection<OrchestrationSystemInstance>>([]);
-
-        public Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetByOrchestrationIdAsync(OrchestrationId orchestrationId, bool includeDeleted = false, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyCollection<OrchestrationSystemInstance>>([]);
-
-        public Task<IReadOnlyCollection<OrchestrationSystemInstance>> GetBySystemInstanceIdAsync(SystemInstanceId systemId, bool includeDeleted = false, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyCollection<OrchestrationSystemInstance>>([]);
-
-        public Task<OrchestrationSystemInstance?> GetByOrchestrationAndSystemInstanceAsync(OrchestrationId orchestrationId, SystemInstanceId systemInstanceId, bool includeDeleted = false, CancellationToken cancellationToken = default) =>
-            Task.FromResult<OrchestrationSystemInstance?>(null);
-
-        public Task<bool> ExistsAsync(OrchestrationSystemInstanceId id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(false);
-
-        public Task<bool> AssociationExistsAsync(OrchestrationId orchestrationId, SystemInstanceId systemId, bool includeDeleted = true, CancellationToken cancellationToken = default) =>
-            Task.FromResult(false);
-
-        public Task AddAsync(OrchestrationSystemInstance association, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-
-        public Task UpdateAsync(OrchestrationSystemInstance association, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
+        public Task<IReadOnlyList<OrchestrationSystemInstanceDto>> GetByOrchestrationIdAsync(
+            GetOrchestrationSystemInstancesByOrchestrationIdQuery query,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<OrchestrationSystemInstanceDto>>([]);
     }
 
     private sealed class UnusedProcessCoordinator : ISystemInstanceProcessCoordinator

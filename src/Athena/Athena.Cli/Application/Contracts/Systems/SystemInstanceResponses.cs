@@ -42,4 +42,5 @@ public sealed record SystemInstanceOperationResponse(
     DateTime? AgentCompletedAtUtc = null,
     DateTime? LeaseExpiresAtUtc = null,
     int AttemptCount = 0,
-    string? ConvergenceStatus = null);
+    string? ConvergenceStatus = null,
+    int MaxAttempts = 8);

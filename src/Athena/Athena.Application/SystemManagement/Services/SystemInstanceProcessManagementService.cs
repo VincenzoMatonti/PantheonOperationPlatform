@@ -1,4 +1,5 @@
 using System.Runtime.ExceptionServices;
+using System.Text.Json;
 using Athena.Application.SystemManagement.Contracts;
 using Athena.Domain.System.Registry.Entities;
 using Athena.Domain.System.Registry.Enums;
@@ -64,6 +65,67 @@ public sealed class SystemInstanceProcessManagementService(
             () => _executionAgent.CreateAsync(ToAgentRequest(instance, request.Details), cancellationToken),
             response => ValidateStatus(response, instance.Id.Value),
             static _ => Task.CompletedTask,
+            cancellationToken);
+    }
+
+    public async Task<SystemInstanceOperationDto> CreateOperationAsync(
+        SystemInstanceExecutionCommandRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.SystemId is null || request.WorkloadId is null)
+            throw new ArgumentException("SystemId and WorkloadId are required to create a SystemInstance.", nameof(request));
+
+        var id = SystemInstanceId.Create(request.SystemInstanceId);
+        if (await _repository.ExistsByIdAsync(id, cancellationToken))
+            throw new InvalidOperationException($"SystemInstance '{request.SystemInstanceId}' already exists.");
+
+        var instance = SystemInstance.Create(
+            id,
+            SystemId.Create(request.SystemId.Value),
+            WorkloadId.Create(request.WorkloadId.Value),
+            SystemInstanceName.Create(request.Name ?? string.Empty));
+        var lifecycle = SystemInstanceLifecycle.Create(instance.Id);
+        var operation = SystemInstanceOperation.Create(
+            instance.Id,
+            SystemInstanceOperationType.Create,
+            SerializePayload(request.Details, request.ConfigurationReference));
+        await _operationRepository.AddWithRegistryAsync(operation, instance, lifecycle, cancellationToken);
+        return ToOperationDto(operation);
+    }
+
+    public Task<SystemInstanceOperationDto> RegisterOperationAsync(
+        SystemInstanceExecutionCommandRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return EnqueueOperationAsync(
+            request.SystemInstanceId,
+            SystemInstanceOperationType.Register,
+            SerializePayload(request.Details, request.ConfigurationReference),
+            cancellationToken);
+    }
+
+    public Task<SystemInstanceOperationDto> RemoveOperationAsync(
+        Guid systemInstanceId,
+        CancellationToken cancellationToken = default) =>
+        EnqueueOperationAsync(systemInstanceId, SystemInstanceOperationType.Remove, null, cancellationToken);
+
+    public Task<SystemInstanceOperationDto> UnregisterOperationAsync(
+        Guid systemInstanceId,
+        CancellationToken cancellationToken = default) =>
+        EnqueueOperationAsync(systemInstanceId, SystemInstanceOperationType.Unregister, null, cancellationToken);
+
+    public Task<SystemInstanceOperationDto> ConfigureOperationAsync(
+        Guid systemInstanceId,
+        string configurationReference,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(configurationReference);
+        return EnqueueOperationAsync(
+            systemInstanceId,
+            SystemInstanceOperationType.Configure,
+            JsonSerializer.Serialize(new { configurationReference }),
             cancellationToken);
     }
 
@@ -200,22 +262,55 @@ public sealed class SystemInstanceProcessManagementService(
     public async Task<SystemInstanceOperationDto> EnqueueOperationAsync(
         Guid systemInstanceId,
         SystemInstanceOperationType operationType,
+        string? commandPayloadJson = null,
         CancellationToken cancellationToken = default)
     {
-        if (operationType is not (SystemInstanceOperationType.Start or SystemInstanceOperationType.Stop or SystemInstanceOperationType.Restart))
-            throw new ArgumentOutOfRangeException(nameof(operationType), "Only Start, Stop, and Restart can be queued asynchronously.");
+        if (!Enum.IsDefined(operationType))
+            throw new ArgumentOutOfRangeException(nameof(operationType), "The SystemInstance operation type is invalid.");
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
-        EnsureRegistered(instance);
+        switch (operationType)
+        {
+            case SystemInstanceOperationType.Start:
+            case SystemInstanceOperationType.Stop:
+            case SystemInstanceOperationType.Restart:
+            case SystemInstanceOperationType.Configure:
+                EnsureRegistered(instance);
+                break;
+            case SystemInstanceOperationType.Register:
+                EnsureCanRegister(instance);
+                break;
+            case SystemInstanceOperationType.Unregister:
+                EnsureRegistered(instance);
+                break;
+            case SystemInstanceOperationType.Remove:
+                break;
+            case SystemInstanceOperationType.Create:
+                if (instance.RegistrationStatus != SystemInstanceRegistrationStatus.Unregistered)
+                    throw new InvalidOperationException($"SystemInstance '{systemInstanceId}' must be unregistered to process Create.");
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(operationType));
+        }
         var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
         if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
             throw new InvalidOperationException($"SystemInstance '{systemInstanceId}' already has an active operation.");
 
-        lifecycle.SetDesiredState(operationType == SystemInstanceOperationType.Stop
-            ? SystemInstanceDesiredState.Stopped
-            : SystemInstanceDesiredState.Running);
-        var operation = SystemInstanceOperation.Create(instance.Id, operationType);
+        if (operationType is SystemInstanceOperationType.Start or SystemInstanceOperationType.Restart)
+            lifecycle.SetDesiredState(SystemInstanceDesiredState.Running);
+        else if (operationType == SystemInstanceOperationType.Stop)
+            lifecycle.SetDesiredState(SystemInstanceDesiredState.Stopped);
+        var operation = SystemInstanceOperation.Create(instance.Id, operationType, commandPayloadJson);
         await _operationRepository.AddWithLifecycleAsync(operation, lifecycle, cancellationToken);
         return ToOperationDto(operation);
+    }
+
+    private static string? SerializePayload(string? details, string? configurationReference)
+    {
+        if (!string.IsNullOrWhiteSpace(details))
+            throw new ArgumentException("Queued operations do not persist inline details. Store configuration separately and pass a non-secret reference.", nameof(details));
+        return string.IsNullOrWhiteSpace(configurationReference)
+            ? null
+            : JsonSerializer.Serialize(new { configurationReference });
     }
 
     public async Task<SystemInstanceOperationDto?> GetOperationAsync(
@@ -393,7 +488,8 @@ public sealed class SystemInstanceProcessManagementService(
             operation.AgentCompletedAtUtc,
             operation.LeaseExpiresAtUtc,
             operation.AttemptCount,
-            GetConvergenceStatus(operation, lifecycle));
+            GetConvergenceStatus(operation, lifecycle),
+            operation.MaxAttempts);
 
     private static string? GetConvergenceStatus(
         SystemInstanceOperation operation,

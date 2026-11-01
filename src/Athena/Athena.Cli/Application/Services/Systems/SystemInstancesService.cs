@@ -13,10 +13,10 @@ public sealed class SystemInstancesService(ISystemInstances systemInstances)
     public Task<SystemInstanceProcessResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.GetByIdAsync(id, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> CreateAsync(CreateSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
+    public Task<SystemInstanceOperationResponse> CreateAsync(CreateSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
         _systemInstances.CreateAsync(request, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> RegisterAsync(RegisterSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
+    public Task<SystemInstanceOperationResponse> RegisterAsync(RegisterSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
         _systemInstances.RegisterAsync(request, cancellationToken);
 
     public Task<SystemInstanceOperationResponse> StartAsync(Guid id, CancellationToken cancellationToken = default) =>
@@ -28,8 +28,14 @@ public sealed class SystemInstancesService(ISystemInstances systemInstances)
     public Task<SystemInstanceOperationResponse> RestartAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.RestartAsync(id, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> RemoveAsync(Guid id, CancellationToken cancellationToken = default) =>
+    public Task<SystemInstanceOperationResponse> RemoveAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.RemoveAsync(id, cancellationToken);
+
+    public Task<SystemInstanceOperationResponse> UnregisterAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _systemInstances.UnregisterAsync(id, cancellationToken);
+
+    public Task<SystemInstanceOperationResponse> ConfigureAsync(Guid id, string configurationReference, CancellationToken cancellationToken = default) =>
+        _systemInstances.ConfigureAsync(id, configurationReference, cancellationToken);
 
     public Task<SystemInstanceStatusResponse> GetStatusAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.GetStatusAsync(id, cancellationToken);

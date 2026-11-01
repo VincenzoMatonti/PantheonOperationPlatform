@@ -1,5 +1,8 @@
 namespace Athena.Application.WorkloadManagement.Contracts;
 
+using Athena.Application.WorkloadManagement.Commands;
+using Athena.Application.WorkloadManagement.Queries;
+
 public sealed record WorkloadLifecycleDto(
     Guid WorkloadId,
     string DesiredState,
@@ -21,6 +24,13 @@ public sealed record WorkloadOperationDto(
 
 public interface IWorkloadManagement
 {
+    Task<WorkloadLifecycleDto> CreateLifecycleAsync(CreateWorkloadLifecycleCommand command, CancellationToken cancellationToken = default);
+    Task<WorkloadLifecycleDto?> GetLifecycleAsync(GetWorkloadLifecycleQuery query, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<WorkloadLifecycleDto>> GetLifecyclesAsync(GetWorkloadLifecyclesQuery query, CancellationToken cancellationToken = default);
+    Task<WorkloadLifecycleDto> SetDesiredStateAsync(SetWorkloadDesiredStateCommand command, CancellationToken cancellationToken = default);
+    Task<WorkloadOperationDto> ExecuteOperationAsync(ExecuteWorkloadOperationCommand command, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<WorkloadOperationDto>> GetOperationsAsync(GetWorkloadOperationsQuery query, CancellationToken cancellationToken = default);
+
     Task<WorkloadLifecycleDto> CreateLifecycleAsync(Guid workloadId, CancellationToken cancellationToken = default);
     Task<WorkloadLifecycleDto?> GetLifecycleAsync(Guid workloadId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<WorkloadLifecycleDto>> GetLifecyclesAsync(CancellationToken cancellationToken = default);

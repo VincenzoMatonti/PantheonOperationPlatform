@@ -7,6 +7,9 @@ namespace Athena.Api.SystemRegistry.Mappings;
 
 public static class SystemRegistryQueryRequestMapper
 {
+    public static GetAllSystemsQuery ToGetAllQuery() => new();
+    public static GetDeletedSystemsQuery ToGetDeletedQuery() => new();
+
     public static GetSystemByIdQuery ToByIdQuery(Guid id) => new() { SystemId = id };
     public static GetSystemByNameQuery ToQuery(GetSystemByNameRequest request) => new() { Name = request.Name };
     public static GetSystemsByRegistrationStatusQuery ToQuery(SystemRegistrationStatusFilter status) => new() { Status = status };

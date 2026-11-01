@@ -804,6 +804,10 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("command_dispatched_at_utc");
 
+                    b.Property<string>("CommandPayloadJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("command_payload_json");
+
                     b.Property<DateTime?>("CompletedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_at_utc");
@@ -829,6 +833,12 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("lease_owner");
+
+                    b.Property<int>("MaxAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(8)
+                        .HasColumnName("max_attempts");
 
                     b.Property<DateTime?>("NextAttemptAtUtc")
                         .HasColumnType("timestamp with time zone")

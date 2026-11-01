@@ -6,6 +6,9 @@ namespace Athena.Api.OrchestrationManagement.Mappings;
 
 public static class OrchestrationLifecycleRequestCommandMapper
 {
+    public static CreateOrchestrationLifecycleCommand ToCreateLifecycleCommand(Guid orchestrationId) =>
+        new(orchestrationId);
+
     public static SetOrchestrationDesiredStateCommand ToSetDesiredStateCommand(Guid orchestrationId, SetOrchestrationDesiredStateRequest request)
     {
         return new SetOrchestrationDesiredStateCommand

@@ -6,6 +6,10 @@ namespace Athena.Api.OrchestrationManagement.Mappings;
 
 public static class OrchestrationLifecycleRequestQueryMapper
 {
+    public static GetAllOrchestrationLifecyclesQuery ToGetAllQuery() => new();
+
+    public static GetDeletedOrchestrationLifecyclesQuery ToGetDeletedQuery() => new();
+
     public static GetOrchestrationLifecycleByIdQuery ToGetByIdQuery(Guid orchestrationId)
     {
         return new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId };

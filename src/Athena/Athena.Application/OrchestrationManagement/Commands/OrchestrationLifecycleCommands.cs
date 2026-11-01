@@ -4,6 +4,8 @@ using Athena.Application.OrchestrationManagement.Enums;
 
 namespace Athena.Application.OrchestrationManagement.Commands;
 
+public sealed record CreateOrchestrationLifecycleCommand(Guid OrchestrationId);
+
 public class SetOrchestrationDesiredStateCommand
 {
     public Guid OrchestrationId { get; init; }

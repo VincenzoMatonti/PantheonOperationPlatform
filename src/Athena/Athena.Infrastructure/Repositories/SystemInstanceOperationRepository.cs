@@ -38,6 +38,48 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task AddWithRegistryAsync(
+        SystemInstanceOperation operation,
+        SystemInstance systemInstance,
+        SystemInstanceLifecycle lifecycle,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(systemInstance);
+        ArgumentNullException.ThrowIfNull(lifecycle);
+        if (operation.SystemInstanceId != systemInstance.Id || systemInstance.Id != lifecycle.Id)
+            throw new ArgumentException("The operation, registry entity, and lifecycle must share the same SystemInstance identifier.");
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        var systemDatabaseId = await context.Systems
+            .Where(system => system.Id == systemInstance.SystemId && !system.IsDeleted)
+            .Select(system => (int?)EF.Property<int>(system, "id"))
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"System '{systemInstance.SystemId.Value}' does not exist.");
+        var workloadDatabaseId = await context.Workloads
+            .Where(workload => workload.Id == systemInstance.WorkloadId && !workload.IsDeleted)
+            .Select(workload => (int?)EF.Property<int>(workload, "id"))
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Workload '{systemInstance.WorkloadId.Value}' does not exist.");
+
+        await context.SystemInstances.AddAsync(systemInstance, cancellationToken);
+        var instanceEntry = context.Entry(systemInstance);
+        instanceEntry.Property<int>("system_database_id").CurrentValue = systemDatabaseId;
+        instanceEntry.Property<int>("workload_database_id").CurrentValue = workloadDatabaseId;
+        await context.SaveChangesAsync(cancellationToken);
+
+        var instanceDatabaseId = await context.SystemInstances
+            .Where(instance => instance.Id == systemInstance.Id)
+            .Select(instance => EF.Property<int>(instance, "id"))
+            .SingleAsync(cancellationToken);
+        context.Entry(lifecycle).Property<int>("system_instance_database_id").CurrentValue = instanceDatabaseId;
+        context.Entry(operation).Property<int>("system_instance_database_id").CurrentValue = instanceDatabaseId;
+        await context.SystemInstanceLifecycles.AddAsync(lifecycle, cancellationToken);
+        await context.SystemInstanceOperations.AddAsync(operation, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     public async Task SaveWithLifecycleAsync(
         SystemInstanceOperation operation,
         SystemInstanceLifecycle lifecycle,
@@ -110,6 +152,14 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
             .Where(operation => operation.Status == SystemInstanceOperationStatus.Pending
                 || operation.Status == SystemInstanceOperationStatus.Running
                 || operation.Status == SystemInstanceOperationStatus.OutcomeUnknown)
+            .Where(operation => operation.Type == SystemInstanceOperationType.Create
+                || operation.Type == SystemInstanceOperationType.Register
+                || operation.Type == SystemInstanceOperationType.Start
+                || operation.Type == SystemInstanceOperationType.Stop
+                || operation.Type == SystemInstanceOperationType.Restart
+                || operation.Type == SystemInstanceOperationType.Remove
+                || operation.Type == SystemInstanceOperationType.Configure
+                || operation.Type == SystemInstanceOperationType.Unregister)
             .Where(operation => operation.NextAttemptAtUtc == null || operation.NextAttemptAtUtc <= nowUtc)
             .Where(operation => operation.LeaseExpiresAtUtc == null || operation.LeaseExpiresAtUtc <= nowUtc)
             .OrderBy(operation => operation.CreatedAtUtc)
@@ -123,9 +173,14 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
                 && (operation.Status == SystemInstanceOperationStatus.Pending
                     || operation.Status == SystemInstanceOperationStatus.Running
                     || operation.Status == SystemInstanceOperationStatus.OutcomeUnknown)
-                && (operation.Type == SystemInstanceOperationType.Start
+                && (operation.Type == SystemInstanceOperationType.Create
+                    || operation.Type == SystemInstanceOperationType.Register
+                    || operation.Type == SystemInstanceOperationType.Start
                     || operation.Type == SystemInstanceOperationType.Stop
-                    || operation.Type == SystemInstanceOperationType.Restart)
+                    || operation.Type == SystemInstanceOperationType.Restart
+                    || operation.Type == SystemInstanceOperationType.Remove
+                    || operation.Type == SystemInstanceOperationType.Configure
+                    || operation.Type == SystemInstanceOperationType.Unregister)
                 && (operation.LeaseExpiresAtUtc == null || operation.LeaseExpiresAtUtc <= nowUtc))
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(operation => operation.LeaseOwner, leaseOwner)
@@ -151,12 +206,13 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
     public async Task<bool> SaveWithLifecycleIfLeaseOwnerAsync(
         SystemInstanceOperation operation,
         SystemInstanceLifecycle lifecycle,
+        SystemInstance? systemInstance,
         string leaseOwner,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(lifecycle);
-        if (operation.SystemInstanceId != lifecycle.Id)
-            throw new ArgumentException("The lifecycle must belong to the operation's SystemInstance.", nameof(lifecycle));
+        if (operation.SystemInstanceId != lifecycle.Id || systemInstance is not null && operation.SystemInstanceId != systemInstance.Id)
+            throw new ArgumentException("The lifecycle and optional registry entity must belong to the operation's SystemInstance.", nameof(lifecycle));
 
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         var databaseId = await SaveIfLeaseOwnerCoreAsync(operation, leaseOwner, cancellationToken);
@@ -167,6 +223,11 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
         }
 
         PrepareLifecycleUpdate(lifecycle, databaseId.Value);
+        if (systemInstance is not null)
+        {
+            var instanceEntry = context.Entry(systemInstance);
+            if (instanceEntry.State == EntityState.Detached) context.SystemInstances.Update(systemInstance);
+        }
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return true;
@@ -200,6 +261,7 @@ public sealed class SystemInstanceOperationRepository(AthenaDbContext context) :
                 && candidate.LeaseExpiresAtUtc > DateTime.UtcNow)
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(candidate => candidate.Status, operation.Status)
+                .SetProperty(candidate => candidate.CommandPayloadJson, operation.CommandPayloadJson)
                 .SetProperty(candidate => candidate.StartedAtUtc, operation.StartedAtUtc)
                 .SetProperty(candidate => candidate.CompletedAtUtc, operation.CompletedAtUtc)
                 .SetProperty(candidate => candidate.ErrorMessage, operation.ErrorMessage)

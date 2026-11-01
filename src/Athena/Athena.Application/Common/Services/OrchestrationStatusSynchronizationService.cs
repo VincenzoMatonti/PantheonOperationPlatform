@@ -1,8 +1,6 @@
-using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.Enums;
 using Athena.Application.OrchestrationManagement.Interfaces;
-using Athena.Application.OrchestrationManagement.Queries;
-using Athena.Application.OrchestrationManagement.UseCases;
+using Athena.Application.Common.Queries;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.ValueObjects;
 using Athena.Domain.System.Registry.ValueObjects;
@@ -22,8 +20,6 @@ public sealed class OrchestrationStatusSynchronizationService(
     IOrchestrationSystemInstanceRepository associationRepository,
     IOrchestrationLifecycleOperationRepository operationRepository,
     IOrchestrationResourceCoordinator resourceCoordinator,
-    OrchestrationLifecycleQueryHandler lifecycleQueryHandler,
-    OrchestrationLifecycleUseCaseHandler lifecycleUseCaseHandler,
     ILogger<OrchestrationStatusSynchronizationService> logger) : IOrchestrationStatusSynchronizer
 {
     public async Task<OrchestrationAggregateStatusDto> GetAggregateStatusAsync(
@@ -46,6 +42,11 @@ public sealed class OrchestrationStatusSynchronizationService(
             summary.OperationalStatus,
             summary.LatestObservedAtUtc);
     }
+
+    public Task<OrchestrationAggregateStatusDto> GetAggregateStatusAsync(
+        GetOrchestrationAggregateStatusQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetAggregateStatusAsync(query.OrchestrationId, cancellationToken);
 
     public async Task SynchronizeForSystemInstancesAsync(
         IEnumerable<Guid> systemInstanceIds,
@@ -85,40 +86,8 @@ public sealed class OrchestrationStatusSynchronizationService(
             }
 
             var aggregate = await GetAggregateStatusAsync(orchestrationId, cancellationToken);
-            if (aggregate.AggregateStatus is ResourceAggregateStatus.Converged or ResourceAggregateStatus.Failed)
-            {
-                var lifecycle = await lifecycleQueryHandler.GetOrchestrationLifecycleByIdAsync(
-                    new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId },
-                    cancellationToken);
-                if (lifecycle is not null)
-                {
-                    if (aggregate.AggregateStatus == ResourceAggregateStatus.Failed
-                        && lifecycle.OperationalStatus != Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus.Failed)
-                    {
-                        await lifecycleUseCaseHandler.MarkOrchestrationFailedAsync(
-                            new MarkOrchestrationFailedCommand { OrchestrationId = orchestrationId },
-                            cancellationToken);
-                    }
-                    else if (aggregate.AggregateStatus == ResourceAggregateStatus.Converged
-                        && aggregate.ObservedStatus == "Running"
-                        && lifecycle.OperationalStatus != Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus.Running)
-                    {
-                        await lifecycleUseCaseHandler.MarkOrchestrationRunningAsync(
-                            new MarkOrchestrationRunningCommand { OrchestrationId = orchestrationId },
-                            cancellationToken);
-                    }
-                    else if (aggregate.AggregateStatus == ResourceAggregateStatus.Converged
-                        && aggregate.ObservedStatus == "Stopped"
-                        && lifecycle.OperationalStatus != Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus.Stopped)
-                    {
-                        await lifecycleUseCaseHandler.MarkOrchestrationStoppedAsync(
-                            new MarkOrchestrationStoppedCommand { OrchestrationId = orchestrationId },
-                            cancellationToken);
-                    }
-                }
-            }
             logger.LogInformation(
-                "Orchestration {OrchestrationId} derived aggregate status is {AggregateStatus}; its DesiredState was preserved.",
+                "Orchestration {OrchestrationId} derived aggregate status is {AggregateStatus}; aggregate synchronization does not modify its Lifecycle.",
                 orchestrationId,
                 aggregate.AggregateStatus);
         }

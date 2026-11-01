@@ -60,6 +60,9 @@ public sealed class CreateSystemInstanceCommand(SystemInstancesService service) 
         [CommandOption("--name <NAME>")]
         public string Name { get; init; } = string.Empty;
 
+        [CommandOption("--configuration-reference <REFERENCE>")]
+        public string? ConfigurationReference { get; init; }
+
         public override ValidationResult Validate()
         {
             if (SystemId == Guid.Empty) return ValidationResult.Error("System ID cannot be empty.");
@@ -71,7 +74,12 @@ public sealed class CreateSystemInstanceCommand(SystemInstancesService service) 
 
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        var request = new CreateSystemInstanceRequest(Guid.NewGuid(), settings.SystemId, settings.WorkloadId, settings.Name);
+        var request = new CreateSystemInstanceRequest(
+            Guid.NewGuid(),
+            settings.SystemId,
+            settings.WorkloadId,
+            settings.Name,
+            settings.ConfigurationReference);
         SystemInstanceCommandOutput.Write(await service.CreateAsync(request, cancellationToken));
         return 0;
     }
@@ -104,7 +112,7 @@ public sealed class RegisterSystemInstanceCommand(SystemInstancesService service
     protected override Task<object> ExecuteOperationAsync(Guid id, CancellationToken cancellationToken) =>
         WrapAsync(Service.RegisterAsync(new RegisterSystemInstanceRequest(id), cancellationToken));
 
-    private static async Task<object> WrapAsync(Task<SystemInstanceStatusResponse> operation) => await operation;
+    private static async Task<object> WrapAsync(Task<SystemInstanceOperationResponse> operation) => await operation;
 }
 
 public sealed class StartSystemInstanceCommand(SystemInstancesService service) : SystemInstanceIdCommand(service)
@@ -136,7 +144,39 @@ public sealed class RemoveSystemInstanceCommand(SystemInstancesService service) 
     protected override Task<object> ExecuteOperationAsync(Guid id, CancellationToken cancellationToken) =>
         WrapAsync(Service.RemoveAsync(id, cancellationToken));
 
-    private static async Task<object> WrapAsync(Task<SystemInstanceStatusResponse> operation) => await operation;
+    private static async Task<object> WrapAsync(Task<SystemInstanceOperationResponse> operation) => await operation;
+}
+
+public sealed class UnregisterSystemInstanceCommand(SystemInstancesService service) : SystemInstanceIdCommand(service)
+{
+    protected override Task<object> ExecuteOperationAsync(Guid id, CancellationToken cancellationToken) =>
+        WrapAsync(Service.UnregisterAsync(id, cancellationToken));
+
+    private static async Task<object> WrapAsync(Task<SystemInstanceOperationResponse> operation) => await operation;
+}
+
+public sealed class ConfigureSystemInstanceCommand(SystemInstancesService service)
+    : AsyncCommand<ConfigureSystemInstanceCommand.Settings>
+{
+    public sealed class Settings : CommandSettings
+    {
+        [CommandOption("--id <ID>")]
+        public Guid Id { get; init; }
+
+        [CommandOption("--configuration-reference <REFERENCE>")]
+        public string ConfigurationReference { get; init; } = string.Empty;
+
+        public override ValidationResult Validate() =>
+            Id == Guid.Empty || string.IsNullOrWhiteSpace(ConfigurationReference)
+                ? ValidationResult.Error("Both SystemInstance ID and a non-secret configuration reference are required.")
+                : ValidationResult.Success();
+    }
+
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    {
+        SystemInstanceCommandOutput.Write(await service.ConfigureAsync(settings.Id, settings.ConfigurationReference, cancellationToken));
+        return 0;
+    }
 }
 
 public sealed class GetSystemInstanceStatusCommand(SystemInstancesService service) : SystemInstanceIdCommand(service)

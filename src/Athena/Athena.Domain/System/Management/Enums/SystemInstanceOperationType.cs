@@ -7,5 +7,7 @@ public enum SystemInstanceOperationType
     Start = 2,
     Stop = 3,
     Restart = 4,
-    Remove = 5
+    Remove = 5,
+    Configure = 6,
+    Unregister = 7
 }

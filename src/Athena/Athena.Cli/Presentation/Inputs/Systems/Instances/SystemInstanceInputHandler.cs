@@ -14,6 +14,8 @@ public static class SystemInstanceInputHandler
             instances.AddCommand<GetSystemInstanceCommand>("get");
             instances.AddCommand<CreateSystemInstanceCommand>("create");
             instances.AddCommand<RegisterSystemInstanceCommand>("register");
+            instances.AddCommand<UnregisterSystemInstanceCommand>("unregister");
+            instances.AddCommand<ConfigureSystemInstanceCommand>("configure");
             instances.AddCommand<StartSystemInstanceCommand>("start");
             instances.AddCommand<StopSystemInstanceCommand>("stop");
             instances.AddCommand<RestartSystemInstanceCommand>("restart");

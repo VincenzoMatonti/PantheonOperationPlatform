@@ -11,6 +11,13 @@ public interface IOrchestrationLifecycleQueries
         CancellationToken cancellationToken = default);
 }
 
+public interface IOrchestrationSystemInstanceQueries
+{
+    Task<IReadOnlyList<OrchestrationSystemInstanceDto>> GetByOrchestrationIdAsync(
+        GetOrchestrationSystemInstancesByOrchestrationIdQuery query,
+        CancellationToken cancellationToken = default);
+}
+
 public interface IOrchestrationLifecycleCommands
 {
     Task<OrchestrationLifecycleDto> SetOrchestrationDesiredStateAsync(SetOrchestrationDesiredStateCommand command, CancellationToken cancellationToken = default);

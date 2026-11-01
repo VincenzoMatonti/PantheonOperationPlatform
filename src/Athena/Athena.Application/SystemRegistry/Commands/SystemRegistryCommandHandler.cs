@@ -1,151 +1,103 @@
-
 using Athena.Application.SystemRegistry.Dtos;
+using Athena.Application.SystemRegistry.Exceptions;
 using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.System.Registry.ValueObjects;
 using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 
 namespace Athena.Application.SystemRegistry.Commands;
 
-public class SystemRegistryCommandHandler(ISystemRepository systemRepository)
+public sealed class SystemRegistryCommandHandler(ISystemRepository systemRepository)
 {
     private readonly ISystemRepository _systemRepository = systemRepository;
 
-    public async Task<RegisteredSystem> CreateSystemAsync(RegisterSystemCommand command, CancellationToken cancellationToken = default)
+    public async Task<SystemDto> CreateSystemAsync(RegisterSystemCommand command, CancellationToken cancellationToken = default)
     {
-        var name = SystemName.Create(command.Name);
-        var system = RegisteredSystem.Create(SystemId.New(), name);
+        var system = RegisteredSystem.Create(SystemId.New(), SystemName.Create(command.Name));
         await _systemRepository.AddAsync(system, cancellationToken);
-        return system;
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task RegisterExistingSystemAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
+    public Task<SystemDto> RegisterExistingSystemAsync(Guid systemId, CancellationToken cancellationToken = default) =>
+        MutateAsync(systemId, system => system.Register(), cancellationToken);
+
+    public Task<SystemDto> UnregisterSystemAsync(UnregisterSystemCommand command, CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.Unregister(), cancellationToken);
+
+    public async Task<SystemDto> RenameSystemAsync(RenameSystemCommand command, CancellationToken cancellationToken = default)
     {
-        system.Register();
+        var system = await GetRequiredAsync(command.SystemId, cancellationToken);
+        system.Rename(SystemName.Create(command.NewName));
         await _systemRepository.UpdateAsync(system, cancellationToken);
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task UnregisterSystemAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
+    public Task<SystemDto> EnableSystemAsync(EnableSystemCommand command, CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.Enable(), cancellationToken);
+
+    public Task<SystemDto> DisableSystemAsync(DisableSystemCommand command, CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.Disable(), cancellationToken);
+
+    public Task<SystemDto> MarkSystemAvailableAsync(MarkSystemAvailableCommand command, CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.MarkAvailable(), cancellationToken);
+
+    public Task<SystemDto> MarkSystemUnavailableAsync(MarkSystemUnavailableCommand command, CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.MarkUnavailable(), cancellationToken);
+
+    public Task<SystemDto> MarkSystemAvailabilityUnknownAsync(
+        MarkSystemAvailabilityUnknownCommand command,
+        CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.MarkAvailabilityUnknown(), cancellationToken);
+
+    public async Task<SystemDto> AddSystemEndpointAsync(AddSystemEndpointCommand command, CancellationToken cancellationToken = default)
     {
-        system.Unregister();
+        var system = await GetRequiredAsync(command.SystemId, cancellationToken);
+        system.AddEndpoint(SystemEndpoint.Create(command.Name, command.BaseAddress));
         await _systemRepository.UpdateAsync(system, cancellationToken);
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task RenameSystemAsync(RegisteredSystem system, string newName, CancellationToken cancellationToken = default)
+    public async Task<SystemDto> RemoveSystemEndpointAsync(RemoveSystemEndpointCommand command, CancellationToken cancellationToken = default)
     {
-        var name = SystemName.Create(newName);
-        system.Rename(name);
+        var system = await GetRequiredAsync(command.SystemId, cancellationToken);
+        system.RemoveEndpoint(command.EndpointName);
         await _systemRepository.UpdateAsync(system, cancellationToken);
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task EnableSystemAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
+    public async Task<SystemDto> AddSystemCapabilityAsync(AddSystemCapabilityCommand command, CancellationToken cancellationToken = default)
     {
-        system.Enable();
+        var system = await GetRequiredAsync(command.SystemId, cancellationToken);
+        system.AddCapability(SystemCapability.Create(command.Name, command.Description));
         await _systemRepository.UpdateAsync(system, cancellationToken);
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task DisableSystemAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
+    public async Task<SystemDto> RemoveSystemCapabilityAsync(RemoveSystemCapabilityCommand command, CancellationToken cancellationToken = default)
     {
-        system.Disable();
+        var system = await GetRequiredAsync(command.SystemId, cancellationToken);
+        system.RemoveCapability(command.CapabilityName);
         await _systemRepository.UpdateAsync(system, cancellationToken);
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task MarkSystemAvailableAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
+    public Task<SystemDto> DeleteSystemAsync(DeleteSystemCommand command, CancellationToken cancellationToken = default) =>
+        MutateAsync(command.SystemId, system => system.Delete(), cancellationToken);
+
+    private async Task<SystemDto> MutateAsync(
+        Guid systemId,
+        Action<RegisteredSystem> mutation,
+        CancellationToken cancellationToken)
     {
-        system.MarkAvailable();
+        var system = await GetRequiredAsync(systemId, cancellationToken);
+        mutation(system);
         await _systemRepository.UpdateAsync(system, cancellationToken);
+        return SystemRegistryDtoMapper.ToDto(system);
     }
 
-    public async Task MarkSystemUnavailableAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
+    private async Task<RegisteredSystem> GetRequiredAsync(Guid systemId, CancellationToken cancellationToken)
     {
-        system.MarkUnavailable();
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public async Task MarkSystemAvailabilityUnknownAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
-    {
-        system.MarkAvailabilityUnknown();
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public async Task AddSystemEndpointAsync(RegisteredSystem system, string name, string baseAddress, CancellationToken cancellationToken = default)
-    {
-        var endpoint = SystemEndpoint.Create(name, baseAddress);
-        system.AddEndpoint(endpoint);
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public async Task RemoveSystemEndpointAsync(RegisteredSystem system, string endpointName, CancellationToken cancellationToken = default)
-    {
-        system.RemoveEndpoint(endpointName);
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public async Task AddSystemCapabilityAsync(RegisteredSystem system, string name, string description, CancellationToken cancellationToken = default)
-    {
-        var capability = SystemCapability.Create(name, description);
-        system.AddCapability(capability);
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public async Task RemoveSystemCapabilityAsync(RegisteredSystem system, string capabilityName, CancellationToken cancellationToken = default)
-    {
-        system.RemoveCapability(capabilityName);
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public async Task DeleteSystemAsync(RegisteredSystem system, CancellationToken cancellationToken = default)
-    {
-        system.Delete();
-        await _systemRepository.UpdateAsync(system, cancellationToken);
-    }
-
-    public static SystemDto ConvertSystemEntitiesToDto(RegisteredSystem system)
-    {
-        return new SystemDto
-        {
-            Id = system.Id.Value,
-            Name = system.Name.Value,
-            RegistrationStatus = system.RegistrationStatus.ToString(),
-            AvailabilityStatus = system.AvailabilityStatus.ToString(),
-            Endpoints = [.. system.Endpoints.Select(ConvertSystemEndpointEntitiesToDto)],
-            Capabilities = [.. system.Capabilities.Select(ConvertSystemCapabilityEntitiesToDto)],
-            CreatedAtUtc = system.CreatedAtUtc,
-            UpdatedAtUtc = system.UpdatedAtUtc,
-            IsDeleted = system.IsDeleted
-        };
-    }
-
-    public static List<SystemDto> ConvertSystemEntitiesToDto(IReadOnlyList<RegisteredSystem> systems)
-    {
-        return [.. systems.Select(ConvertSystemEntitiesToDto)];
-    }
-
-    public static SystemEndpointDto ConvertSystemEndpointEntitiesToDto(SystemEndpoint endpoint)
-    {
-        return new SystemEndpointDto
-        {
-            Name = endpoint.Name,
-            BaseAddress = endpoint.BaseAddress.ToString()
-        };
-    }
-
-    public static List<SystemEndpointDto> ConvertSystemEndpointEntitiesToDto(IReadOnlyList<SystemEndpoint> endpoints)
-    {
-        return [.. endpoints.Select(ConvertSystemEndpointEntitiesToDto)];
-    }
-
-    public static SystemCapabilityDto ConvertSystemCapabilityEntitiesToDto(SystemCapability capability)
-    {
-        return new SystemCapabilityDto
-        {
-            Name = capability.Name,
-            Description = capability.Description
-        };
-    }
-
-    public static List<SystemCapabilityDto> ConvertSystemCapabilityEntitiesToDto(IReadOnlyList<SystemCapability> capabilities)
-    {
-        return [.. capabilities.Select(ConvertSystemCapabilityEntitiesToDto)];
+        var id = SystemId.Create(systemId);
+        return await _systemRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new SystemNotFoundException(systemId);
     }
 }
-

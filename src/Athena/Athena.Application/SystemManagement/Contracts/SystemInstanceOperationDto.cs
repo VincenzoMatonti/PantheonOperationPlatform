@@ -13,6 +13,8 @@ public sealed record SystemInstanceOperationDto(
     DateTime? AgentCompletedAtUtc = null,
     DateTime? LeaseExpiresAtUtc = null,
     int AttemptCount = 0,
-    string? ConvergenceStatus = null);
+    string? ConvergenceStatus = null,
+    int MaxAttempts = 8);
 
 public sealed record ResolveSystemInstanceOperationRequest(string Reason);
+public sealed record ConfigureSystemInstanceRequest(string ConfigurationReference);

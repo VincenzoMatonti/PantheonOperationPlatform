@@ -1,5 +1,8 @@
 namespace Athena.Application.BlockManagement.Contracts;
 
+using Athena.Application.BlockManagement.Commands;
+using Athena.Application.BlockManagement.Queries;
+
 public sealed record BlockLifecycleDto(
     Guid BlockId,
     string DesiredState,
@@ -21,6 +24,13 @@ public sealed record BlockOperationDto(
 
 public interface IBlockManagement
 {
+    Task<BlockLifecycleDto> CreateLifecycleAsync(CreateBlockLifecycleCommand command, CancellationToken cancellationToken = default);
+    Task<BlockLifecycleDto?> GetLifecycleAsync(GetBlockLifecycleQuery query, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BlockLifecycleDto>> GetLifecyclesAsync(GetBlockLifecyclesQuery query, CancellationToken cancellationToken = default);
+    Task<BlockLifecycleDto> SetDesiredStateAsync(SetBlockDesiredStateCommand command, CancellationToken cancellationToken = default);
+    Task<BlockOperationDto> ExecuteOperationAsync(ExecuteBlockOperationCommand command, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BlockOperationDto>> GetOperationsAsync(GetBlockOperationsQuery query, CancellationToken cancellationToken = default);
+
     Task<BlockLifecycleDto> CreateLifecycleAsync(Guid blockId, CancellationToken cancellationToken = default);
     Task<BlockLifecycleDto?> GetLifecycleAsync(Guid blockId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BlockLifecycleDto>> GetLifecyclesAsync(CancellationToken cancellationToken = default);

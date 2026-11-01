@@ -20,6 +20,11 @@ public class OrchestrationLifecycleUseCaseHandler(
 
     // =============================================================================================================
     // USE CASE COMMANDS - ORCHESTRATION LIFECYCLE
+    public Task<OrchestrationLifecycleDto> CreateOrchestrationLifecycleAsync(
+        CreateOrchestrationLifecycleCommand command,
+        CancellationToken cancellationToken = default) =>
+        CreateOrchestrationLifecycleAsync(command.OrchestrationId, cancellationToken);
+
     public Task<OrchestrationLifecycleDto> CreateOrchestrationLifecycleAsync(Guid orchestrationId, CancellationToken cancellationToken = default) => ExecuteAsync(async () =>
     {
         var query = new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId };
@@ -63,6 +68,11 @@ public class OrchestrationLifecycleUseCaseHandler(
     public Task<List<OrchestrationLifecycleDto>> GetAllOrchestrationLifecyclesAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetAllOrchestrationLifecyclesAsync(cancellationToken));
 
+    public Task<List<OrchestrationLifecycleDto>> GetAllOrchestrationLifecyclesAsync(
+        GetAllOrchestrationLifecyclesQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetAllOrchestrationLifecyclesAsync(cancellationToken);
+
     public Task<List<OrchestrationLifecycleDto>> GetOrchestrationLifecyclesByDesiredStateAsync(GetOrchestrationLifecyclesByDesiredStateQuery query, CancellationToken cancellationToken = default) =>
     ExecuteAsync(async () =>
     {
@@ -79,4 +89,9 @@ public class OrchestrationLifecycleUseCaseHandler(
 
     public Task<List<OrchestrationLifecycleDto>> GetDeletedOrchestrationLifecyclesAsync(CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetDeletedOrchestrationLifecyclesAsync(cancellationToken));
+
+    public Task<List<OrchestrationLifecycleDto>> GetDeletedOrchestrationLifecyclesAsync(
+        GetDeletedOrchestrationLifecyclesQuery query,
+        CancellationToken cancellationToken = default) =>
+        GetDeletedOrchestrationLifecyclesAsync(cancellationToken);
 }

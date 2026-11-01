@@ -24,12 +24,14 @@ public class OrchestrationManagementQueryController(
     // =====================================================================
     // ORCHESTRATION LIFECYCLE QUERIES
     [HttpGet("{orchestrationId:guid}/aggregate-status")]
-    [ProducesResponseType(typeof(ApiResponse<OrchestrationAggregateStatusDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<OrchestrationAggregateStatusDto>>> GetAggregateStatus(
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationAggregateStatusResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationAggregateStatusResponse>>> GetAggregateStatus(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
-        var result = await _statusSynchronizationService.GetAggregateStatusAsync(orchestrationId, cancellationToken);
-        return Ok(ApiResponseBuilder.BuildSuccess(result));
+        var query = OrchestrationAggregateStatusRequestQueryMapper.ToQuery(orchestrationId);
+        var result = await _statusSynchronizationService.GetAggregateStatusAsync(query, cancellationToken);
+        var response = OrchestrationAggregateStatusResponseMapper.ToResponse(result);
+        return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpGet("{orchestrationId:guid}/lifecycle")]
@@ -48,7 +50,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleQueryResponse>>>> GetAllLifecycles(
         CancellationToken cancellationToken)
     {
-        var result = await _lifecycleHandler.GetAllOrchestrationLifecyclesAsync(cancellationToken);
+        var query = OrchestrationLifecycleRequestQueryMapper.ToGetAllQuery();
+        var result = await _lifecycleHandler.GetAllOrchestrationLifecyclesAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToLifecycleResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -80,7 +83,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleQueryResponse>>>> GetDeletedLifecycles(
         CancellationToken cancellationToken)
     {
-        var result = await _lifecycleHandler.GetDeletedOrchestrationLifecyclesAsync(cancellationToken);
+        var query = OrchestrationLifecycleRequestQueryMapper.ToGetDeletedQuery();
+        var result = await _lifecycleHandler.GetDeletedOrchestrationLifecyclesAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToLifecycleResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -101,9 +105,9 @@ public class OrchestrationManagementQueryController(
     [HttpGet("{orchestrationId:guid}/lifecycle/operations")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetOperationsByOrchestrationId(
-        Guid orchestrationId, CancellationToken cancellationToken)
+        [FromRoute] GetOrchestrationLifecycleOperationsByOrchestrationIdRequest request,
+        CancellationToken cancellationToken)
     {
-        var request = new GetOrchestrationLifecycleOperationsByOrchestrationIdRequest { OrchestrationId = orchestrationId };
         var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetByOrchestrationIdQuery(request);
         var result = await _operationHandler.GetOrchestrationLifecycleOperationsByOrchestrationIdAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
@@ -115,7 +119,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetAllOperations(
         CancellationToken cancellationToken)
     {
-        var result = await _operationHandler.GetAllOrchestrationLifecycleOperationsAsync(cancellationToken);
+        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetAllQuery();
+        var result = await _operationHandler.GetAllOrchestrationLifecycleOperationsAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -147,13 +152,7 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetOperationsByOrchestrationIdAndStatus(
         Guid orchestrationId, [FromQuery] GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequest request, CancellationToken cancellationToken)
     {
-        var queryRequest = new GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequest
-        {
-            OrchestrationId = orchestrationId,
-            Status = request.Status
-        };
-
-        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetByOrchestrationIdAndStatusQuery(queryRequest);
+        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetByOrchestrationIdAndStatusQuery(orchestrationId, request);
         var result = await _operationHandler.GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
@@ -164,7 +163,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetPendingOperations(
         CancellationToken cancellationToken)
     {
-        var result = await _operationHandler.GetPendingOrchestrationLifecycleOperationsAsync(cancellationToken);
+        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetPendingQuery();
+        var result = await _operationHandler.GetPendingOrchestrationLifecycleOperationsAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -174,7 +174,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetRunningOperations(
         CancellationToken cancellationToken)
     {
-        var result = await _operationHandler.GetRunningOrchestrationLifecycleOperationsAsync(cancellationToken);
+        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetRunningQuery();
+        var result = await _operationHandler.GetRunningOrchestrationLifecycleOperationsAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -184,7 +185,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetFailedOperations(
         CancellationToken cancellationToken)
     {
-        var result = await _operationHandler.GetFailedOrchestrationLifecycleOperationsAsync(cancellationToken);
+        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetFailedQuery();
+        var result = await _operationHandler.GetFailedOrchestrationLifecycleOperationsAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -194,7 +196,8 @@ public class OrchestrationManagementQueryController(
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationLifecycleOperationQueryResponse>>>> GetDeletedOperations(
         CancellationToken cancellationToken)
     {
-        var result = await _operationHandler.GetDeletedOrchestrationLifecycleOperationsAsync(cancellationToken);
+        var query = OrchestrationLifecycleOperationRequestQueryMapper.ToGetDeletedQuery();
+        var result = await _operationHandler.GetDeletedOrchestrationLifecycleOperationsAsync(query, cancellationToken);
         var response = OrchestrationManagementResponseQueryMapper.ToOperationResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

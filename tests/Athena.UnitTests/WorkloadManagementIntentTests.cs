@@ -1,5 +1,7 @@
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Services;
+using Athena.Application.WorkloadManagement.Commands;
+using Athena.Application.WorkloadManagement.Queries;
 using Athena.Application.WorkloadManagement.UseCases;
 using Athena.Domain.Block.Registry.ValueObjects;
 using Athena.Domain.Workload.Management.Entities;
@@ -74,9 +76,8 @@ public sealed class WorkloadManagementIntentTests
             Registry = new WorkloadRepository(Workload);
             Lifecycles.Item = Lifecycle;
             Handler = new WorkloadManagementUseCaseHandler(
-                Registry,
-                Lifecycles,
-                Operations,
+                new WorkloadManagementCommandHandler(Registry, Lifecycles, Operations),
+                new WorkloadManagementQueryHandler(Registry, Lifecycles, Operations),
                 new ApplicationExceptionService(Array.Empty<IApplicationExceptionMapper>()));
         }
     }

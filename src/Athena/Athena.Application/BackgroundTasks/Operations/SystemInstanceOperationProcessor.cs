@@ -2,11 +2,13 @@ using Athena.Application.SystemManagement.Contracts;
 using Athena.Domain.System.Management.Entities;
 using Athena.Domain.System.Management.Enums;
 using Athena.Domain.System.Management.Repositories;
+using Athena.Domain.System.Registry.Entities;
 using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.System.Registry.Enums;
 using Athena.Domain.System.Registry.ValueObjects;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Text.Json;
 
 namespace Athena.Application.BackgroundTasks.Operations;
 
@@ -31,23 +33,42 @@ public sealed class SystemInstanceOperationProcessor(
 
         try
         {
+            if (operation.AttemptCount > operation.MaxAttempts)
+            {
+                if (operation.Status == SystemInstanceOperationStatus.Pending
+                    && operation.CommandDispatchedAtUtc is null)
+                    operation.FailBeforeDispatch($"Operation exceeded its maximum of {operation.MaxAttempts} attempts before dispatch.");
+                else
+                {
+                    if (operation.Status == SystemInstanceOperationStatus.Running)
+                        operation.MarkOutcomeUnknown($"Operation exceeded its maximum of {operation.MaxAttempts} attempts; Agent outcome requires manual review.");
+                    operation.MarkIndeterminate($"Operation exceeded its maximum of {operation.MaxAttempts} attempts; Agent outcome requires manual review.", leaseOwner);
+                }
+                if (!await operationRepository.SaveIfLeaseOwnerAsync(operation, leaseOwner, CancellationToken.None))
+                    logger.LogWarning("Could not persist exhausted-operation state for {OperationId} because its lease changed.", operation.Id);
+                return true;
+            }
             var isNewCommand = operation.Status == SystemInstanceOperationStatus.Pending;
             var instance = await instanceRepository.GetByIdAsync(operation.SystemInstanceId, cancellationToken);
-            if (isNewCommand && (instance is null || instance.IsDeleted
-                || instance.RegistrationStatus != SystemInstanceRegistrationStatus.Registered))
+            if (isNewCommand && !CanDispatch(operation.Type, instance))
             {
-                operation.FailBeforeDispatch($"SystemInstance '{operation.SystemInstanceId.Value}' is not registered and cannot execute the queued command.");
+                operation.FailBeforeDispatch($"SystemInstance '{operation.SystemInstanceId.Value}' is not in a valid registration state for '{operation.Type}'.");
                 if (!await operationRepository.SaveIfLeaseOwnerAsync(operation, leaseOwner, CancellationToken.None))
                     logger.LogWarning("Could not persist pre-dispatch failure for operation {OperationId} because its lease changed.", operation.Id);
+                return true;
+            }
+            if (isNewCommand && useLegacyProtocol
+                && operation.Type is SystemInstanceOperationType.Configure or SystemInstanceOperationType.Unregister)
+            {
+                operation.FailBeforeDispatch($"The Legacy Agent protocol does not support '{operation.Type}'. Configure a correlated Agent protocol.");
+                if (!await operationRepository.SaveIfLeaseOwnerAsync(operation, leaseOwner, CancellationToken.None))
+                    logger.LogWarning("Could not persist unsupported legacy operation {OperationId} because its lease changed.", operation.Id);
                 return true;
             }
             if (instance is null)
                 throw new InvalidOperationException($"SystemInstance '{operation.SystemInstanceId.Value}' for operation '{operation.Id}' was not found.");
             var lifecycle = await lifecycleRepository.GetByIdAsync(operation.SystemInstanceId, cancellationToken)
                 ?? throw new InvalidOperationException($"Lifecycle '{operation.SystemInstanceId.Value}' for operation '{operation.Id}' was not found.");
-
-            if (operation.Type is not (SystemInstanceOperationType.Start or SystemInstanceOperationType.Stop or SystemInstanceOperationType.Restart))
-                throw new InvalidOperationException($"Operation '{operation.Id}' has unsupported queued type '{operation.Type}'.");
 
             if (isNewCommand)
             {
@@ -57,7 +78,8 @@ public sealed class SystemInstanceOperationProcessor(
             }
             else if (operation.CommandDispatchedAtUtc is null)
             {
-                operation.MarkOutcomeUnknown("Operation predates persisted Agent command correlation; automatic redelivery is unsafe.");
+                if (operation.Status == SystemInstanceOperationStatus.Running)
+                    operation.MarkOutcomeUnknown("Operation predates persisted Agent command correlation; automatic redelivery is unsafe.");
                 operation.ScheduleRetry(DateTime.UtcNow + retryDelay);
                 operation.ReleaseLease(leaseOwner);
                 await SaveOwnedAsync(operation, leaseOwner, cancellationToken);
@@ -65,9 +87,9 @@ public sealed class SystemInstanceOperationProcessor(
             }
 
             if (useLegacyProtocol)
-                await ProcessLegacyAsync(operation, lifecycle, leaseOwner, isNewCommand, leaseDuration, cancellationToken);
+                await ProcessLegacyAsync(operation, instance, lifecycle, leaseOwner, isNewCommand, leaseDuration, cancellationToken);
             else
-                await ProcessCorrelatedAsync(operation, lifecycle, leaseOwner, isNewCommand, leaseDuration, cancellationToken);
+                await ProcessCorrelatedAsync(operation, instance, lifecycle, leaseOwner, isNewCommand, leaseDuration, cancellationToken);
 
             if (operation.IsActive)
             {
@@ -106,6 +128,7 @@ public sealed class SystemInstanceOperationProcessor(
 
     private async Task ProcessCorrelatedAsync(
         SystemInstanceOperation operation,
+        SystemInstance instance,
         SystemInstanceLifecycle lifecycle,
         string leaseOwner,
         bool isNewCommand,
@@ -116,7 +139,7 @@ public sealed class SystemInstanceOperationProcessor(
         SystemInstanceExecutionResult result;
         if (isNewCommand)
         {
-            result = await correlatedAgent.ExecuteAsync(ToCommand(operation), cancellationToken);
+            result = await correlatedAgent.ExecuteAsync(ToCommand(operation, instance), cancellationToken);
         }
         else
         {
@@ -125,23 +148,29 @@ public sealed class SystemInstanceOperationProcessor(
                 operation.Id,
                 cancellationToken);
             if (result.Status == AgentOperationStatus.NotFound)
-                result = await correlatedAgent.ExecuteAsync(ToCommand(operation), cancellationToken);
+                result = await correlatedAgent.ExecuteAsync(ToCommand(operation, instance), cancellationToken);
         }
 
         ValidateResult(result, operation);
         ApplyCorrelatedResult(operation, result);
         if (isNewCommand && result.Status == AgentOperationStatus.NotFound)
             operation.MarkOutcomeUnknown("Agent did not confirm receipt of the newly dispatched OperationId.");
-        if (result.Status == AgentOperationStatus.Completed && result.ObservedState is not null)
-            Observe(lifecycle, result.ObservedState, result.ObservedAtUtc, operation.SystemInstanceId.Value);
-        if (result.Status == AgentOperationStatus.Completed && result.ObservedState is not null)
-            await SaveOwnedWithLifecycleAsync(operation, lifecycle, leaseOwner, cancellationToken);
+        SystemInstance? changedInstance = null;
+        if (result.Status == AgentOperationStatus.Completed)
+        {
+            if (result.ObservedState is not null)
+                Observe(lifecycle, result.ObservedState, result.ObservedAtUtc, operation.SystemInstanceId.Value);
+            changedInstance = ApplyRegistryResult(operation.Type, instance);
+        }
+        if (result.Status == AgentOperationStatus.Completed && (result.ObservedState is not null || changedInstance is not null))
+            await SaveOwnedWithLifecycleAsync(operation, lifecycle, leaseOwner, changedInstance, cancellationToken);
         else
             await SaveOwnedAsync(operation, leaseOwner, cancellationToken);
     }
 
     private async Task ProcessLegacyAsync(
         SystemInstanceOperation operation,
+        SystemInstance instance,
         SystemInstanceLifecycle lifecycle,
         string leaseOwner,
         bool isNewCommand,
@@ -154,9 +183,12 @@ public sealed class SystemInstanceOperationProcessor(
         {
             status = operation.Type switch
             {
+                SystemInstanceOperationType.Create => await legacyAgent.CreateAsync(ToRequest(operation, instance), cancellationToken),
+                SystemInstanceOperationType.Register => await legacyAgent.RegisterAsync(ToRequest(operation, instance), cancellationToken),
                 SystemInstanceOperationType.Start => await legacyAgent.StartAsync(operation.SystemInstanceId.Value, cancellationToken),
                 SystemInstanceOperationType.Stop => await legacyAgent.StopAsync(operation.SystemInstanceId.Value, cancellationToken),
                 SystemInstanceOperationType.Restart => await legacyAgent.RestartAsync(operation.SystemInstanceId.Value, cancellationToken),
+                SystemInstanceOperationType.Remove => await legacyAgent.RemoveAsync(operation.SystemInstanceId.Value, cancellationToken),
                 _ => throw new InvalidOperationException($"Unsupported operation type '{operation.Type}'.")
             };
         }
@@ -169,7 +201,7 @@ public sealed class SystemInstanceOperationProcessor(
         Observe(lifecycle, status.State, status.ObservedAtUtc, operation.SystemInstanceId.Value);
         if (operation.Status == SystemInstanceOperationStatus.Running)
             operation.MarkOutcomeUnknown("Legacy Agent response is not correlated with this OperationId.");
-        await SaveOwnedWithLifecycleAsync(operation, lifecycle, leaseOwner, cancellationToken);
+        await SaveOwnedWithLifecycleAsync(operation, lifecycle, leaseOwner, null, cancellationToken);
     }
 
     private async Task MarkUncertainAndReleaseAsync(
@@ -203,9 +235,10 @@ public sealed class SystemInstanceOperationProcessor(
         SystemInstanceOperation operation,
         SystemInstanceLifecycle lifecycle,
         string leaseOwner,
+        SystemInstance? systemInstance,
         CancellationToken cancellationToken)
     {
-        if (!await operationRepository.SaveWithLifecycleIfLeaseOwnerAsync(operation, lifecycle, leaseOwner, cancellationToken))
+        if (!await operationRepository.SaveWithLifecycleIfLeaseOwnerAsync(operation, lifecycle, systemInstance, leaseOwner, cancellationToken))
             throw new InvalidOperationException($"Lease ownership was lost while persisting operation '{operation.Id}' and its observed lifecycle.");
     }
 
@@ -233,7 +266,12 @@ public sealed class SystemInstanceOperationProcessor(
         {
             case AgentOperationStatus.Accepted:
             case AgentOperationStatus.Running:
+            case AgentOperationStatus.Pending:
             case AgentOperationStatus.NotFound:
+                return;
+            case AgentOperationStatus.OutcomeUnknown:
+                if (operation.Status == SystemInstanceOperationStatus.Running)
+                    operation.MarkOutcomeUnknown(result.ErrorMessage ?? "Execution Agent reports an uncertain outcome.");
                 return;
             case AgentOperationStatus.Completed:
                 if (result.CompletedAtUtc is not { } completedAtUtc)
@@ -252,7 +290,9 @@ public sealed class SystemInstanceOperationProcessor(
 
     private static void ValidateResult(SystemInstanceExecutionResult result, SystemInstanceOperation operation)
     {
-        if (result.OperationId != operation.Id || result.SystemInstanceId != operation.SystemInstanceId.Value)
+        if (result.OperationId != operation.Id
+            || result.SystemInstanceId != operation.SystemInstanceId.Value
+            || result.CorrelationId is { } correlationId && correlationId != operation.Id)
             throw new InvalidOperationException($"Agent result correlation mismatch for operation '{operation.Id}'.");
         if (!Enum.IsDefined(result.Status) || result.UpdatedAtUtc.Kind != DateTimeKind.Utc)
             throw new InvalidOperationException($"Agent returned invalid execution-result metadata for operation '{operation.Id}'.");
@@ -287,8 +327,67 @@ public sealed class SystemInstanceOperationProcessor(
         lifecycle.SetObservedOperationalStatus(mapped, observedAtUtc.Value);
     }
 
-    private static SystemInstanceExecutionCommand ToCommand(SystemInstanceOperation operation) =>
-        new(operation.Id, operation.SystemInstanceId.Value, operation.Type.ToString());
+    private static SystemInstanceExecutionCommand ToCommand(SystemInstanceOperation operation, SystemInstance instance) =>
+        new(
+            operation.Id,
+            operation.SystemInstanceId.Value,
+            operation.Type.ToString(),
+            operation.CommandPayloadJson,
+            instance.SystemId.Value,
+            instance.WorkloadId.Value,
+            instance.Name.Value,
+            operation.Id);
+
+    private static SystemInstanceExecutionCommandRequest ToRequest(SystemInstanceOperation operation, SystemInstance instance) =>
+        new(
+            instance.Id.Value,
+            instance.SystemId.Value,
+            instance.WorkloadId.Value,
+            instance.Name.Value,
+            ConfigurationReference: GetConfigurationReference(operation.CommandPayloadJson));
+
+    private static string? GetConfigurationReference(string? payloadJson)
+    {
+        if (string.IsNullOrWhiteSpace(payloadJson)) return null;
+        using var document = JsonDocument.Parse(payloadJson);
+        return document.RootElement.TryGetProperty("configurationReference", out var reference)
+            ? reference.GetString()
+            : null;
+    }
+
+    private static SystemInstance? ApplyRegistryResult(SystemInstanceOperationType type, SystemInstance instance)
+    {
+        switch (type)
+        {
+            case SystemInstanceOperationType.Register:
+                instance.Register();
+                return instance;
+            case SystemInstanceOperationType.Unregister:
+                instance.Unregister();
+                return instance;
+            case SystemInstanceOperationType.Remove:
+                instance.Delete();
+                return instance;
+            default:
+                return null;
+        }
+    }
+
+    private static bool CanDispatch(SystemInstanceOperationType type, SystemInstance? instance)
+    {
+        if (instance is null || instance.IsDeleted) return false;
+        return type switch
+        {
+            SystemInstanceOperationType.Create or SystemInstanceOperationType.Register =>
+                instance.RegistrationStatus == SystemInstanceRegistrationStatus.Unregistered,
+            SystemInstanceOperationType.Unregister or SystemInstanceOperationType.Remove =>
+                instance.RegistrationStatus is SystemInstanceRegistrationStatus.Registered or SystemInstanceRegistrationStatus.Unregistered,
+            SystemInstanceOperationType.Configure or SystemInstanceOperationType.Start
+                or SystemInstanceOperationType.Stop or SystemInstanceOperationType.Restart =>
+                instance.RegistrationStatus == SystemInstanceRegistrationStatus.Registered,
+            _ => false
+        };
+    }
 
     private static bool IsDefinitiveRejection(HttpRequestException exception) =>
         exception.StatusCode is { } statusCode

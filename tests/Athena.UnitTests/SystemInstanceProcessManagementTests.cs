@@ -211,6 +211,103 @@ public sealed class SystemInstanceProcessManagementTests
     }
 
     [Fact]
+    public async Task CreateOperation_IsQueuedAndRegistryEntityExistsBeforeAgentExecution()
+    {
+        var fixture = new Fixture();
+        var id = Guid.NewGuid();
+
+        var operation = await fixture.CreateService().CreateOperationAsync(
+            new SystemInstanceExecutionCommandRequest(
+                id,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "created",
+                ConfigurationReference: "profile/test"));
+
+        Assert.Equal("Pending", operation.Status);
+        Assert.Equal(SystemInstanceOperationType.Create, Assert.Single(fixture.Operations.Items).Type);
+        Assert.True(await fixture.Instances.ExistsByIdAsync(SystemInstanceId.Create(id)));
+        Assert.Empty(fixture.Agent.CommandedInstanceIds);
+    }
+
+    [Fact]
+    public async Task CreateOperation_RejectsInlineDetailsThatCouldContainSecrets()
+    {
+        var fixture = new Fixture();
+
+        await Assert.ThrowsAsync<ArgumentException>(() => fixture.CreateService().CreateOperationAsync(
+            new SystemInstanceExecutionCommandRequest(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "created",
+                Details: "{\"password\":\"plaintext\"}")));
+
+        Assert.Empty(fixture.Operations.Items);
+        Assert.DoesNotContain(fixture.Instances.Items, instance => instance.Id.Value != fixture.InstanceId);
+    }
+
+    [Fact]
+    public async Task OperationProcessor_RegistersLocallyOnlyAfterCorrelatedAgentCompletion()
+    {
+        var fixture = new Fixture();
+        var queued = await fixture.CreateService().RegisterOperationAsync(
+            new SystemInstanceExecutionCommandRequest(fixture.InstanceId, ConfigurationReference: "profile/test"));
+        Assert.Equal(SystemInstanceRegistrationStatus.Unregistered, fixture.Instance.RegistrationStatus);
+        fixture.Agent.CorrelatedResult = new SystemInstanceExecutionResult(
+            queued.Id,
+            fixture.InstanceId,
+            AgentOperationStatus.Completed,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        await fixture.CreateProcessor().ProcessOneAsync(false, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+
+        Assert.Equal(SystemInstanceOperationStatus.Completed, Assert.Single(fixture.Operations.Items).Status);
+        Assert.Equal(SystemInstanceRegistrationStatus.Registered, fixture.Instance.RegistrationStatus);
+    }
+
+    [Fact]
+    public async Task OperationProcessor_RemovesRegistryInstanceOnlyAfterCorrelatedAgentCompletion()
+    {
+        var fixture = new Fixture();
+        fixture.Instance.Register();
+        var queued = await fixture.CreateService().RemoveOperationAsync(fixture.InstanceId);
+        fixture.Agent.CorrelatedResult = new SystemInstanceExecutionResult(
+            queued.Id,
+            fixture.InstanceId,
+            AgentOperationStatus.Completed,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        await fixture.CreateProcessor().ProcessOneAsync(false, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+
+        Assert.Equal(SystemInstanceOperationStatus.Completed, Assert.Single(fixture.Operations.Items).Status);
+        Assert.True(fixture.Instance.IsDeleted);
+    }
+
+    [Fact]
+    public async Task OperationProcessor_ExhaustsRetriesAsIndeterminateWithoutClaimingFailure()
+    {
+        var fixture = new Fixture();
+        fixture.Instance.Register();
+        var operation = SystemInstanceOperation.Create(
+            fixture.Instance.Id,
+            SystemInstanceOperationType.Start,
+            maxAttempts: 1);
+        fixture.Operations.Items.Add(operation);
+
+        await fixture.CreateProcessor().ProcessOneAsync(false, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+        await fixture.CreateProcessor().ProcessOneAsync(false, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+
+        Assert.Equal(SystemInstanceOperationStatus.Indeterminate, operation.Status);
+        Assert.Contains("maximum of 1 attempts", operation.ErrorMessage);
+        Assert.Equal(1, fixture.Agent.CorrelatedCommandCount);
+    }
+
+    [Fact]
     public async Task StartAsync_WhenLifecycleIsMissing_FailsBeforeCallingAgent()
     {
         var fixture = new Fixture();
@@ -445,7 +542,7 @@ public sealed class SystemInstanceProcessManagementTests
         public Fixture()
         {
             Instances = new InMemorySystemInstanceRepository(Lifecycles);
-            Operations = new InMemorySystemInstanceOperationRepository(Lifecycles);
+            Operations = new InMemorySystemInstanceOperationRepository(Lifecycles, Instances);
             Instance = SystemInstance.Create(
                 SystemInstanceId.Create(InstanceId),
                 SystemId.Create(Guid.NewGuid()),
@@ -615,9 +712,15 @@ public sealed class SystemInstanceProcessManagementTests
     private sealed class InMemorySystemInstanceOperationRepository : ISystemInstanceOperationRepository
     {
         private readonly InMemorySystemInstanceLifecycleRepository _lifecycles;
+        private readonly InMemorySystemInstanceRepository _instances;
 
-        public InMemorySystemInstanceOperationRepository(InMemorySystemInstanceLifecycleRepository lifecycles) =>
+        public InMemorySystemInstanceOperationRepository(
+            InMemorySystemInstanceLifecycleRepository lifecycles,
+            InMemorySystemInstanceRepository instances)
+        {
             _lifecycles = lifecycles;
+            _instances = instances;
+        }
 
         public List<SystemInstanceOperation> Items { get; } = [];
         public Dictionary<Guid, SystemInstanceOperationStatus> PersistedStatuses { get; } = [];
@@ -637,6 +740,19 @@ public sealed class SystemInstanceProcessManagementTests
         {
             Items.Add(operation);
             PersistedStatuses[operation.Id] = operation.Status;
+            return Task.CompletedTask;
+        }
+
+        public Task AddWithRegistryAsync(
+            SystemInstanceOperation operation,
+            SystemInstance systemInstance,
+            SystemInstanceLifecycle lifecycle,
+            CancellationToken cancellationToken = default)
+        {
+            Items.Add(operation);
+            PersistedStatuses[operation.Id] = operation.Status;
+            _instances.Items.Add(systemInstance);
+            _lifecycles.Items.Add(lifecycle);
             return Task.CompletedTask;
         }
 
@@ -670,7 +786,7 @@ public sealed class SystemInstanceProcessManagementTests
         public Task<SystemInstanceOperation?> ClaimNextAsync(string leaseOwner, TimeSpan leaseDuration, DateTime nowUtc, CancellationToken cancellationToken = default)
         {
             var operation = Items.FirstOrDefault(item => item.IsActive
-                && item.Type is SystemInstanceOperationType.Start or SystemInstanceOperationType.Stop or SystemInstanceOperationType.Restart
+                && Enum.IsDefined(item.Type)
                 && (item.NextAttemptAtUtc is null || item.NextAttemptAtUtc <= nowUtc)
                 && (item.LeaseExpiresAtUtc is null || item.LeaseExpiresAtUtc <= nowUtc));
             if (operation is null) return Task.FromResult<SystemInstanceOperation?>(null);
@@ -694,6 +810,7 @@ public sealed class SystemInstanceProcessManagementTests
         public Task<bool> SaveWithLifecycleIfLeaseOwnerAsync(
             SystemInstanceOperation operation,
             SystemInstanceLifecycle lifecycle,
+            SystemInstance? systemInstance,
             string leaseOwner,
             CancellationToken cancellationToken = default)
         {

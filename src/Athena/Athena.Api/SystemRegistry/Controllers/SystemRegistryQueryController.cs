@@ -42,7 +42,8 @@ public class SystemRegistryQueryController(SystemRegistryUseCaseHandler handler)
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _handler.GetAllSystemsAsync(cancellationToken);
+        var query = SystemRegistryQueryRequestMapper.ToGetAllQuery();
+        var result = await _handler.GetAllSystemsAsync(query, cancellationToken);
         var response = SystemRegistryResponseMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -117,7 +118,8 @@ public class SystemRegistryQueryController(SystemRegistryUseCaseHandler handler)
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemResponse>>>> GetDeleted(CancellationToken cancellationToken)
     {
-        var result = await _handler.GetDeletedSystemsAsync(cancellationToken);
+        var query = SystemRegistryQueryRequestMapper.ToGetDeletedQuery();
+        var result = await _handler.GetDeletedSystemsAsync(query, cancellationToken);
         var response = SystemRegistryResponseMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

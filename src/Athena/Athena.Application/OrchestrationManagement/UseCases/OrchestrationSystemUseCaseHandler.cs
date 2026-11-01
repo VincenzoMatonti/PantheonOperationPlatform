@@ -2,11 +2,13 @@ using Athena.Application.Common.Services;
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.DTOs;
 using Athena.Application.OrchestrationManagement.Exceptions;
+using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 
 public class OrchestrationSystemInstanceUseCaseHandler(OrchestrationSystemInstanceCommandHandler commandHandler, OrchestrationSystemInstanceQueryHandler queryHandler, ApplicationExceptionService exceptionService)
+    : IOrchestrationSystemInstanceQueries
 {
     private readonly OrchestrationSystemInstanceCommandHandler _commandHandler = commandHandler;
     private readonly OrchestrationSystemInstanceQueryHandler _queryHandler = queryHandler;
@@ -33,4 +35,9 @@ public class OrchestrationSystemInstanceUseCaseHandler(OrchestrationSystemInstan
 
     public Task<List<OrchestrationSystemInstanceDto>> GetAllOrchestrationSystemInstancesAsync(GetOrchestrationSystemInstancesQuery query, CancellationToken cancellationToken = default) =>
     ExecuteAsync(() => _queryHandler.GetAllOrchestrationSystemInstancesAsync(query, cancellationToken));
+
+    public Task<IReadOnlyList<OrchestrationSystemInstanceDto>> GetByOrchestrationIdAsync(
+        GetOrchestrationSystemInstancesByOrchestrationIdQuery query,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(() => _queryHandler.GetByOrchestrationIdAsync(query, cancellationToken));
 }

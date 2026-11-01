@@ -41,7 +41,8 @@ public sealed class OrchestrationRegistryQueryController(OrchestrationRegistryUs
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationResponse>>>> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _handler.GetAllAsync(cancellationToken);
+        var query = OrchestrationRegistryQueryRequestMapper.ToGetAllQuery();
+        var result = await _handler.GetAllAsync(query, cancellationToken);
         var response = OrchestrationRegistryResponseMapper.ToResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }
@@ -72,7 +73,8 @@ public sealed class OrchestrationRegistryQueryController(OrchestrationRegistryUs
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<OrchestrationResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<OrchestrationResponse>>>> GetDeleted(CancellationToken cancellationToken)
     {
-        var result = await _handler.GetDeletedAsync(cancellationToken);
+        var query = OrchestrationRegistryQueryRequestMapper.ToGetDeletedQuery();
+        var result = await _handler.GetDeletedAsync(query, cancellationToken);
         var response = OrchestrationRegistryResponseMapper.ToResponses(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

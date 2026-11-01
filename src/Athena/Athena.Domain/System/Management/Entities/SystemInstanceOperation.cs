@@ -10,6 +10,7 @@ public sealed class SystemInstanceOperation
     public Guid Id { get; private set; }
     public SystemInstanceId SystemInstanceId { get; private set; } = null!;
     public SystemInstanceOperationType Type { get; private set; }
+    public string? CommandPayloadJson { get; private set; }
     public SystemInstanceOperationStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? StartedAtUtc { get; private set; }
@@ -23,20 +24,28 @@ public sealed class SystemInstanceOperation
     public DateTime? NextAttemptAtUtc { get; private set; }
     public DateTime? LastAttemptAtUtc { get; private set; }
     public int AttemptCount { get; private set; }
+    public int MaxAttempts { get; private set; } = 8;
     public long Version { get; private set; }
     public bool IsActive => Status is SystemInstanceOperationStatus.Pending
         or SystemInstanceOperationStatus.Running
         or SystemInstanceOperationStatus.OutcomeUnknown;
 
-    public static SystemInstanceOperation Create(SystemInstanceId id, SystemInstanceOperationType type)
+    public static SystemInstanceOperation Create(
+        SystemInstanceId id,
+        SystemInstanceOperationType type,
+        string? commandPayloadJson = null,
+        int maxAttempts = 8)
     {
         ArgumentNullException.ThrowIfNull(id);
         if (!Enum.IsDefined(type)) throw new SystemInstanceManagementException(SystemInstanceManagementErrorCode.OperationInvalidTransition, $"Operation type '{type}' is invalid.", DomainErrorType.Validation);
+        if (maxAttempts < 1) throw new ArgumentOutOfRangeException(nameof(maxAttempts));
         return new SystemInstanceOperation
         {
             Id = Guid.NewGuid(),
             SystemInstanceId = id,
             Type = type,
+            CommandPayloadJson = commandPayloadJson,
+            MaxAttempts = maxAttempts,
             Status = SystemInstanceOperationStatus.Pending,
             CreatedAtUtc = DateTime.UtcNow
         };
@@ -124,12 +133,13 @@ public sealed class SystemInstanceOperation
         Version++;
     }
 
-    public void MarkIndeterminate(string reason)
+    public void MarkIndeterminate(string reason, string? leaseOwner = null)
     {
         EnsureStatus(SystemInstanceOperationStatus.OutcomeUnknown);
         if (string.IsNullOrWhiteSpace(reason))
             throw new SystemInstanceManagementException(SystemInstanceManagementErrorCode.OperationErrorMessageRequired, "A resolution reason is required.", DomainErrorType.Validation);
-        if (LeaseExpiresAtUtc is { } leaseExpiresAtUtc && leaseExpiresAtUtc > DateTime.UtcNow)
+        if (LeaseExpiresAtUtc is { } leaseExpiresAtUtc && leaseExpiresAtUtc > DateTime.UtcNow
+            && (leaseOwner is null || LeaseOwner != leaseOwner))
             throw new SystemInstanceManagementException(SystemInstanceManagementErrorCode.OperationInvalidTransition, $"Operation '{Id}' is still leased and cannot be resolved.");
 
         Status = SystemInstanceOperationStatus.Indeterminate;

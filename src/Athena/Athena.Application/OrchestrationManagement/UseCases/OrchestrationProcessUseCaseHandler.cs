@@ -7,9 +7,6 @@ using Athena.Application.OrchestrationManagement.Exceptions;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.SystemManagement.Contracts;
-using Athena.Domain.Orchestration.Management.Entities;
-using Athena.Domain.Orchestration.Management.Repositories;
-using Athena.Domain.Orchestration.Registry.ValueObjects;
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 
@@ -19,7 +16,7 @@ public class OrchestrationProcessUseCaseHandler(
     IOrchestrationLifecycleCommands orchestrationLifecycleUseCaseHandler,
     IOrchestrationLifecycleOperations orchestrationLifecycleOperationUseCaseHandler,
     IOrchestrationStatusSynchronizer orchestrationStatusSynchronizationService,
-    IOrchestrationSystemInstanceRepository orchestrationSystemRepository,
+    IOrchestrationSystemInstanceQueries orchestrationSystemQueries,
     ISystemInstanceProcessCoordinator processManagementService,
     IOrchestrationResourceCoordinator resourceCoordinator)
 {
@@ -29,7 +26,7 @@ public class OrchestrationProcessUseCaseHandler(
     private readonly IOrchestrationLifecycleCommands _orchestrationLifecycleUseCaseHandler = orchestrationLifecycleUseCaseHandler;
     private readonly IOrchestrationLifecycleOperations _orchestrationLifecycleOperationUseCaseHandler = orchestrationLifecycleOperationUseCaseHandler;
     private readonly IOrchestrationStatusSynchronizer _orchestrationStatusSynchronizationService = orchestrationStatusSynchronizationService;
-    private readonly IOrchestrationSystemInstanceRepository _orchestrationSystemRepository = orchestrationSystemRepository;
+    private readonly IOrchestrationSystemInstanceQueries _orchestrationSystemQueries = orchestrationSystemQueries;
     private readonly ISystemInstanceProcessCoordinator _processManagementService = processManagementService;
     private readonly IOrchestrationResourceCoordinator _resourceCoordinator = resourceCoordinator;
 
@@ -37,22 +34,21 @@ public class OrchestrationProcessUseCaseHandler(
     {
         OrchestrationLifecycleOperationDto? operation = null;
         var operationStarted = false;
-        IReadOnlyCollection<OrchestrationSystemInstance> associations = [];
+        IReadOnlyList<OrchestrationSystemInstanceDto> associations = [];
         var completedOperation = await _exceptionService.ExecuteWithRecoveryAsync(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!Enum.IsDefined(command.Type)) throw new InvalidOperationTypeException(command.Type.ToString());
-            var orchestrationId = OrchestrationId.Create(command.OrchestrationId);
-            associations = (await _orchestrationSystemRepository.GetByOrchestrationIdAsync(
-                    orchestrationId, cancellationToken: cancellationToken))
-                .ToArray();
+            associations = await _orchestrationSystemQueries.GetByOrchestrationIdAsync(
+                new GetOrchestrationSystemInstancesByOrchestrationIdQuery(command.OrchestrationId),
+                cancellationToken);
             if (associations.Count == 0)
                 throw new InvalidOperationException($"Orchestration '{command.OrchestrationId}' has no active SystemInstance associations.");
 
             foreach (var association in associations)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await _processManagementService.EnsureOperableAsync(association.SystemInstanceId.Value, cancellationToken);
+                await _processManagementService.EnsureOperableAsync(association.SystemInstanceId, cancellationToken);
             }
 
             var lifecycleQuery = new GetOrchestrationLifecycleByIdQuery { OrchestrationId = command.OrchestrationId };
@@ -79,7 +75,7 @@ public class OrchestrationProcessUseCaseHandler(
 
             var successfulInstanceIds = await _resourceCoordinator.ExecuteAsync(
                 command.OrchestrationId,
-                associations.Select(association => association.SystemInstanceId.Value).ToArray(),
+                associations.Select(association => association.SystemInstanceId).ToArray(),
                 command.Type.ToString(),
                 cancellationToken);
 
@@ -106,7 +102,7 @@ public class OrchestrationProcessUseCaseHandler(
                 if (associations.Count > 0)
                 {
                     await ApplicationExceptionService.TryExecuteCleanupAsync(() => _orchestrationStatusSynchronizationService.SynchronizeForSystemInstancesAsync(
-                                associations.Select(association => association.SystemInstanceId.Value), CancellationToken.None, excludedOrchestrationId: command.OrchestrationId),
+                                associations.Select(association => association.SystemInstanceId), CancellationToken.None, excludedOrchestrationId: command.OrchestrationId),
                                 $"Failed to synchronize related orchestrations after orchestration '{command.OrchestrationId}' failed.");
                 }
             }

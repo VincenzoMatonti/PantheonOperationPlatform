@@ -122,6 +122,9 @@ public class OrchestrationRegistryUseCaseHandler(
         return await _orchestrationQueryHandler.GetAllAsync(cancellationToken);
     });
 
+    public Task<List<OrchestrationDto>> GetAllAsync(GetAllOrchestrationsQuery query, CancellationToken cancellationToken = default) =>
+        GetAllAsync(cancellationToken);
+
     public Task<List<OrchestrationDto>> GetByRegistrationStatusAsync(GetOrchestrationsByRegistrationStatusQuery query, CancellationToken cancellationToken = default) => ExecuteAsync(async () =>
     {
         return await _orchestrationQueryHandler.GetByRegistrationStatusAsync(query, cancellationToken);
@@ -136,4 +139,7 @@ public class OrchestrationRegistryUseCaseHandler(
     {
         return await _orchestrationQueryHandler.GetDeletedAsync(cancellationToken);
     });
+
+    public Task<List<OrchestrationDto>> GetDeletedAsync(GetDeletedOrchestrationsQuery query, CancellationToken cancellationToken = default) =>
+        GetDeletedAsync(cancellationToken);
 }

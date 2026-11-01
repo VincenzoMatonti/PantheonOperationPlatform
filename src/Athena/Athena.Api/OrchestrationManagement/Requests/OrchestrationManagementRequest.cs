@@ -44,8 +44,6 @@ public class GetOrchestrationLifecycleOperationsByStatusRequest
 
 public class GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequest
 {
-    public Guid OrchestrationId { get; init; }
-
     public string Status { get; init; } = string.Empty;
 }
 

@@ -38,10 +38,6 @@ public class GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusReques
 {
     public GetOrchestrationLifecycleOperationsByOrchestrationIdAndStatusRequestValidator()
     {
-        RuleFor(x => x.OrchestrationId)
-            .NotEmpty()
-            .WithMessage("The orchestration ID is required.");
-
         RuleFor(x => x.Status)
             .Must(value => Enum.TryParse<OrchestrationLifecycleOperationStatus>(value, true, out var status) && Enum.IsDefined(status))
             .WithMessage("The lifecycle operation status filter is invalid.");

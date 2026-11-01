@@ -29,7 +29,8 @@ public class OrchestrationManagementCommandController(
     public async Task<ActionResult<ApiResponse<OrchestrationLifecycleCommandResponse>>> CreateLifecycle(
         Guid orchestrationId, CancellationToken cancellationToken)
     {
-        var result = await _lifecycleHandler.CreateOrchestrationLifecycleAsync(orchestrationId, cancellationToken);
+        var command = OrchestrationLifecycleRequestCommandMapper.ToCreateLifecycleCommand(orchestrationId);
+        var result = await _lifecycleHandler.CreateOrchestrationLifecycleAsync(command, cancellationToken);
         var response = OrchestrationManagementResponseCommandMapper.ToResponse(result);
         return Ok(ApiResponseBuilder.BuildSuccess(response));
     }

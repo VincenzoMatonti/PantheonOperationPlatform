@@ -5,7 +5,8 @@ public sealed record SystemInstanceExecutionCommandRequest(
     Guid? SystemId = null,
     Guid? WorkloadId = null,
     string? Name = null,
-    string? Details = null);
+    string? Details = null,
+    string? ConfigurationReference = null);
 
 public sealed record SystemInstanceProcessDto(
     Guid Id,
@@ -30,7 +31,13 @@ public sealed record SystemInstanceExecutionStatus(
 public sealed record SystemInstanceExecutionCommand(
     Guid OperationId,
     Guid SystemInstanceId,
-    string Command);
+    string Command,
+    string? PayloadJson = null,
+    Guid? SystemId = null,
+    Guid? WorkloadId = null,
+    string? Name = null,
+    Guid? CorrelationId = null,
+    string ContractVersion = "1.0");
 
 public enum AgentOperationStatus
 {
@@ -38,7 +45,9 @@ public enum AgentOperationStatus
     Running = 1,
     Completed = 2,
     Failed = 3,
-    NotFound = 4
+    NotFound = 4,
+    Pending = 5,
+    OutcomeUnknown = 6
 }
 
 public sealed record SystemInstanceExecutionResult(
@@ -50,7 +59,8 @@ public sealed record SystemInstanceExecutionResult(
     DateTime? CompletedAtUtc = null,
     string? ErrorMessage = null,
     string? ObservedState = null,
-    DateTime? ObservedAtUtc = null);
+    DateTime? ObservedAtUtc = null,
+    Guid? CorrelationId = null);
 
 public sealed record SystemInstanceExecutionHealth(
     Guid SystemInstanceId,

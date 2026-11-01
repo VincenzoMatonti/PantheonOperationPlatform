@@ -1,5 +1,12 @@
 namespace Athena.Api.OrchestrationManagement.Responses;
 
+public sealed record OrchestrationAggregateStatusResponse(
+    Guid OrchestrationId,
+    string AggregateStatus,
+    string DesiredState,
+    string ObservedStatus,
+    DateTime? LatestObservedAtUtc);
+
 public class OrchestrationLifecycleCommandResponse
 {
     public Guid OrchestrationId { get; init; }

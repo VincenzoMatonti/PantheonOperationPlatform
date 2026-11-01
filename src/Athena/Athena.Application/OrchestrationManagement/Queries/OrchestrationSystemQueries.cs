@@ -9,3 +9,5 @@ public class GetOrchestrationSystemInstancesQuery
 {
     public bool IncludeDeleted { get; set; }
 }
+
+public sealed record GetOrchestrationSystemInstancesByOrchestrationIdQuery(Guid OrchestrationId);
