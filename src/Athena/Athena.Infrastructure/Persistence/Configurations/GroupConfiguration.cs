@@ -1,5 +1,5 @@
-using Athena.Domain.Company.Registry.Entities;
-using Athena.Domain.Company.Registry.ValueObjects;
+using Athena.Domain.Company.Entities;
+using Athena.Domain.Company.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

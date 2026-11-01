@@ -1,8 +1,8 @@
-using Athena.Domain.Company.Registry.Enums;
-using Athena.Domain.Company.Registry.Entities;
-using Athena.Domain.Company.Registry.ValueObjects;
+using Athena.Domain.Company.Enums;
+using Athena.Domain.Company.Entities;
+using Athena.Domain.Company.ValueObjects;
 
-namespace Athena.Domain.Company.Registry.Repositories;
+namespace Athena.Domain.Company.Repositories;
 
 public interface IGroupRepository
 {

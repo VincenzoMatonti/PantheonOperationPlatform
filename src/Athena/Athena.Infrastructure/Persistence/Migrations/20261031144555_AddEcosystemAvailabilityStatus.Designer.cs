@@ -25,7 +25,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Athena.Domain.Company.Registry.Entities.Company", b =>
+            modelBuilder.Entity("Athena.Domain.Company.Entities.Company", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -146,7 +146,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("companies", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.Company.Registry.Entities.Group", b =>
+            modelBuilder.Entity("Athena.Domain.Company.Entities.Group", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -696,15 +696,15 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("system_runtime_instances", (string)null);
                 });
 
-            modelBuilder.Entity("Athena.Domain.Company.Registry.Entities.Company", b =>
+            modelBuilder.Entity("Athena.Domain.Company.Entities.Company", b =>
                 {
-                    b.HasOne("Athena.Domain.Company.Registry.Entities.Group", null)
+                    b.HasOne("Athena.Domain.Company.Entities.Group", null)
                         .WithMany()
                         .HasForeignKey("group_database_id", "GroupId")
                         .HasPrincipalKey("id", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.OwnsOne("Athena.Domain.Company.Registry.ValueObjects.PostalAddress", "RegisteredAddress", b1 =>
+                    b.OwnsOne("Athena.Domain.Company.ValueObjects.PostalAddress", "RegisteredAddress", b1 =>
                         {
                             b1.Property<int>("Companyid")
                                 .HasColumnType("integer");
@@ -751,7 +751,7 @@ namespace Athena.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Athena.Domain.Ecosystem.Registry.Entities.Ecosystem", b =>
                 {
-                    b.HasOne("Athena.Domain.Company.Registry.Entities.Company", null)
+                    b.HasOne("Athena.Domain.Company.Entities.Company", null)
                         .WithMany()
                         .HasForeignKey("company_database_id", "CompanyId")
                         .HasPrincipalKey("id", "Id")

@@ -1,4 +1,4 @@
-namespace Athena.Domain.Company.Registry.Exceptions;
+namespace Athena.Domain.Company.Exceptions;
 
 public class GroupIdRequiredException() : GroupRegistryException(
     GroupRegistryErrorCode.GroupIdRequired,

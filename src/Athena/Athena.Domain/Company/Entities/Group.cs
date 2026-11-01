@@ -1,8 +1,8 @@
-using Athena.Domain.Company.Registry.Enums;
-using Athena.Domain.Company.Registry.Exceptions;
-using Athena.Domain.Company.Registry.ValueObjects;
+using Athena.Domain.Company.Enums;
+using Athena.Domain.Company.Exceptions;
+using Athena.Domain.Company.ValueObjects;
 
-namespace Athena.Domain.Company.Registry.Entities;
+namespace Athena.Domain.Company.Entities;
 
 public class Group
 {

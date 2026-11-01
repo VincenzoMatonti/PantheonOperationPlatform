@@ -1,7 +1,7 @@
-using Athena.Domain.Company.Registry.Entities;
-using Athena.Domain.Company.Registry.Enums;
-using Athena.Domain.Company.Registry.Repositories;
-using Athena.Domain.Company.Registry.ValueObjects;
+using Athena.Domain.Company.Entities;
+using Athena.Domain.Company.Enums;
+using Athena.Domain.Company.Repositories;
+using Athena.Domain.Company.ValueObjects;
 using Athena.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,6 +1,6 @@
-using Athena.Domain.Company.Registry.Exceptions;
+using Athena.Domain.Company.Exceptions;
 
-namespace Athena.Domain.Company.Registry.ValueObjects;
+namespace Athena.Domain.Company.ValueObjects;
 
 public class LegalName : IEquatable<LegalName>
 {

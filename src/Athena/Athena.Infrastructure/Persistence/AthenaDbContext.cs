@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Athena.Domain.Company.Registry.Entities;
+using Athena.Domain.Company.Entities;
 using Athena.Domain.System.Management.Entities;
 using Athena.Infrastructure.Persistence.Runtime;
 using Athena.Domain.Orchestration.Management.Entities;

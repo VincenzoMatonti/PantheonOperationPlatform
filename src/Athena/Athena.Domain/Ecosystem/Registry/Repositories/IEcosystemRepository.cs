@@ -1,4 +1,4 @@
-using Athena.Domain.Company.Registry.ValueObjects;
+using Athena.Domain.Company.ValueObjects;
 using EcosystemEntity = Athena.Domain.Ecosystem.Registry.Entities.Ecosystem;
 using Athena.Domain.Ecosystem.Registry.Enums;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;

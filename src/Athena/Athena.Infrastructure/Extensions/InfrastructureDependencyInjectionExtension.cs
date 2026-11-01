@@ -2,7 +2,7 @@ using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Interfaces.Runtime;
 using Athena.Domain.Block.Registry.Repositories;
-using Athena.Domain.Company.Registry.Repositories;
+using Athena.Domain.Company.Repositories;
 using Athena.Domain.Ecosystem.Registry.Repositories;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.Repositories;

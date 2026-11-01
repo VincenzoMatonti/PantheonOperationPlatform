@@ -1,6 +1,6 @@
 using Athena.Domain.Common;
 
-namespace Athena.Domain.Company.Registry.Exceptions;
+namespace Athena.Domain.Company.Exceptions;
 
 public abstract class CompanyRegistryException(CompanyRegistryErrorCode code, string message)
     : DomainException<CompanyRegistryErrorCode>(code, message, MapErrorType(code))

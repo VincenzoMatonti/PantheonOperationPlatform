@@ -1,6 +1,6 @@
 using Athena.Domain.Common;
 
-namespace Athena.Domain.Company.Registry.Exceptions;
+namespace Athena.Domain.Company.Exceptions;
 
 public abstract class GroupRegistryException(GroupRegistryErrorCode code, string message)
     : DomainException<GroupRegistryErrorCode>(code, message, MapErrorType(code))

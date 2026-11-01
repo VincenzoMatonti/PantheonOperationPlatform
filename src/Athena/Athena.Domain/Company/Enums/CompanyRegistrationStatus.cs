@@ -1,4 +1,4 @@
-namespace Athena.Domain.Company.Registry.Enums;
+namespace Athena.Domain.Company.Enums;
 
 public enum CompanyRegistrationStatus
 {

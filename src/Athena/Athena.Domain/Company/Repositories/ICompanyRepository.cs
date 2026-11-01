@@ -1,8 +1,8 @@
-using CompanyEntity = Athena.Domain.Company.Registry.Entities.Company;
-using Athena.Domain.Company.Registry.Enums;
-using Athena.Domain.Company.Registry.ValueObjects;
+using CompanyEntity = Athena.Domain.Company.Entities.Company;
+using Athena.Domain.Company.Enums;
+using Athena.Domain.Company.ValueObjects;
 
-namespace Athena.Domain.Company.Registry.Repositories;
+namespace Athena.Domain.Company.Repositories;
 
 public interface ICompanyRepository
 {
