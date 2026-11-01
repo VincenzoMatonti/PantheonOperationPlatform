@@ -700,6 +700,85 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.ToTable("systems", (string)null);
                 });
 
+            modelBuilder.Entity("Athena.Domain.System.Registry.Entities.SystemInstance", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int>("AvailabilityStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(3)
+                        .HasColumnName("availability_status");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("system_instance_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RegistrationStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("registration_status");
+
+                    b.Property<Guid>("SystemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("system_id");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("WorkloadId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workload_id");
+
+                    b.Property<int>("system_database_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("system_database_id");
+
+                    b.Property<int>("workload_database_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("workload_database_id");
+
+                    b.HasKey("id")
+                        .HasName("pk_system_instances");
+
+                    b.HasAlternateKey("id", "Id")
+                        .HasName("ak_system_instances_id_system_instance_id");
+
+                    b.HasIndex("Id")
+                        .IsUnique()
+                        .HasDatabaseName("ux_system_instances_system_instance_id");
+
+                    b.HasIndex("system_database_id", "SystemId")
+                        .HasDatabaseName("ix_system_instances_system_database_id_system_id");
+
+                    b.HasIndex("workload_database_id", "WorkloadId")
+                        .HasDatabaseName("ix_system_instances_workload_database_id_workload_id");
+
+                    b.HasIndex("workload_database_id", "WorkloadId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_system_instances_workload_name");
+
+                    b.ToTable("system_instances", (string)null);
+                });
+
             modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>
                 {
                     b.Property<int>("id")
@@ -1033,6 +1112,23 @@ namespace Athena.Infrastructure.Persistence.Migrations
                     b.Navigation("Capabilities");
 
                     b.Navigation("Endpoints");
+                });
+
+            modelBuilder.Entity("Athena.Domain.System.Registry.Entities.SystemInstance", b =>
+                {
+                    b.HasOne("Athena.Domain.System.Registry.Entities.System", null)
+                        .WithMany()
+                        .HasForeignKey("system_database_id", "SystemId")
+                        .HasPrincipalKey("id", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Athena.Domain.Workload.Registry.Entities.Workload", null)
+                        .WithMany()
+                        .HasForeignKey("workload_database_id", "WorkloadId")
+                        .HasPrincipalKey("id", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Athena.Domain.Workload.Registry.Entities.Workload", b =>

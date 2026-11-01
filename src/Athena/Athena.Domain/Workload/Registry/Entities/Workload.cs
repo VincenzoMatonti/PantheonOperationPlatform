@@ -23,10 +23,6 @@ public sealed class Workload
 
     public bool IsDeleted { get; private set; }
 
-    private Workload()
-    {
-    }
-
     public static Workload Create(WorkloadId id, BlockId blockId, WorkloadName name)
     {
         if (id is null) throw new WorkloadIdRequiredException();

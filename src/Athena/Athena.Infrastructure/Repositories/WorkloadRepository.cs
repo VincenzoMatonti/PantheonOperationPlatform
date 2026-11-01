@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Athena.Infrastructure.Repositories;
 
-public sealed class WorkloadRepository(AthenaDbContext context) : IWorkloadRepository
+public class WorkloadRepository(AthenaDbContext context) : IWorkloadRepository
 {
     private IQueryable<Workload> ActiveWorkloads => context.Workloads.Where(workload => !workload.IsDeleted);
 

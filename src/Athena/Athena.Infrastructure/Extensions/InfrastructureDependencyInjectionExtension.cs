@@ -64,6 +64,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IEcosystemRepository, EcosystemRepository>();
         services.AddScoped<IBlockRepository, BlockRepository>();
         services.AddScoped<IWorkloadRepository, WorkloadRepository>();
+        services.AddScoped<ISystemInstanceRepository, SystemInstanceRepository>();
         return services;
     }
 

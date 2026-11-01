@@ -5,6 +5,7 @@ using Athena.Infrastructure.Persistence.Runtime;
 using Athena.Domain.Orchestration.Management.Entities;
 using RegisteredSystem = Athena.Domain.System.Registry.Entities.System;
 using RegisteredOrchestration = Athena.Domain.Orchestration.Registry.Entities.Orchestration;
+using RegisteredSystemInstance = Athena.Domain.System.Registry.Entities.SystemInstance;
 using Athena.Domain.Ecosystem.Registry.Entities;
 using Athena.Domain.Block.Registry.Entities;
 using Athena.Domain.Workload.Registry.Entities;
@@ -29,6 +30,7 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
     public DbSet<Ecosystem> Ecosystems => Set<Ecosystem>();
     public DbSet<Block> Blocks => Set<Block>();
     public DbSet<Workload> Workloads => Set<Workload>();
+    public DbSet<RegisteredSystemInstance> SystemInstances => Set<RegisteredSystemInstance>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +47,9 @@ public class AthenaDbContext(DbContextOptions<AthenaDbContext> options) : DbCont
         modelBuilder.Entity<Block>().Property<int>("ecosystem_database_id");
         modelBuilder.Entity<Workload>().Property<int>("id");
         modelBuilder.Entity<Workload>().Property<int>("block_database_id");
+        modelBuilder.Entity<RegisteredSystemInstance>().Property<int>("id");
+        modelBuilder.Entity<RegisteredSystemInstance>().Property<int>("system_database_id");
+        modelBuilder.Entity<RegisteredSystemInstance>().Property<int>("workload_database_id");
 
         // Applicare tutte le configurazioni.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AthenaDbContext).Assembly);
