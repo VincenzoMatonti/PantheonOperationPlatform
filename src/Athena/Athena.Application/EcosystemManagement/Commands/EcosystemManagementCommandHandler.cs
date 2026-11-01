@@ -3,6 +3,8 @@ using Athena.Application.EcosystemManagement.Exceptions;
 using Athena.Domain.Ecosystem.Management.Entities;
 using Athena.Domain.Ecosystem.Management.Enums;
 using Athena.Domain.Ecosystem.Management.Repositories;
+using Athena.Domain.Ecosystem.Registry.Entities;
+using Athena.Domain.Ecosystem.Registry.Enums;
 using Athena.Domain.Ecosystem.Registry.Exceptions;
 using Athena.Domain.Ecosystem.Registry.Repositories;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;
@@ -59,20 +61,16 @@ public sealed class EcosystemManagementCommandHandler(
         return EcosystemManagementDtoMapper.ToDto(operation);
     }
 
-    private async Task<Athena.Domain.Ecosystem.Registry.Entities.Ecosystem> GetEcosystemAsync(EcosystemId id, CancellationToken token) =>
-        await ecosystemRepository.GetByIdAsync(id, token) ?? throw new EcosystemNotFoundException(id.Value);
+    private async Task<Ecosystem> GetEcosystemAsync(EcosystemId id, CancellationToken token) => await ecosystemRepository.GetByIdAsync(id, token) ?? throw new EcosystemNotFoundException(id.Value);
 
-    private static void EnsureRegistered(Athena.Domain.Ecosystem.Registry.Entities.Ecosystem ecosystem)
+    private static void EnsureRegistered(Ecosystem ecosystem)
     {
-        if (ecosystem.RegistrationStatus == Athena.Domain.Ecosystem.Registry.Enums.EcosystemRegistrationStatus.Disabled)
-            throw new EcosystemAlreadyDisabledException(ecosystem.Id.Value);
-        if (ecosystem.RegistrationStatus == Athena.Domain.Ecosystem.Registry.Enums.EcosystemRegistrationStatus.Unregistered)
-            throw new EcosystemNotRegisteredException(ecosystem.Id.Value);
+        if (ecosystem.RegistrationStatus == EcosystemRegistrationStatus.Disabled) throw new EcosystemAlreadyDisabledException(ecosystem.Id.Value);
+        if (ecosystem.RegistrationStatus == EcosystemRegistrationStatus.Unregistered) throw new EcosystemNotRegisteredException(ecosystem.Id.Value);
     }
 
     private async Task<EcosystemLifecycle> GetRequiredLifecycleAsync(EcosystemId id, CancellationToken token) =>
-        await lifecycleRepository.GetByIdAsync(id, token)
-        ?? throw Error(EcosystemManagementErrorCode.EcosystemLifecycleNotFound, $"Lifecycle for ecosystem '{id.Value}' was not found.");
+        await lifecycleRepository.GetByIdAsync(id, token) ?? throw Error(EcosystemManagementErrorCode.EcosystemLifecycleNotFound, $"Lifecycle for ecosystem '{id.Value}' was not found.");
 
     private static EcosystemManagementException Error(EcosystemManagementErrorCode code, string message) => new(code, message);
 

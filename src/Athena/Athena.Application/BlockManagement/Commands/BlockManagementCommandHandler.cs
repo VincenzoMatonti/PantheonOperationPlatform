@@ -3,16 +3,15 @@ using Athena.Application.BlockManagement.Exceptions;
 using Athena.Domain.Block.Management.Entities;
 using Athena.Domain.Block.Management.Enums;
 using Athena.Domain.Block.Management.Repositories;
+using Athena.Domain.Block.Registry.Entities;
+using Athena.Domain.Block.Registry.Enums;
 using Athena.Domain.Block.Registry.Exceptions;
 using Athena.Domain.Block.Registry.Repositories;
 using Athena.Domain.Block.Registry.ValueObjects;
 
 namespace Athena.Application.BlockManagement.Commands;
 
-public sealed class BlockManagementCommandHandler(
-    IBlockRepository blockRepository,
-    IBlockLifecycleRepository lifecycleRepository,
-    IBlockOperationRepository operationRepository)
+public sealed class BlockManagementCommandHandler(IBlockRepository blockRepository, IBlockLifecycleRepository lifecycleRepository, IBlockOperationRepository operationRepository)
 {
     public async Task<BlockLifecycleDto> CreateLifecycleAsync(CreateBlockLifecycleCommand command, CancellationToken token)
     {
@@ -59,19 +58,16 @@ public sealed class BlockManagementCommandHandler(
         return BlockManagementDtoMapper.ToDto(operation);
     }
 
-    private async Task<Athena.Domain.Block.Registry.Entities.Block> GetBlockAsync(BlockId id, CancellationToken token) =>
+    private async Task<Block> GetBlockAsync(BlockId id, CancellationToken token) =>
         await blockRepository.GetByIdAsync(id, token) ?? throw new BlockNotFoundException(id.Value);
 
     private async Task<BlockLifecycle> GetRequiredLifecycleAsync(BlockId id, CancellationToken token) =>
-        await lifecycleRepository.GetByIdAsync(id, token)
-        ?? throw Error(BlockManagementErrorCode.BlockLifecycleNotFound, $"Lifecycle for block '{id.Value}' was not found.");
+        await lifecycleRepository.GetByIdAsync(id, token) ?? throw Error(BlockManagementErrorCode.BlockLifecycleNotFound, $"Lifecycle for block '{id.Value}' was not found.");
 
-    private static void EnsureRegistered(Athena.Domain.Block.Registry.Entities.Block block)
+    private static void EnsureRegistered(Block block)
     {
-        if (block.RegistrationStatus == Athena.Domain.Block.Registry.Enums.BlockRegistrationStatus.Disabled)
-            throw new BlockAlreadyDisabledException(block.Id.Value);
-        if (block.RegistrationStatus == Athena.Domain.Block.Registry.Enums.BlockRegistrationStatus.Unregistered)
-            throw new BlockNotRegisteredException(block.Id.Value);
+        if (block.RegistrationStatus == BlockRegistrationStatus.Disabled) throw new BlockAlreadyDisabledException(block.Id.Value);
+        if (block.RegistrationStatus == BlockRegistrationStatus.Unregistered) throw new BlockNotRegisteredException(block.Id.Value);
     }
 
     private static BlockManagementException Error(BlockManagementErrorCode code, string message) => new(code, message);

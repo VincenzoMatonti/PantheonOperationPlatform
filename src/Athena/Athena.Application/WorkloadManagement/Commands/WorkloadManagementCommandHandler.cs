@@ -3,16 +3,15 @@ using Athena.Application.WorkloadManagement.Exceptions;
 using Athena.Domain.Workload.Management.Entities;
 using Athena.Domain.Workload.Management.Enums;
 using Athena.Domain.Workload.Management.Repositories;
+using Athena.Domain.Workload.Registry.Entities;
+using Athena.Domain.Workload.Registry.Enums;
 using Athena.Domain.Workload.Registry.Exceptions;
 using Athena.Domain.Workload.Registry.Repositories;
 using Athena.Domain.Workload.Registry.ValueObjects;
 
 namespace Athena.Application.WorkloadManagement.Commands;
 
-public sealed class WorkloadManagementCommandHandler(
-    IWorkloadRepository workloadRepository,
-    IWorkloadLifecycleRepository lifecycleRepository,
-    IWorkloadOperationRepository operationRepository)
+public sealed class WorkloadManagementCommandHandler(IWorkloadRepository workloadRepository, IWorkloadLifecycleRepository lifecycleRepository, IWorkloadOperationRepository operationRepository)
 {
     public async Task<WorkloadLifecycleDto> CreateLifecycleAsync(CreateWorkloadLifecycleCommand command, CancellationToken token)
     {
@@ -59,18 +58,15 @@ public sealed class WorkloadManagementCommandHandler(
         return WorkloadManagementDtoMapper.ToDto(operation);
     }
 
-    private async Task<Athena.Domain.Workload.Registry.Entities.Workload> GetWorkloadAsync(WorkloadId id, CancellationToken token) =>
-        await workloadRepository.GetByIdAsync(id, token) ?? throw new WorkloadNotFoundException(id.Value);
+    private async Task<Workload> GetWorkloadAsync(WorkloadId id, CancellationToken token) => await workloadRepository.GetByIdAsync(id, token) ?? throw new WorkloadNotFoundException(id.Value);
 
-    private static void EnsureRegistered(Athena.Domain.Workload.Registry.Entities.Workload workload)
+    private static void EnsureRegistered(Workload workload)
     {
-        if (workload.RegistrationStatus != Athena.Domain.Workload.Registry.Enums.WorkloadRegistrationStatus.Registered)
-            throw new WorkloadNotRegisteredException(workload.Id.Value);
+        if (workload.RegistrationStatus != WorkloadRegistrationStatus.Registered) throw new WorkloadNotRegisteredException(workload.Id.Value);
     }
 
     private async Task<WorkloadLifecycle> GetRequiredLifecycleAsync(WorkloadId id, CancellationToken token) =>
-        await lifecycleRepository.GetByIdAsync(id, token)
-        ?? throw Error(WorkloadManagementErrorCode.WorkloadLifecycleNotFound, $"Lifecycle for workload '{id.Value}' was not found.");
+        await lifecycleRepository.GetByIdAsync(id, token) ?? throw Error(WorkloadManagementErrorCode.WorkloadLifecycleNotFound, $"Lifecycle for workload '{id.Value}' was not found.");
 
     private static WorkloadManagementException Error(WorkloadManagementErrorCode code, string message) => new(code, message);
 
