@@ -1,14 +1,15 @@
-using Athena.Application.SystemManagement.Contracts;
 using Athena.Domain.System.Management.Entities;
 using Athena.Domain.System.Management.Enums;
 using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.System.Registry.Entities;
 using Athena.Domain.System.Registry.Repositories;
 using Athena.Domain.System.Registry.Enums;
-using Athena.Domain.System.Registry.ValueObjects;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
+using Athena.Application.SystemInstanceManagement.Contracts;
+using Athena.Application.SystemInstanceManagement.Interfaces;
+using Athena.Application.SystemInstanceManagement.Enums;
 
 namespace Athena.Application.BackgroundTasks.Operations;
 

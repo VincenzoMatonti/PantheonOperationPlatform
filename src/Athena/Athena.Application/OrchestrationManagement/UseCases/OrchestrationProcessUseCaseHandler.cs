@@ -1,4 +1,3 @@
-using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Services;
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.DTOs;
@@ -6,7 +5,7 @@ using Athena.Application.OrchestrationManagement.Enums;
 using Athena.Application.OrchestrationManagement.Exceptions;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
-using Athena.Application.SystemManagement.Contracts;
+using Athena.Application.SystemInstanceManagement.Interfaces;
 
 namespace Athena.Application.OrchestrationManagement.UseCases;
 

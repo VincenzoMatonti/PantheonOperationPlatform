@@ -1,5 +1,5 @@
 using Athena.Api.SystemManagement.Responses;
-using Athena.Application.SystemManagement.Contracts;
+using Athena.Application.SystemInstanceManagement.Contracts;
 
 namespace Athena.Api.SystemManagement.Mappings;
 

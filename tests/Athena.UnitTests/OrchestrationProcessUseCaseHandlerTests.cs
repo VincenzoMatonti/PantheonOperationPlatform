@@ -6,12 +6,8 @@ using Athena.Application.OrchestrationManagement.Enums;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.UseCases;
-using Athena.Application.SystemManagement.Contracts;
-using Athena.Domain.Orchestration.Management.Entities;
-using Athena.Domain.Orchestration.Management.Repositories;
-using Athena.Domain.Orchestration.Management.ValueObjects;
-using Athena.Domain.Orchestration.Registry.ValueObjects;
-using Athena.Domain.System.Registry.ValueObjects;
+using Athena.Application.SystemInstanceManagement.Contracts;
+using Athena.Application.SystemInstanceManagement.Interfaces;
 
 namespace Athena.UnitTests;
 

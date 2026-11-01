@@ -3,7 +3,7 @@ using Athena.Api.Common.contracts;
 using Athena.Api.SystemManagement.Mappings;
 using Athena.Api.SystemManagement.Requests;
 using Athena.Api.SystemManagement.Responses;
-using Athena.Application.SystemManagement.Services;
+using Athena.Application.SystemInstanceManagement.UseCases;
 using Athena.Domain.System.Management.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,8 +18,7 @@ public sealed class ApiSystemInstanceProcessController(SystemInstanceProcessUseC
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SystemInstanceResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<SystemInstanceResponse>>>> GetAll(CancellationToken cancellationToken)
     {
-        var query = SystemInstanceProcessRequestMapper.ToGetAllQuery();
-        var result = await handler.GetAllAsync(query, cancellationToken);
+        var result = await handler.GetAllAsync(cancellationToken);
         return Ok(ApiResponseBuilder.BuildSuccess(SystemInstanceProcessResponseMapper.ToResponses(result)));
     }
 
@@ -35,30 +34,22 @@ public sealed class ApiSystemInstanceProcessController(SystemInstanceProcessUseC
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationResponse>), StatusCodes.Status202Accepted)]
-    public async Task<ActionResult<ApiResponse<SystemInstanceOperationResponse>>> Create(
-        [FromBody] CreateSystemInstanceRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationResponse>>> Create([FromBody] CreateSystemInstanceRequest request, CancellationToken cancellationToken)
     {
         var command = SystemInstanceProcessRequestMapper.ToCreateCommand(request);
-        var operation = await handler.CreateAsync(command, cancellationToken);
+        var operation = await handler.CreateOperationAsync(command, cancellationToken);
         var response = SystemInstanceProcessResponseMapper.ToResponse(operation);
-        return AcceptedAtAction(nameof(GetOperation),
-            new { id = operation.SystemInstanceId, operationId = operation.Id },
-            ApiResponseBuilder.BuildSuccess(response));
+        return AcceptedAtAction(nameof(GetOperation), new { id = operation.SystemInstanceId, operationId = operation.Id }, ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationResponse>), StatusCodes.Status202Accepted)]
-    public async Task<ActionResult<ApiResponse<SystemInstanceOperationResponse>>> Register(
-        [FromBody] RegisterSystemInstanceRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationResponse>>> Register([FromBody] RegisterSystemInstanceRequest request, CancellationToken cancellationToken)
     {
         var command = SystemInstanceProcessRequestMapper.ToRegisterCommand(request);
-        var operation = await handler.RegisterAsync(command, cancellationToken);
+        var operation = await handler.RegisterOperationAsync(command, cancellationToken);
         var response = SystemInstanceProcessResponseMapper.ToResponse(operation);
-        return AcceptedAtAction(nameof(GetOperation),
-            new { id = operation.SystemInstanceId, operationId = operation.Id },
-            ApiResponseBuilder.BuildSuccess(response));
+        return AcceptedAtAction(nameof(GetOperation), new { id = operation.SystemInstanceId, operationId = operation.Id }, ApiResponseBuilder.BuildSuccess(response));
     }
 
     [HttpPost("{id:guid}/start")]
@@ -85,21 +76,6 @@ public sealed class ApiSystemInstanceProcessController(SystemInstanceProcessUseC
     [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationResponse>), StatusCodes.Status202Accepted)]
     public Task<ActionResult<ApiResponse<SystemInstanceOperationResponse>>> Unregister(Guid id, CancellationToken cancellationToken) =>
         EnqueueOperation(id, SystemInstanceOperationType.Unregister, cancellationToken);
-
-    [HttpPost("{id:guid}/configure")]
-    [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationResponse>), StatusCodes.Status202Accepted)]
-    public async Task<ActionResult<ApiResponse<SystemInstanceOperationResponse>>> Configure(
-        Guid id,
-        [FromBody] ConfigureSystemInstanceRequest request,
-        CancellationToken cancellationToken)
-    {
-        var command = SystemInstanceProcessRequestMapper.ToConfigureCommand(id, request);
-        var operation = await handler.ConfigureAsync(command, cancellationToken);
-        var response = SystemInstanceProcessResponseMapper.ToResponse(operation);
-        return AcceptedAtAction(nameof(GetOperation),
-            new { id, operationId = operation.Id },
-            ApiResponseBuilder.BuildSuccess(response));
-    }
 
     [HttpGet("{id:guid}/status")]
     [ProducesResponseType(typeof(ApiResponse<SystemInstanceExecutionStatusResponse>), StatusCodes.Status200OK)]

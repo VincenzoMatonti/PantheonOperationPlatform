@@ -1,4 +1,4 @@
-using Athena.Application.SystemManagement.Contracts;
+using Athena.Application.SystemInstanceManagement.Exceptions;
 using Athena.Infrastructure.Services.ProcessManagement;
 using Microsoft.Extensions.Configuration;
 

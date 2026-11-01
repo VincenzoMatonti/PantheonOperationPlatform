@@ -10,32 +10,42 @@ using Athena.Application.CompanyRegistry.UseCases;
 using Athena.Application.GroupRegistry.Commands;
 using Athena.Application.GroupRegistry.Queries;
 using Athena.Application.GroupRegistry.UseCases;
+using Athena.Application.SystemRegistry.Commands;
+using Athena.Application.SystemRegistry.Queries;
+using Athena.Application.SystemRegistry.UseCases;
+using Athena.Application.SystemInstanceManagement.Services;
+using Athena.Application.SystemInstanceManagement.UseCases;
+using Athena.Application.OrchestrationRegistry.Commands;
+using Athena.Application.OrchestrationRegistry.Queries;
+using Athena.Application.OrchestrationRegistry.UseCases;
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.Services;
 using Athena.Application.OrchestrationManagement.UseCases;
-using Athena.Application.OrchestrationRegistry.Commands;
-using Athena.Application.OrchestrationRegistry.Queries;
-using Athena.Application.OrchestrationRegistry.UseCases;
-using Athena.Application.SystemManagement.Contracts;
-using Athena.Application.SystemManagement.Services;
-using Athena.Application.SystemRegistry.Commands;
-using Athena.Application.SystemRegistry.Queries;
-using Athena.Application.SystemRegistry.UseCases;
-using Athena.Application.WorkloadManagement.Commands;
-using Athena.Application.WorkloadManagement.Contracts;
-using Athena.Application.WorkloadManagement.Queries;
-using Athena.Application.WorkloadManagement.UseCases;
-using Athena.Application.BlockManagement.Commands;
-using Athena.Application.BlockManagement.Contracts;
-using Athena.Application.BlockManagement.Queries;
-using Athena.Application.BlockManagement.UseCases;
+using Athena.Application.EcosystemRegistry.Commands;
+using Athena.Application.EcosystemRegistry.Queries;
+using Athena.Application.EcosystemRegistry.UseCases;
 using Athena.Application.EcosystemManagement.Commands;
 using Athena.Application.EcosystemManagement.Contracts;
 using Athena.Application.EcosystemManagement.Queries;
 using Athena.Application.EcosystemManagement.UseCases;
+using Athena.Application.BlockRegistry.Commands;
+using Athena.Application.BlockRegistry.Queries;
+using Athena.Application.BlockRegistry.UseCases;
+using Athena.Application.BlockManagement.Commands;
+using Athena.Application.BlockManagement.Contracts;
+using Athena.Application.BlockManagement.Queries;
+using Athena.Application.BlockManagement.UseCases;
+using Athena.Application.WorkloadRegistry.Commands;
+using Athena.Application.WorkloadRegistry.Queries;
+using Athena.Application.WorkloadRegistry.UseCases;
+using Athena.Application.WorkloadManagement.Commands;
+using Athena.Application.WorkloadManagement.Contracts;
+using Athena.Application.WorkloadManagement.Queries;
+using Athena.Application.WorkloadManagement.UseCases;
 using Microsoft.Extensions.DependencyInjection;
+using Athena.Application.SystemInstanceManagement.Interfaces;
 
 namespace Athena.Application.Common.Extensions;
 
@@ -46,7 +56,27 @@ public static class AthenaApplicationExtensions
         AddApplicationServices(services);
         AddApplicationExceptionHandling(services);
         AddBackgroundServices(services);
+
         return services;
+    }
+
+    // Application Exception Handling
+    private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
+    {
+        services.AddSingleton<IApplicationExceptionMapper, DomainExceptionMapper>();
+        services.AddSingleton<IApplicationExceptionMapper, ApplicationExceptionMapper>();
+        services.AddSingleton<ApplicationExceptionService>();
+        return services;
+    }
+
+    // Background Services
+    private static void AddBackgroundServices(IServiceCollection services)
+    {
+        services.AddScoped<OrchestrationReconciliationService>();
+        services.AddScoped<SystemInstanceOperationProcessor>();
+        services.AddSingleton<EndpointCheckSchedule>();
+        services.AddScoped<SystemSynchronizationService>();
+        services.AddScoped<SystemEndpointSynchronizationService>();
     }
 
     // Application Services
@@ -56,10 +86,14 @@ public static class AthenaApplicationExtensions
         AddManagementApplicationServices(services);
     }
 
+    // Registry
     private static void AddRegistryApplicationServices(IServiceCollection services)
     {
         AddSystemRegistryApplicationServices(services);
         AddOrchestrationRegistryApplicationServices(services);
+        AddEcosystemRegistryApplicationServices(services);
+        AddBlockRegistryApplicationServices(services);
+        AddWorkloadRegistryApplicationServices(services);
         AddGroupRegistryApplicationServices(services);
         AddCompanyRegistryApplicationServices(services);
     }
@@ -78,6 +112,27 @@ public static class AthenaApplicationExtensions
         services.AddScoped<OrchestrationRegistryUseCaseHandler>();
     }
 
+    private static void AddEcosystemRegistryApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<EcosystemRegistryCommandHandler>();
+        services.AddScoped<EcosystemRegistryQueryHandler>();
+        services.AddScoped<EcosystemRegistryUseCaseHandler>();
+    }
+
+    private static void AddBlockRegistryApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<BlockRegistryCommandHandler>();
+        services.AddScoped<BlockRegistryQueryHandler>();
+        services.AddScoped<BlockRegistryUseCaseHandler>();
+    }
+
+    private static void AddWorkloadRegistryApplicationServices(IServiceCollection services)
+    {
+        services.AddScoped<WorkloadRegistryCommandHandler>();
+        services.AddScoped<WorkloadRegistryQueryHandler>();
+        services.AddScoped<WorkloadRegistryUseCaseHandler>();
+    }
+
     private static void AddGroupRegistryApplicationServices(IServiceCollection services)
     {
         services.AddScoped<GroupRegistryCommandHandler>();
@@ -92,17 +147,17 @@ public static class AthenaApplicationExtensions
         services.AddScoped<CompanyRegistryUseCaseHandler>();
     }
 
-    // Management Services
+    // Management
     private static void AddManagementApplicationServices(IServiceCollection services)
     {
+        AddSystemInstanceManagementApplicationServices(services);
         AddOrchestrationManagementApplicationServices(services);
-        AddSystemManagementApplicationServices(services);
         AddEcosystemManagementApplicationServices(services);
         AddBlockManagementApplicationServices(services);
         AddWorkloadManagementApplicationServices(services);
     }
 
-    private static void AddSystemManagementApplicationServices(IServiceCollection services)
+    private static void AddSystemInstanceManagementApplicationServices(IServiceCollection services)
     {
         services.AddScoped<SystemInstanceProcessManagementService>();
         services.AddScoped<SystemInstanceProcessUseCaseHandler>();
@@ -153,24 +208,5 @@ public static class AthenaApplicationExtensions
         services.AddScoped<WorkloadManagementCommandHandler>();
         services.AddScoped<WorkloadManagementQueryHandler>();
         services.AddScoped<IWorkloadManagement>(sp => sp.GetRequiredService<WorkloadManagementUseCaseHandler>());
-    }
-
-    // Application Exception Handling
-    private static IServiceCollection AddApplicationExceptionHandling(IServiceCollection services)
-    {
-        services.AddSingleton<IApplicationExceptionMapper, DomainExceptionMapper>();
-        services.AddSingleton<IApplicationExceptionMapper, ApplicationExceptionMapper>();
-        services.AddSingleton<ApplicationExceptionService>();
-        return services;
-    }
-
-    // Background Services
-    private static void AddBackgroundServices(IServiceCollection services)
-    {
-        services.AddScoped<OrchestrationReconciliationService>();
-        services.AddScoped<SystemInstanceOperationProcessor>();
-        services.AddSingleton<EndpointCheckSchedule>();
-        services.AddScoped<SystemSynchronizationService>();
-        services.AddScoped<SystemEndpointSynchronizationService>();
     }
 }

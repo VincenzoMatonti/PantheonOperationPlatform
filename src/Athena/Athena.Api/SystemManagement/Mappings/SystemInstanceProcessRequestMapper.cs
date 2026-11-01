@@ -1,7 +1,7 @@
 using Athena.Api.SystemManagement.Requests;
-using Athena.Application.SystemManagement.Commands;
-using Athena.Application.SystemManagement.Contracts;
-using Athena.Application.SystemManagement.Queries;
+using Athena.Application.SystemInstanceManagement.Queries;
+using Athena.Application.SystemInstanceManagement.Commands;
+using Athena.Application.SystemInstanceManagement.Contracts;
 using Athena.Domain.System.Management.Enums;
 using ConfigureRequest = Athena.Api.SystemManagement.Requests.ConfigureSystemInstanceRequest;
 using ResolveRequest = Athena.Api.SystemManagement.Requests.ResolveSystemInstanceOperationRequest;

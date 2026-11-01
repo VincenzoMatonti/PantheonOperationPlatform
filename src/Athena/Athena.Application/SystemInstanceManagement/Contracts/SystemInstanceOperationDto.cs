@@ -1,4 +1,4 @@
-namespace Athena.Application.SystemManagement.Contracts;
+namespace Athena.Application.SystemInstanceManagement.Contracts;
 
 public sealed record SystemInstanceOperationDto(
     Guid Id,

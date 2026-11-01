@@ -1,6 +1,4 @@
 using Athena.Application.BackgroundTasks.Synchronization.Interfaces;
-using Athena.Application.Common.Interfaces;
-using Athena.Application.SystemManagement.Contracts;
 using Athena.Domain.Block.Registry.Repositories;
 using Athena.Domain.Company.Repositories;
 using Athena.Domain.Ecosystem.Registry.Repositories;
@@ -20,6 +18,7 @@ using Athena.Infrastructure.Services.Synchronization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Athena.Application.SystemInstanceManagement.Interfaces;
 
 namespace Athena.Infrastructure.Extensions;
 
@@ -80,8 +79,7 @@ public static class DependencyInjectionExtension
         {
             client.Timeout = TimeSpan.FromSeconds(15);
         });
-        services.AddScoped<ICorrelatedSystemInstanceExecutionAgent>(sp =>
-            (ICorrelatedSystemInstanceExecutionAgent)sp.GetRequiredService<ISystemInstanceExecutionAgent>());
+        services.AddScoped<ICorrelatedSystemInstanceExecutionAgent>(sp => (ICorrelatedSystemInstanceExecutionAgent)sp.GetRequiredService<ISystemInstanceExecutionAgent>());
 
         return services;
     }

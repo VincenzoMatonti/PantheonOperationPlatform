@@ -1,4 +1,6 @@
-namespace Athena.Application.SystemManagement.Contracts;
+using Athena.Application.SystemInstanceManagement.Contracts;
+
+namespace Athena.Application.SystemInstanceManagement.Interfaces;
 
 public interface ISystemInstanceProcessCoordinator
 {
