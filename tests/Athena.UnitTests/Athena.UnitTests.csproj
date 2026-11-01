@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Athena\Athena.Api\Athena.Api.csproj" />
+    <ProjectReference Include="..\..\src\Athena\Athena.Cli\Athena.Cli.csproj" />
     <ProjectReference Include="..\..\src\Athena\Athena.Application\Athena.Application.csproj" />
     <ProjectReference Include="..\..\src\Athena\Athena.Domain\Athena.Domain.csproj" />
     <ProjectReference Include="..\..\src\Athena\Athena.Infrastructure\Athena.Infrastructure.csproj" />

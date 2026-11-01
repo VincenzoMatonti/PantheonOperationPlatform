@@ -69,13 +69,15 @@ public class AthenaSystemsRegistryClient(AthenaApiClient apiClient) : ISystemsRe
         apiClient.PostAsync<AddSystemEndpointRequest, SystemResponse>($"{BasePath}/{id}/endpoints", request, cancellationToken);
 
     public Task<SystemResponse> RemoveEndpointAsync(Guid id, RemoveSystemEndpointRequest request, CancellationToken cancellationToken = default) =>
-        apiClient.DeleteAsync<SystemResponse>($"{BasePath}/{id}/endpoints", cancellationToken);
+        apiClient.DeleteAsync<RemoveSystemEndpointRequest, SystemResponse>(
+            $"{BasePath}/{id}/endpoints", request, cancellationToken);
 
     public Task<SystemResponse> AddCapabilityAsync(Guid id, AddSystemCapabilityRequest request, CancellationToken cancellationToken = default) =>
         apiClient.PostAsync<AddSystemCapabilityRequest, SystemResponse>($"{BasePath}/{id}/capabilities", request, cancellationToken);
 
     public Task<SystemResponse> RemoveCapabilityAsync(Guid id, RemoveSystemCapabilityRequest request, CancellationToken cancellationToken = default) =>
-        apiClient.DeleteAsync<SystemResponse>($"{BasePath}/{id}/capabilities", cancellationToken);
+        apiClient.DeleteAsync<RemoveSystemCapabilityRequest, SystemResponse>(
+            $"{BasePath}/{id}/capabilities", request, cancellationToken);
 
     public Task<SystemResponse> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
         apiClient.DeleteAsync<SystemResponse>($"{BasePath}/{id}", cancellationToken);

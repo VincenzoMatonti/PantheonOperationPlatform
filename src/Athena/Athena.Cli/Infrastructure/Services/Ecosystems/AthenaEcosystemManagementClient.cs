@@ -8,8 +8,17 @@ public sealed class AthenaEcosystemManagementClient(AthenaApiClient client) : IE
 {
     public Task<IReadOnlyList<EcosystemLifecycleResponse>> GetAllAsync(CancellationToken token = default) =>
         client.GetAsync<IReadOnlyList<EcosystemLifecycleResponse>>("api/ecosystems/management", token);
-    public Task<EcosystemLifecycleResponse?> GetAsync(Guid id, CancellationToken token = default) =>
-        client.GetAsync<EcosystemLifecycleResponse?>($"api/ecosystems/management/{id}/lifecycle", token);
+    public async Task<EcosystemLifecycleResponse?> GetAsync(Guid id, CancellationToken token = default)
+    {
+        try
+        {
+            return await client.GetAsync<EcosystemLifecycleResponse?>($"api/ecosystems/management/{id}/lifecycle", token);
+        }
+        catch (AthenaApiException exception) when (exception.StatusCode == (int)System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
     public Task<EcosystemLifecycleResponse> CreateAsync(Guid id, CancellationToken token = default) =>
         client.PostAsync<EcosystemLifecycleResponse>($"api/ecosystems/management/{id}/lifecycle", token);
     public Task<EcosystemLifecycleResponse> SetDesiredStateAsync(Guid id, string state, CancellationToken token = default) =>

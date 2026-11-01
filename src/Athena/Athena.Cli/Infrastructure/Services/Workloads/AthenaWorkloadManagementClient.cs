@@ -8,8 +8,17 @@ public sealed class AthenaWorkloadManagementClient(AthenaApiClient client) : IWo
 {
     public Task<IReadOnlyList<WorkloadLifecycleResponse>> GetAllAsync(CancellationToken token = default) =>
         client.GetAsync<IReadOnlyList<WorkloadLifecycleResponse>>("api/workloads/management", token);
-    public Task<WorkloadLifecycleResponse?> GetAsync(Guid id, CancellationToken token = default) =>
-        client.GetAsync<WorkloadLifecycleResponse?>($"api/workloads/management/{id}/lifecycle", token);
+    public async Task<WorkloadLifecycleResponse?> GetAsync(Guid id, CancellationToken token = default)
+    {
+        try
+        {
+            return await client.GetAsync<WorkloadLifecycleResponse?>($"api/workloads/management/{id}/lifecycle", token);
+        }
+        catch (AthenaApiException exception) when (exception.StatusCode == (int)System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
     public Task<WorkloadLifecycleResponse> CreateAsync(Guid id, CancellationToken token = default) =>
         client.PostAsync<WorkloadLifecycleResponse>($"api/workloads/management/{id}/lifecycle", token);
     public Task<WorkloadLifecycleResponse> SetDesiredStateAsync(Guid id, string state, CancellationToken token = default) =>

@@ -8,8 +8,17 @@ public sealed class AthenaBlockManagementClient(AthenaApiClient client) : IBlock
 {
     public Task<IReadOnlyList<BlockLifecycleResponse>> GetAllAsync(CancellationToken token = default) =>
         client.GetAsync<IReadOnlyList<BlockLifecycleResponse>>("api/blocks/management", token);
-    public Task<BlockLifecycleResponse?> GetAsync(Guid id, CancellationToken token = default) =>
-        client.GetAsync<BlockLifecycleResponse?>($"api/blocks/management/{id}/lifecycle", token);
+    public async Task<BlockLifecycleResponse?> GetAsync(Guid id, CancellationToken token = default)
+    {
+        try
+        {
+            return await client.GetAsync<BlockLifecycleResponse?>($"api/blocks/management/{id}/lifecycle", token);
+        }
+        catch (AthenaApiException exception) when (exception.StatusCode == (int)System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
     public Task<BlockLifecycleResponse> CreateAsync(Guid id, CancellationToken token = default) =>
         client.PostAsync<BlockLifecycleResponse>($"api/blocks/management/{id}/lifecycle", token);
     public Task<BlockLifecycleResponse> SetDesiredStateAsync(Guid id, string state, CancellationToken token = default) =>

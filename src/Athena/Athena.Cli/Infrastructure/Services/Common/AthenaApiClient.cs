@@ -26,6 +26,11 @@ public class AthenaApiClient(HttpClient httpClient)
         await EnsureSuccessAsync(response, cancellationToken);
     }
 
+    public Task<TResponse> DeleteAsync<TRequest, TResponse>(
+        string path, TRequest request, CancellationToken cancellationToken = default) =>
+        SendForDataAsync<TResponse>(
+            HttpMethod.Delete, path, request, true, cancellationToken);
+
     private async Task<T> SendForDataAsync<T>(HttpMethod method, string path, object? requestBody, bool includeBody, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(method, path);
