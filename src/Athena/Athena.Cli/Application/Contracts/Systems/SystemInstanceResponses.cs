@@ -9,7 +9,8 @@ public sealed record SystemInstanceProcessResponse(
     string DesiredState,
     string OperationalStatus,
     DateTime CreatedAtUtc,
-    DateTime? UpdatedAtUtc);
+    DateTime? UpdatedAtUtc,
+    DateTime? ObservedAtUtc = null);
 
 public sealed record SystemInstanceStatusResponse(
     Guid SystemInstanceId,
@@ -36,4 +37,9 @@ public sealed record SystemInstanceOperationResponse(
     DateTime CreatedAtUtc,
     DateTime? StartedAtUtc,
     DateTime? CompletedAtUtc,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    DateTime? AgentAcceptedAtUtc = null,
+    DateTime? AgentCompletedAtUtc = null,
+    DateTime? LeaseExpiresAtUtc = null,
+    int AttemptCount = 0,
+    string? ConvergenceStatus = null);

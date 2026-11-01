@@ -1,21 +1,52 @@
 using Athena.Application.OrchestrationManagement.Commands;
 using Athena.Application.OrchestrationManagement.Enums;
-using Athena.Application.OrchestrationManagement.Exceptions;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.OrchestrationManagement.Queries;
 using Athena.Application.OrchestrationManagement.UseCases;
 using Athena.Domain.Orchestration.Management.Repositories;
 using Athena.Domain.Orchestration.Registry.ValueObjects;
 using Athena.Domain.System.Registry.ValueObjects;
+using Microsoft.Extensions.Logging;
+using DomainOperationStatus = Athena.Domain.Orchestration.Management.Enums.OrchestrationLifecycleOperationStatus;
 
 namespace Athena.Application.Common.Services;
 
+public sealed record OrchestrationAggregateStatusDto(
+    Guid OrchestrationId,
+    ResourceAggregateStatus AggregateStatus,
+    string DesiredState,
+    string ObservedStatus,
+    DateTime? LatestObservedAtUtc);
+
 public sealed class OrchestrationStatusSynchronizationService(
     IOrchestrationSystemInstanceRepository associationRepository,
+    IOrchestrationLifecycleOperationRepository operationRepository,
     IOrchestrationResourceCoordinator resourceCoordinator,
-    OrchestrationLifecycleQueryHandler orchestrationLifecycleQueryHandler,
-    OrchestrationLifecycleUseCaseHandler orchestrationLifecycleUseCaseHandler) : IOrchestrationStatusSynchronizer
+    OrchestrationLifecycleQueryHandler lifecycleQueryHandler,
+    OrchestrationLifecycleUseCaseHandler lifecycleUseCaseHandler,
+    ILogger<OrchestrationStatusSynchronizationService> logger) : IOrchestrationStatusSynchronizer
 {
+    public async Task<OrchestrationAggregateStatusDto> GetAggregateStatusAsync(
+        Guid orchestrationId,
+        CancellationToken cancellationToken = default)
+    {
+        var associations = await associationRepository.GetByOrchestrationIdAsync(
+            OrchestrationId.Create(orchestrationId),
+            cancellationToken: cancellationToken);
+        if (associations.Count == 0)
+            return new OrchestrationAggregateStatusDto(orchestrationId, ResourceAggregateStatus.Unknown, "Unknown", "Unknown", null);
+
+        var summary = await resourceCoordinator.GetLifecycleSummaryAsync(
+            associations.Select(association => association.SystemInstanceId.Value),
+            cancellationToken);
+        return new OrchestrationAggregateStatusDto(
+            orchestrationId,
+            summary.AggregateStatus,
+            summary.DesiredState,
+            summary.OperationalStatus,
+            summary.LatestObservedAtUtc);
+    }
+
     public async Task SynchronizeForSystemInstancesAsync(
         IEnumerable<Guid> systemInstanceIds,
         CancellationToken cancellationToken = default,
@@ -39,52 +70,57 @@ public sealed class OrchestrationStatusSynchronizationService(
         foreach (var orchestrationId in affectedOrchestrationIds)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var associations = await associationRepository.GetByOrchestrationIdAsync(
+            var pending = await operationRepository.GetByOrchestrationIdAndStatusAsync(
                 OrchestrationId.Create(orchestrationId),
-                cancellationToken: cancellationToken);
-            var summary = await resourceCoordinator.GetLifecycleSummaryAsync(
-                associations.Select(association => association.SystemInstanceId.Value), cancellationToken);
-            if (!Enum.TryParse<OrchestrationOperationalStatus>(summary.OperationalStatus, true, out var targetStatus)
-                || !Enum.IsDefined(targetStatus))
-                throw new InvalidOperationException($"Resource coordinator returned invalid operational status '{summary.OperationalStatus}'.");
-            if (!Enum.TryParse<OrchestrationDesiredState>(summary.DesiredState, true, out var targetDesiredState)
-                || !Enum.IsDefined(targetDesiredState))
-                throw new InvalidOperationException($"Resource coordinator returned invalid desired state '{summary.DesiredState}'.");
-            var lifecycle = await orchestrationLifecycleQueryHandler.GetOrchestrationLifecycleByIdAsync(
-                new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId },
-                cancellationToken) ?? throw new OrchestrationLifecycleNotFoundException(orchestrationId);
-
-            if (lifecycle.OperationalStatus != targetStatus)
+                DomainOperationStatus.Pending,
+                cancellationToken);
+            var running = await operationRepository.GetByOrchestrationIdAndStatusAsync(
+                OrchestrationId.Create(orchestrationId),
+                DomainOperationStatus.Running,
+                cancellationToken);
+            if (pending.Count > 0 || running.Count > 0)
             {
-                switch (targetStatus)
+                logger.LogDebug("Skipping aggregate synchronization for Orchestration {OrchestrationId} while an Operation is active.", orchestrationId);
+                continue;
+            }
+
+            var aggregate = await GetAggregateStatusAsync(orchestrationId, cancellationToken);
+            if (aggregate.AggregateStatus is ResourceAggregateStatus.Converged or ResourceAggregateStatus.Failed)
+            {
+                var lifecycle = await lifecycleQueryHandler.GetOrchestrationLifecycleByIdAsync(
+                    new GetOrchestrationLifecycleByIdQuery { OrchestrationId = orchestrationId },
+                    cancellationToken);
+                if (lifecycle is not null)
                 {
-                    case OrchestrationOperationalStatus.Running:
-                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationRunningAsync(
-                            new MarkOrchestrationRunningCommand { OrchestrationId = orchestrationId }, cancellationToken);
-                        break;
-                    case OrchestrationOperationalStatus.Stopped:
-                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationStoppedAsync(
-                            new MarkOrchestrationStoppedCommand { OrchestrationId = orchestrationId }, cancellationToken);
-                        break;
-                    case OrchestrationOperationalStatus.Failed:
-                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationFailedAsync(
-                            new MarkOrchestrationFailedCommand { OrchestrationId = orchestrationId }, cancellationToken);
-                        break;
-                    case OrchestrationOperationalStatus.Unknown:
-                        await orchestrationLifecycleUseCaseHandler.MarkOrchestrationOperationalStatusUnknownAsync(
-                            new MarkOrchestrationOperationalStatusUnknownCommand { OrchestrationId = orchestrationId }, cancellationToken);
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unsupported orchestration operational status '{targetStatus}'.");
+                    if (aggregate.AggregateStatus == ResourceAggregateStatus.Failed
+                        && lifecycle.OperationalStatus != Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus.Failed)
+                    {
+                        await lifecycleUseCaseHandler.MarkOrchestrationFailedAsync(
+                            new MarkOrchestrationFailedCommand { OrchestrationId = orchestrationId },
+                            cancellationToken);
+                    }
+                    else if (aggregate.AggregateStatus == ResourceAggregateStatus.Converged
+                        && aggregate.ObservedStatus == "Running"
+                        && lifecycle.OperationalStatus != Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus.Running)
+                    {
+                        await lifecycleUseCaseHandler.MarkOrchestrationRunningAsync(
+                            new MarkOrchestrationRunningCommand { OrchestrationId = orchestrationId },
+                            cancellationToken);
+                    }
+                    else if (aggregate.AggregateStatus == ResourceAggregateStatus.Converged
+                        && aggregate.ObservedStatus == "Stopped"
+                        && lifecycle.OperationalStatus != Athena.Application.OrchestrationManagement.Enums.OrchestrationOperationalStatus.Stopped)
+                    {
+                        await lifecycleUseCaseHandler.MarkOrchestrationStoppedAsync(
+                            new MarkOrchestrationStoppedCommand { OrchestrationId = orchestrationId },
+                            cancellationToken);
+                    }
                 }
             }
-
-            if (lifecycle.DesiredState != targetDesiredState)
-            {
-                await orchestrationLifecycleUseCaseHandler.SetOrchestrationDesiredStateAsync(
-                    new SetOrchestrationDesiredStateCommand { OrchestrationId = orchestrationId, DesiredState = targetDesiredState }, cancellationToken);
-            }
+            logger.LogInformation(
+                "Orchestration {OrchestrationId} derived aggregate status is {AggregateStatus}; its DesiredState was preserved.",
+                orchestrationId,
+                aggregate.AggregateStatus);
         }
     }
-
 }

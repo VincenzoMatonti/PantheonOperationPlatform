@@ -29,8 +29,21 @@ public sealed class SystemInstanceOperationConfiguration : IEntityTypeConfigurat
         builder.Property(operation => operation.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
         builder.Property(operation => operation.StartedAtUtc).HasColumnName("started_at_utc");
         builder.Property(operation => operation.CompletedAtUtc).HasColumnName("completed_at_utc");
+        builder.Property(operation => operation.AgentAcceptedAtUtc).HasColumnName("agent_accepted_at_utc");
+        builder.Property(operation => operation.AgentCompletedAtUtc).HasColumnName("agent_completed_at_utc");
+        builder.Property(operation => operation.CommandDispatchedAtUtc).HasColumnName("command_dispatched_at_utc");
+        builder.Property(operation => operation.LeaseOwner).HasColumnName("lease_owner").HasMaxLength(200);
+        builder.Property(operation => operation.LeaseExpiresAtUtc).HasColumnName("lease_expires_at_utc");
+        builder.Property(operation => operation.NextAttemptAtUtc).HasColumnName("next_attempt_at_utc");
+        builder.Property(operation => operation.LastAttemptAtUtc).HasColumnName("last_attempt_at_utc");
+        builder.Property(operation => operation.AttemptCount).HasColumnName("attempt_count").IsRequired();
+        builder.Property(operation => operation.Version).HasColumnName("version").IsConcurrencyToken().IsRequired();
         builder.Property(operation => operation.ErrorMessage).HasColumnName("error_message").HasMaxLength(4000);
         builder.HasIndex("system_instance_database_id", nameof(SystemInstanceOperation.SystemInstanceId), nameof(SystemInstanceOperation.CreatedAtUtc))
             .HasDatabaseName("ix_system_instance_operations_instance_created");
+        builder.HasIndex("system_instance_database_id")
+            .IsUnique()
+            .HasFilter("\"operation_status\" IN (0, 1, 4)")
+            .HasDatabaseName("ux_system_instance_operations_one_active");
     }
 }

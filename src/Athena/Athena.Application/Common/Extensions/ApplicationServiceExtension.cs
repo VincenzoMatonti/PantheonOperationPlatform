@@ -1,4 +1,5 @@
 using Athena.Application.BackgroundTasks.Reconciliation;
+using Athena.Application.BackgroundTasks.Operations;
 using Athena.Application.BackgroundTasks.Synchronization;
 using Athena.Application.Common.Interfaces;
 using Athena.Application.Common.Mappings;
@@ -100,6 +101,7 @@ public static class AthenaApplicationExtensions
     private static IServiceCollection AddBackgroundService(IServiceCollection services)
     {
         services.AddScoped<OrchestrationReconciliationService>();
+        services.AddScoped<SystemInstanceOperationProcessor>();
         services.AddSingleton<EndpointCheckSchedule>();
         services.AddScoped<SystemSynchronizationService>();
         services.AddScoped<SystemEndpointSynchronizationService>();

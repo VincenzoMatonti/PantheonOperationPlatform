@@ -2,6 +2,8 @@ using Athena.Worker.Reconciliation;
 using Athena.Worker.Reconciliation.Options;
 using Athena.Worker.Synchronization;
 using Athena.Worker.Synchronization.Options;
+using Athena.Worker.Operations;
+using Athena.Worker.Operations.Options;
 
 namespace Athena.Worker.Hosting.Extensions;
 
@@ -11,6 +13,7 @@ public static class WorkerServiceExtensions
     {
         services.AddOrchestrationReconciliation();
         services.AddSystemSynchronization();
+        services.AddSystemInstanceOperationProcessing();
         return services;
     }
 
@@ -33,6 +36,20 @@ public static class WorkerServiceExtensions
             .ValidateOnStart();
 
         services.AddHostedService<SystemSynchronizationHostedService>();
+        return services;
+    }
+
+    private static IServiceCollection AddSystemInstanceOperationProcessing(this IServiceCollection services)
+    {
+        services.AddOptions<SystemInstanceOperationsOptions>()
+            .BindConfiguration(SystemInstanceOperationsOptions.SectionName)
+            .Validate(options => options.PollingInterval > TimeSpan.Zero, "The SystemInstance operation polling interval must be greater than zero.")
+            .Validate(options => options.LeaseDuration > TimeSpan.Zero, "The SystemInstance operation lease duration must be greater than zero.")
+            .Validate(options => string.Equals(options.AgentProtocol, "Legacy", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(options.AgentProtocol, "Correlated", StringComparison.OrdinalIgnoreCase),
+                "The SystemInstance operation Agent protocol must be Correlated or Legacy.")
+            .ValidateOnStart();
+        services.AddHostedService<SystemInstanceOperationsHostedService>();
         return services;
     }
 }

@@ -22,6 +22,7 @@ public static class SystemInstanceInputHandler
             instances.AddCommand<GetSystemInstanceHealthCommand>("health");
             instances.AddCommand<GetSystemInstanceLogsCommand>("logs");
             instances.AddCommand<GetSystemInstanceOperationsCommand>("operations");
+            instances.AddCommand<GetSystemInstanceOperationCommand>("operation");
         });
 
         return config;

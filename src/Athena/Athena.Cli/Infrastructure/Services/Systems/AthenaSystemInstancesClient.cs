@@ -30,14 +30,14 @@ public sealed class AthenaSystemInstancesClient(AthenaApiClient apiClient) : ISy
     public Task<SystemInstanceStatusResponse> RegisterAsync(RegisterSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
         _apiClient.PostAsync<RegisterSystemInstanceRequest, SystemInstanceStatusResponse>($"{BasePath}/register", request, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> StartAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _apiClient.PostAsync<SystemInstanceStatusResponse>($"{BasePath}/{id}/start", cancellationToken);
+    public Task<SystemInstanceOperationResponse> StartAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}/start", cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> StopAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _apiClient.PostAsync<SystemInstanceStatusResponse>($"{BasePath}/{id}/stop", cancellationToken);
+    public Task<SystemInstanceOperationResponse> StopAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}/stop", cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> RestartAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _apiClient.PostAsync<SystemInstanceStatusResponse>($"{BasePath}/{id}/restart", cancellationToken);
+    public Task<SystemInstanceOperationResponse> RestartAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _apiClient.PostAsync<SystemInstanceOperationResponse>($"{BasePath}/{id}/restart", cancellationToken);
 
     public Task<SystemInstanceStatusResponse> RemoveAsync(Guid id, CancellationToken cancellationToken = default) =>
         _apiClient.DeleteAsync<SystemInstanceStatusResponse>($"{BasePath}/{id}", cancellationToken);
@@ -53,4 +53,18 @@ public sealed class AthenaSystemInstancesClient(AthenaApiClient apiClient) : ISy
 
     public Task<IReadOnlyList<SystemInstanceOperationResponse>> GetOperationsAsync(Guid id, CancellationToken cancellationToken = default) =>
         _apiClient.GetAsync<IReadOnlyList<SystemInstanceOperationResponse>>($"{BasePath}/{id}/operations", cancellationToken);
+
+    public async Task<SystemInstanceOperationResponse?> GetOperationAsync(Guid id, Guid operationId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _apiClient.GetAsync<SystemInstanceOperationResponse>(
+                $"{BasePath}/{id}/operations/{operationId}",
+                cancellationToken);
+        }
+        catch (AthenaApiException exception) when (exception.StatusCode == 404)
+        {
+            return null;
+        }
+    }
 }

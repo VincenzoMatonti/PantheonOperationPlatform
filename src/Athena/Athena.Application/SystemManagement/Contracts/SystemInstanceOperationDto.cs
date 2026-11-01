@@ -8,4 +8,11 @@ public sealed record SystemInstanceOperationDto(
     DateTime CreatedAtUtc,
     DateTime? StartedAtUtc,
     DateTime? CompletedAtUtc,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    DateTime? AgentAcceptedAtUtc = null,
+    DateTime? AgentCompletedAtUtc = null,
+    DateTime? LeaseExpiresAtUtc = null,
+    int AttemptCount = 0,
+    string? ConvergenceStatus = null);
+
+public sealed record ResolveSystemInstanceOperationRequest(string Reason);

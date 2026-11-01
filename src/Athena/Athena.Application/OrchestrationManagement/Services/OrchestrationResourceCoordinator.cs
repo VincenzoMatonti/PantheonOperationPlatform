@@ -1,5 +1,6 @@
 using Athena.Application.BlockManagement.Contracts;
 using Athena.Application.EcosystemManagement.Contracts;
+using Athena.Application.OrchestrationManagement.Enums;
 using Athena.Application.OrchestrationManagement.Exceptions;
 using Athena.Application.OrchestrationManagement.Interfaces;
 using Athena.Application.SystemManagement.Contracts;
@@ -7,6 +8,8 @@ using Athena.Application.WorkloadManagement.Contracts;
 using Athena.Domain.Block.Registry.Repositories;
 using Athena.Domain.Block.Registry.ValueObjects;
 using Athena.Domain.Ecosystem.Registry.ValueObjects;
+using Athena.Domain.System.Management.Enums;
+using Athena.Domain.System.Management.Repositories;
 using Athena.Domain.System.Registry.ValueObjects;
 using Athena.Domain.Workload.Registry.Repositories;
 using Athena.Domain.Workload.Registry.ValueObjects;
@@ -19,7 +22,8 @@ public sealed class OrchestrationResourceCoordinator(
     IBlockRepository blocks,
     IEcosystemManagement ecosystems,
     IBlockManagement blockManagement,
-    IWorkloadManagement workloadManagement)
+    IWorkloadManagement workloadManagement,
+    ISystemInstanceOperationRepository operationRepository)
     : IOrchestrationResourceCoordinator
 {
     public async Task<IReadOnlyList<Guid>> ExecuteAsync(
@@ -118,9 +122,8 @@ public sealed class OrchestrationResourceCoordinator(
         var chains = await ResolveChainsAsync(systemInstanceIds.Distinct().ToArray(), cancellationToken);
         var desiredStates = new List<string>();
         var operationalStatuses = new List<string>();
-        var workloadsSeen = new HashSet<Guid>();
-        var blocksSeen = new HashSet<Guid>();
-        var ecosystemsSeen = new HashSet<Guid>();
+        var observedAtUtc = new List<DateTime?>();
+        var operationStatuses = new List<SystemInstanceOperationStatus>();
 
         foreach (var chain in chains)
         {
@@ -130,27 +133,19 @@ public sealed class OrchestrationResourceCoordinator(
             {
                 desiredStates.Add(instance.DesiredState);
                 operationalStatuses.Add(instance.OperationalStatus);
+                observedAtUtc.Add(instance.ObservedAtUtc);
             }
-            if (workloadsSeen.Add(chain.WorkloadId))
-            {
-                var lifecycle = await workloadManagement.GetLifecycleAsync(chain.WorkloadId, cancellationToken);
-                if (lifecycle is not null) { desiredStates.Add(lifecycle.DesiredState); operationalStatuses.Add(lifecycle.OperationalStatus); }
-            }
-            if (blocksSeen.Add(chain.BlockId))
-            {
-                var lifecycle = await blockManagement.GetLifecycleAsync(chain.BlockId, cancellationToken);
-                if (lifecycle is not null) { desiredStates.Add(lifecycle.DesiredState); operationalStatuses.Add(lifecycle.OperationalStatus); }
-            }
-            if (ecosystemsSeen.Add(chain.EcosystemId))
-            {
-                var lifecycle = await ecosystems.GetLifecycleAsync(chain.EcosystemId, cancellationToken);
-                if (lifecycle is not null) { desiredStates.Add(lifecycle.DesiredState); operationalStatuses.Add(lifecycle.OperationalStatus); }
-            }
+            var operations = await operationRepository.GetBySystemInstanceIdAsync(
+                SystemInstanceId.Create(chain.InstanceId),
+                cancellationToken);
+            operationStatuses.AddRange(operations.Select(operation => operation.Status));
         }
 
         return new OrchestrationResourceLifecycleSummary(
+            DetermineAggregateStatus(desiredStates, operationalStatuses, observedAtUtc, operationStatuses),
             DetermineDesiredState(desiredStates),
-            DetermineOperationalStatus(operationalStatuses));
+            DetermineOperationalStatus(operationalStatuses),
+            GetLatestObservation(observedAtUtc));
     }
 
     private async Task<IReadOnlyList<ResourceChain>> ResolveChainsAsync(IEnumerable<Guid> ids, CancellationToken token)
@@ -235,10 +230,51 @@ public sealed class OrchestrationResourceCoordinator(
         : "Unknown";
 
     private static string DetermineOperationalStatus(IReadOnlyCollection<string> states) =>
-        states.Any(state => state is "Failed" or "Unreachable") ? "Failed"
+        states.Any(state => state == "Failed") ? "Failed"
+        : states.Any(state => state == "Unreachable") ? "Unreachable"
         : states.Count > 0 && states.All(state => state == "Running") ? "Running"
         : states.Count > 0 && states.All(state => state == "Stopped") ? "Stopped"
         : "Unknown";
+
+    private static ResourceAggregateStatus DetermineAggregateStatus(
+        IReadOnlyList<string> desiredStates,
+        IReadOnlyList<string> operationalStatuses,
+        IReadOnlyList<DateTime?> observedAtUtc,
+        IReadOnlyList<SystemInstanceOperationStatus> operationStatuses)
+    {
+        if (desiredStates.Count == 0 || desiredStates.Count != operationalStatuses.Count)
+            return ResourceAggregateStatus.Unknown;
+        if (operationStatuses.Any(status => status == SystemInstanceOperationStatus.OutcomeUnknown))
+            return ResourceAggregateStatus.OutcomeUnknown;
+        if (operationStatuses.Any(status => status is SystemInstanceOperationStatus.Pending or SystemInstanceOperationStatus.Running))
+            return ResourceAggregateStatus.Transitioning;
+        if (operationalStatuses.Any(status => status == "Unreachable"))
+            return ResourceAggregateStatus.Unreachable;
+        if (operationalStatuses.Any(status => status == "Failed"))
+            return ResourceAggregateStatus.Failed;
+        if (operationalStatuses.Any(status => status is "Starting" or "Stopping"))
+            return ResourceAggregateStatus.Transitioning;
+        if (observedAtUtc.Count != operationalStatuses.Count || observedAtUtc.Any(observed => observed is null))
+            return ResourceAggregateStatus.Unknown;
+        if (observedAtUtc.Any(observed => observed < DateTime.UtcNow.AddMinutes(-3)))
+            return ResourceAggregateStatus.Stale;
+        if (desiredStates.Any(state => state == "Unknown")
+            || operationalStatuses.Any(status => status == "Unknown"))
+            return ResourceAggregateStatus.Unknown;
+
+        var convergedCount = desiredStates
+            .Select((desired, index) => desired == operationalStatuses[index])
+            .Count(matches => matches);
+        if (convergedCount == desiredStates.Count) return ResourceAggregateStatus.Converged;
+        if (convergedCount > 0) return ResourceAggregateStatus.PartiallyConverged;
+        return ResourceAggregateStatus.Diverged;
+    }
+
+    private static DateTime? GetLatestObservation(IEnumerable<DateTime?> values)
+    {
+        var timestamps = values.Where(value => value.HasValue).Select(value => value!.Value).ToArray();
+        return timestamps.Length == 0 ? null : timestamps.Max();
+    }
 
     private sealed record ResourceChain(Guid InstanceId, Guid WorkloadId, Guid BlockId, Guid EcosystemId);
 }

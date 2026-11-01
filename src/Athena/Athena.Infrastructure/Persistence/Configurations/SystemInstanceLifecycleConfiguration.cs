@@ -27,6 +27,7 @@ public sealed class SystemInstanceLifecycleConfiguration : IEntityTypeConfigurat
         builder.Property(lifecycle => lifecycle.OperationalStatus).HasConversion<int>().HasColumnName("operational_status").IsRequired();
         builder.Property(lifecycle => lifecycle.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
         builder.Property(lifecycle => lifecycle.UpdatedAtUtc).HasColumnName("updated_at_utc");
+        builder.Property(lifecycle => lifecycle.ObservedAtUtc).HasColumnName("observed_at_utc");
         builder.Property(lifecycle => lifecycle.IsDeleted).HasColumnName("is_deleted").IsRequired();
     }
 }

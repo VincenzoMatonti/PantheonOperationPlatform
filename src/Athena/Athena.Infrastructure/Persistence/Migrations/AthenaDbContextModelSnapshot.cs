@@ -760,6 +760,10 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
+                    b.Property<DateTime?>("ObservedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("observed_at_utc");
+
                     b.Property<int>("OperationalStatus")
                         .HasColumnType("integer")
                         .HasColumnName("operational_status");
@@ -784,6 +788,22 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("operation_id");
 
+                    b.Property<DateTime?>("AgentAcceptedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("agent_accepted_at_utc");
+
+                    b.Property<DateTime?>("AgentCompletedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("agent_completed_at_utc");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTime?>("CommandDispatchedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("command_dispatched_at_utc");
+
                     b.Property<DateTime?>("CompletedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_at_utc");
@@ -796,6 +816,23 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("error_message");
+
+                    b.Property<DateTime?>("LastAttemptAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_attempt_at_utc");
+
+                    b.Property<DateTime?>("LeaseExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at_utc");
+
+                    b.Property<string>("LeaseOwner")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("lease_owner");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at_utc");
 
                     b.Property<DateTime?>("StartedAtUtc")
                         .HasColumnType("timestamp with time zone")
@@ -813,12 +850,22 @@ namespace Athena.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("operation_type");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
                     b.Property<int>("system_instance_database_id")
                         .HasColumnType("integer")
                         .HasColumnName("system_instance_database_id");
 
                     b.HasKey("Id")
                         .HasName("pk_system_instance_operations");
+
+                    b.HasIndex("system_instance_database_id")
+                        .IsUnique()
+                        .HasDatabaseName("ux_system_instance_operations_one_active")
+                        .HasFilter("\"operation_status\" IN (0, 1, 4)");
 
                     b.HasIndex("system_instance_database_id", "SystemInstanceId", "CreatedAtUtc")
                         .HasDatabaseName("ix_system_instance_operations_instance_created");

@@ -115,13 +115,8 @@ public sealed class SystemInstanceProcessManagementService(
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
         var response = await _executionAgent.GetStatusAsync(systemInstanceId, cancellationToken);
         ValidateStatus(response, systemInstanceId);
-        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
-            return response;
-
         var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
-        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
-            return response;
-        lifecycle.SetOperationalStatus(ParseOperationalStatus(response.State));
+        lifecycle.SetObservedOperationalStatus(ParseOperationalStatus(response.State), response.ObservedAtUtc);
         await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
         return response;
     }
@@ -138,19 +133,12 @@ public sealed class SystemInstanceProcessManagementService(
             return false;
 
         var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
-        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
-            return false;
-
         var response = await _executionAgent.GetStatusAsync(systemInstanceId, cancellationToken);
         ValidateStatus(response, systemInstanceId);
         var observedStatus = ParseOperationalStatus(response.State);
 
-        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
-            return false;
-
         lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
-        var changed = lifecycle.OperationalStatus != observedStatus;
-        lifecycle.SetOperationalStatus(observedStatus);
+        var changed = lifecycle.SetObservedOperationalStatus(observedStatus, response.ObservedAtUtc);
         await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
         return changed;
     }
@@ -164,13 +152,11 @@ public sealed class SystemInstanceProcessManagementService(
             throw new ArgumentOutOfRangeException(nameof(status), "Only Unknown and Unreachable describe an unobservable SystemInstance.");
 
         var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
-        if (instance.RegistrationStatus != SystemInstanceRegistrationStatus.Registered
-            || await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+        if (instance.RegistrationStatus != SystemInstanceRegistrationStatus.Registered)
             return false;
 
         var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
-        var changed = lifecycle.OperationalStatus != status;
-        lifecycle.SetOperationalStatus(status);
+        var changed = lifecycle.SetObservedOperationalStatus(status, DateTime.UtcNow);
         await _lifecycleRepository.UpdateAsync(lifecycle, cancellationToken);
         return changed;
     }
@@ -205,17 +191,57 @@ public sealed class SystemInstanceProcessManagementService(
         if (!await _repository.ExistsByIdAsync(instanceId, cancellationToken))
             throw new SystemInstanceNotFoundException(systemInstanceId);
 
+        var lifecycle = await GetRequiredLifecycleAsync(instanceId, cancellationToken);
         return (await _operationRepository.GetBySystemInstanceIdAsync(instanceId, cancellationToken))
-            .Select(operation => new SystemInstanceOperationDto(
-                operation.Id,
-                operation.SystemInstanceId.Value,
-                operation.Type.ToString(),
-                operation.Status.ToString(),
-                operation.CreatedAtUtc,
-                operation.StartedAtUtc,
-                operation.CompletedAtUtc,
-                operation.ErrorMessage))
+            .Select(operation => ToOperationDto(operation, lifecycle))
             .ToArray();
+    }
+
+    public async Task<SystemInstanceOperationDto> EnqueueOperationAsync(
+        Guid systemInstanceId,
+        SystemInstanceOperationType operationType,
+        CancellationToken cancellationToken = default)
+    {
+        if (operationType is not (SystemInstanceOperationType.Start or SystemInstanceOperationType.Stop or SystemInstanceOperationType.Restart))
+            throw new ArgumentOutOfRangeException(nameof(operationType), "Only Start, Stop, and Restart can be queued asynchronously.");
+        var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
+        EnsureRegistered(instance);
+        var lifecycle = await GetRequiredLifecycleAsync(instance.Id, cancellationToken);
+        if (await _operationRepository.HasActiveOperationAsync(instance.Id, cancellationToken))
+            throw new InvalidOperationException($"SystemInstance '{systemInstanceId}' already has an active operation.");
+
+        lifecycle.SetDesiredState(operationType == SystemInstanceOperationType.Stop
+            ? SystemInstanceDesiredState.Stopped
+            : SystemInstanceDesiredState.Running);
+        var operation = SystemInstanceOperation.Create(instance.Id, operationType);
+        await _operationRepository.AddWithLifecycleAsync(operation, lifecycle, cancellationToken);
+        return ToOperationDto(operation);
+    }
+
+    public async Task<SystemInstanceOperationDto?> GetOperationAsync(
+        Guid systemInstanceId,
+        Guid operationId,
+        CancellationToken cancellationToken = default)
+    {
+        var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
+        var operation = await _operationRepository.GetByIdAsync(operationId, cancellationToken);
+        if (operation?.SystemInstanceId != instance.Id) return null;
+        return ToOperationDto(operation, await GetRequiredLifecycleAsync(instance.Id, cancellationToken));
+    }
+
+    public async Task<SystemInstanceOperationDto?> ResolveOutcomeUnknownOperationAsync(
+        Guid systemInstanceId,
+        Guid operationId,
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        var instance = await GetRequiredAsync(systemInstanceId, cancellationToken);
+        var operation = await _operationRepository.GetByIdAsync(operationId, cancellationToken);
+        if (operation?.SystemInstanceId != instance.Id) return null;
+
+        operation.MarkIndeterminate(reason);
+        await _operationRepository.UpdateAsync(operation, cancellationToken);
+        return ToOperationDto(operation, await GetRequiredLifecycleAsync(instance.Id, cancellationToken));
     }
 
     public async Task EnsureOperableAsync(Guid systemInstanceId, CancellationToken cancellationToken = default)
@@ -349,7 +375,41 @@ public sealed class SystemInstanceProcessManagementService(
     private static SystemInstanceProcessDto ToDto(SystemInstance instance, SystemInstanceLifecycle lifecycle) =>
         new(instance.Id.Value, instance.SystemId.Value, instance.WorkloadId.Value, instance.Name.Value,
             instance.RegistrationStatus.ToString(), lifecycle.DesiredState.ToString(), lifecycle.OperationalStatus.ToString(),
-            instance.CreatedAtUtc, instance.UpdatedAtUtc);
+            instance.CreatedAtUtc, instance.UpdatedAtUtc, lifecycle.ObservedAtUtc);
+
+    private static SystemInstanceOperationDto ToOperationDto(
+        SystemInstanceOperation operation,
+        SystemInstanceLifecycle? lifecycle = null) =>
+        new(
+            operation.Id,
+            operation.SystemInstanceId.Value,
+            operation.Type.ToString(),
+            operation.Status.ToString(),
+            operation.CreatedAtUtc,
+            operation.StartedAtUtc,
+            operation.CompletedAtUtc,
+            operation.ErrorMessage,
+            operation.AgentAcceptedAtUtc,
+            operation.AgentCompletedAtUtc,
+            operation.LeaseExpiresAtUtc,
+            operation.AttemptCount,
+            GetConvergenceStatus(operation, lifecycle));
+
+    private static string? GetConvergenceStatus(
+        SystemInstanceOperation operation,
+        SystemInstanceLifecycle? lifecycle)
+    {
+        if (operation.Status != SystemInstanceOperationStatus.OutcomeUnknown
+            || lifecycle?.ObservedAtUtc is not { } observedAtUtc
+            || observedAtUtc < DateTime.UtcNow.AddMinutes(-3)
+            || operation.Type == SystemInstanceOperationType.Restart)
+            return null;
+
+        var expected = operation.Type == SystemInstanceOperationType.Start
+            ? SystemInstanceOperationalStatus.Running
+            : SystemInstanceOperationalStatus.Stopped;
+        return lifecycle.OperationalStatus == expected ? "ConvergedUncorrelated" : "NotConverged";
+    }
 
     private static void ValidateStatus(SystemInstanceExecutionStatus status, Guid requestedId)
     {

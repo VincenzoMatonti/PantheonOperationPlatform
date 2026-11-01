@@ -80,6 +80,8 @@ public static class DependencyInjectionExtension
         {
             client.Timeout = TimeSpan.FromSeconds(15);
         });
+        services.AddScoped<ICorrelatedSystemInstanceExecutionAgent>(sp =>
+            (ICorrelatedSystemInstanceExecutionAgent)sp.GetRequiredService<ISystemInstanceExecutionAgent>());
 
         return services;
     }

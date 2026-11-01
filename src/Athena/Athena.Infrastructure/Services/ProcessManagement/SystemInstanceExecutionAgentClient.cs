@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Athena.Infrastructure.Services.ProcessManagement;
 
-public sealed class SystemInstanceExecutionAgentClient : ISystemInstanceExecutionAgent
+public sealed class SystemInstanceExecutionAgentClient : ISystemInstanceExecutionAgent, ICorrelatedSystemInstanceExecutionAgent
 {
     private readonly HttpClient _httpClient;
 
@@ -47,6 +47,37 @@ public sealed class SystemInstanceExecutionAgentClient : ISystemInstanceExecutio
 
     public Task<SystemInstanceExecutionStatus> GetStatusAsync(Guid systemInstanceId, CancellationToken cancellationToken = default) =>
         SendAsync<SystemInstanceExecutionStatus>(HttpMethod.Get, $"system-instances/{systemInstanceId}/status", cancellationToken: cancellationToken);
+
+    public Task<SystemInstanceExecutionResult> ExecuteAsync(
+        SystemInstanceExecutionCommand command,
+        CancellationToken cancellationToken = default) =>
+        SendAsync<SystemInstanceExecutionResult>(
+            HttpMethod.Post,
+            $"system-instances/{command.SystemInstanceId}/operations",
+            command,
+            cancellationToken);
+
+    public async Task<SystemInstanceExecutionResult> GetOperationAsync(
+        Guid systemInstanceId,
+        Guid operationId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await SendAsync<SystemInstanceExecutionResult>(
+                HttpMethod.Get,
+                $"system-instances/{systemInstanceId}/operations/{operationId}",
+                cancellationToken: cancellationToken);
+        }
+        catch (HttpRequestException exception) when (exception.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return new SystemInstanceExecutionResult(
+                operationId,
+                systemInstanceId,
+                AgentOperationStatus.NotFound,
+                DateTime.UtcNow);
+        }
+    }
 
     public Task<SystemInstanceExecutionHealth> GetHealthAsync(Guid systemInstanceId, CancellationToken cancellationToken = default) =>
         SendAsync<SystemInstanceExecutionHealth>(HttpMethod.Get, $"system-instances/{systemInstanceId}/health", cancellationToken: cancellationToken);

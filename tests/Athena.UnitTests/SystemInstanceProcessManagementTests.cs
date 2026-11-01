@@ -1,6 +1,7 @@
 using Athena.Application.SystemManagement.Contracts;
 using Athena.Application.SystemManagement.Services;
 using Athena.Application.BackgroundTasks.Synchronization;
+using Athena.Application.BackgroundTasks.Operations;
 using Athena.Domain.System.Registry.Entities;
 using Athena.Domain.System.Registry.Enums;
 using Athena.Domain.System.Registry.Exceptions;
@@ -155,6 +156,61 @@ public sealed class SystemInstanceProcessManagementTests
     }
 
     [Fact]
+    public async Task EnqueueOperationAsync_PersistsDesiredStateAndPendingOperationWithoutCallingAgent()
+    {
+        var fixture = new Fixture();
+        fixture.Instance.Register();
+
+        var operation = await fixture.CreateService().EnqueueOperationAsync(
+            fixture.InstanceId,
+            SystemInstanceOperationType.Start);
+
+        Assert.NotEqual(Guid.Empty, operation.Id);
+        Assert.Equal("Pending", operation.Status);
+        Assert.Equal(SystemInstanceDesiredState.Running, fixture.Lifecycle.DesiredState);
+        Assert.Equal(SystemInstanceOperationStatus.Pending, Assert.Single(fixture.Operations.Items).Status);
+        Assert.Empty(fixture.Agent.CommandedInstanceIds);
+    }
+
+    [Fact]
+    public async Task OperationProcessor_CompletesOnlyFromCorrelatedAgentResult()
+    {
+        var fixture = new Fixture();
+        fixture.Instance.Register();
+        var queued = await fixture.CreateService().EnqueueOperationAsync(fixture.InstanceId, SystemInstanceOperationType.Start);
+        fixture.Agent.CorrelatedResult = new SystemInstanceExecutionResult(
+            queued.Id,
+            fixture.InstanceId,
+            AgentOperationStatus.Completed,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            ObservedState: "Running",
+            ObservedAtUtc: DateTime.UtcNow);
+
+        await fixture.CreateProcessor().ProcessOneAsync(false, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+
+        Assert.Equal(SystemInstanceOperationStatus.Completed, Assert.Single(fixture.Operations.Items).Status);
+        Assert.Equal(queued.Id, fixture.Agent.LastCorrelatedCommand?.OperationId);
+        Assert.Equal(SystemInstanceOperationalStatus.Running, fixture.Lifecycle.OperationalStatus);
+    }
+
+    [Fact]
+    public async Task OperationProcessor_PreservesAmbiguousOutcome()
+    {
+        var fixture = new Fixture();
+        fixture.Instance.Register();
+        var queued = await fixture.CreateService().EnqueueOperationAsync(fixture.InstanceId, SystemInstanceOperationType.Restart);
+        fixture.Agent.CorrelatedCommandFailure = new TimeoutException("Agent response timed out.");
+
+        await fixture.CreateProcessor().ProcessOneAsync(false, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+
+        Assert.Equal(SystemInstanceOperationStatus.OutcomeUnknown, Assert.Single(fixture.Operations.Items).Status);
+        Assert.Equal(queued.Id, fixture.Agent.LastCorrelatedCommand?.OperationId);
+        Assert.Equal(1, fixture.Agent.CorrelatedCommandCount);
+    }
+
+    [Fact]
     public async Task StartAsync_WhenLifecycleIsMissing_FailsBeforeCallingAgent()
     {
         var fixture = new Fixture();
@@ -283,7 +339,7 @@ public sealed class SystemInstanceProcessManagementTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task SynchronizeAsync_DoesNotPollOrChangeInstanceWithActiveOperation(bool running)
+    public async Task SynchronizeAsync_ObservesInstanceEvenWithActiveOperation(bool running)
     {
         var fixture = new Fixture();
         fixture.Instance.Register();
@@ -296,9 +352,9 @@ public sealed class SystemInstanceProcessManagementTests
 
         await CreateSynchronization(fixture).SynchronizeAsync();
 
-        Assert.Empty(fixture.Agent.CommandedInstanceIds);
+        Assert.Equal([fixture.InstanceId], fixture.Agent.CommandedInstanceIds);
         Assert.Equal(running ? SystemInstanceOperationStatus.Running : SystemInstanceOperationStatus.Pending, operation.Status);
-        Assert.Equal(SystemInstanceOperationalStatus.Starting, fixture.Lifecycle.OperationalStatus);
+        Assert.Equal(SystemInstanceOperationalStatus.Stopped, fixture.Lifecycle.OperationalStatus);
         Assert.Equal(SystemInstanceDesiredState.Running, fixture.Lifecycle.DesiredState);
     }
 
@@ -401,9 +457,12 @@ public sealed class SystemInstanceProcessManagementTests
 
         public SystemInstanceProcessManagementService CreateService() =>
             new(Agent, Instances, Lifecycles, Operations);
+
+        public SystemInstanceOperationProcessor CreateProcessor() =>
+            new(Operations, Instances, Lifecycles, Agent, Agent, NullLogger<SystemInstanceOperationProcessor>.Instance);
     }
 
-    private sealed class FakeExecutionAgent : ISystemInstanceExecutionAgent
+    private sealed class FakeExecutionAgent : ISystemInstanceExecutionAgent, ICorrelatedSystemInstanceExecutionAgent
     {
         public Guid? LastCommandedInstanceId { get; private set; }
         public List<Guid> CommandedInstanceIds { get; } = [];
@@ -412,6 +471,35 @@ public sealed class SystemInstanceProcessManagementTests
         public Dictionary<Guid, Exception> Failures { get; } = [];
         public Dictionary<Guid, SystemInstanceExecutionStatus> Statuses { get; } = [];
         public Action? OnCommand { get; set; }
+        public SystemInstanceExecutionCommand? LastCorrelatedCommand { get; private set; }
+        public int CorrelatedCommandCount { get; private set; }
+        public Exception? CorrelatedCommandFailure { get; set; }
+        public SystemInstanceExecutionResult? CorrelatedResult { get; set; }
+
+        public Task<SystemInstanceExecutionResult> ExecuteAsync(SystemInstanceExecutionCommand command, CancellationToken cancellationToken = default)
+        {
+            LastCorrelatedCommand = command;
+            CorrelatedCommandCount++;
+            if (CorrelatedCommandFailure is not null)
+                return Task.FromException<SystemInstanceExecutionResult>(CorrelatedCommandFailure);
+            return Task.FromResult(CorrelatedResult ?? new SystemInstanceExecutionResult(
+                command.OperationId,
+                command.SystemInstanceId,
+                AgentOperationStatus.Accepted,
+                DateTime.UtcNow,
+                DateTime.UtcNow));
+        }
+
+        public Task<SystemInstanceExecutionResult> GetOperationAsync(
+            Guid systemInstanceId,
+            Guid operationId,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(CorrelatedResult ?? new SystemInstanceExecutionResult(
+                operationId,
+                systemInstanceId,
+                AgentOperationStatus.Running,
+                DateTime.UtcNow,
+                DateTime.UtcNow));
 
         public Task<SystemInstanceExecutionStatus> CreateAsync(SystemInstanceExecutionCommandRequest request, CancellationToken cancellationToken = default) =>
             CommandAsync(request.SystemInstanceId, cancellationToken);
@@ -533,6 +621,7 @@ public sealed class SystemInstanceProcessManagementTests
 
         public List<SystemInstanceOperation> Items { get; } = [];
         public Dictionary<Guid, SystemInstanceOperationStatus> PersistedStatuses { get; } = [];
+        private readonly Dictionary<Guid, string> _leases = [];
 
         public Task AddAsync(SystemInstanceOperation operation, CancellationToken cancellationToken = default)
         {
@@ -576,6 +665,47 @@ public sealed class SystemInstanceProcessManagementTests
 
         public Task<bool> HasActiveOperationAsync(SystemInstanceId systemInstanceId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Any(item => item.SystemInstanceId == systemInstanceId
-                && item.Status is SystemInstanceOperationStatus.Pending or SystemInstanceOperationStatus.Running));
+                && item.IsActive));
+
+        public Task<SystemInstanceOperation?> ClaimNextAsync(string leaseOwner, TimeSpan leaseDuration, DateTime nowUtc, CancellationToken cancellationToken = default)
+        {
+            var operation = Items.FirstOrDefault(item => item.IsActive
+                && item.Type is SystemInstanceOperationType.Start or SystemInstanceOperationType.Stop or SystemInstanceOperationType.Restart
+                && (item.NextAttemptAtUtc is null || item.NextAttemptAtUtc <= nowUtc)
+                && (item.LeaseExpiresAtUtc is null || item.LeaseExpiresAtUtc <= nowUtc));
+            if (operation is null) return Task.FromResult<SystemInstanceOperation?>(null);
+            operation.Claim(leaseOwner, nowUtc + leaseDuration, nowUtc);
+            _leases[operation.Id] = leaseOwner;
+            return Task.FromResult<SystemInstanceOperation?>(operation);
+        }
+
+        public Task<bool> RenewLeaseAsync(Guid operationId, string leaseOwner, TimeSpan leaseDuration, DateTime nowUtc, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_leases.TryGetValue(operationId, out var owner) && owner == leaseOwner);
+
+        public Task<bool> SaveIfLeaseOwnerAsync(SystemInstanceOperation operation, string leaseOwner, CancellationToken cancellationToken = default)
+        {
+            if (!_leases.TryGetValue(operation.Id, out var currentOwner) || currentOwner != leaseOwner)
+                return Task.FromResult(false);
+            PersistedStatuses[operation.Id] = operation.Status;
+            if (operation.LeaseOwner is null) _leases.Remove(operation.Id);
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> SaveWithLifecycleIfLeaseOwnerAsync(
+            SystemInstanceOperation operation,
+            SystemInstanceLifecycle lifecycle,
+            string leaseOwner,
+            CancellationToken cancellationToken = default)
+        {
+            if (!_leases.TryGetValue(operation.Id, out var currentOwner) || currentOwner != leaseOwner)
+                return Task.FromResult(false);
+            if (_lifecycles.FailUpdates) throw new IOException("local persistence failed");
+            PersistedStatuses[operation.Id] = operation.Status;
+            if (operation.LeaseOwner is null) _leases.Remove(operation.Id);
+            return Task.FromResult(true);
+        }
+
+        public Task<SystemInstanceOperation?> GetByIdAsync(Guid operationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.SingleOrDefault(operation => operation.Id == operationId));
     }
 }

@@ -16,4 +16,13 @@ public interface ISystemInstanceOperationRepository
     Task UpdateAsync(SystemInstanceOperation operation, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SystemInstanceOperation>> GetBySystemInstanceIdAsync(SystemInstanceId id, CancellationToken cancellationToken = default);
     Task<bool> HasActiveOperationAsync(SystemInstanceId id, CancellationToken cancellationToken = default);
+    Task<SystemInstanceOperation?> ClaimNextAsync(string leaseOwner, TimeSpan leaseDuration, DateTime nowUtc, CancellationToken cancellationToken = default);
+    Task<bool> RenewLeaseAsync(Guid operationId, string leaseOwner, TimeSpan leaseDuration, DateTime nowUtc, CancellationToken cancellationToken = default);
+    Task<bool> SaveIfLeaseOwnerAsync(SystemInstanceOperation operation, string leaseOwner, CancellationToken cancellationToken = default);
+    Task<bool> SaveWithLifecycleIfLeaseOwnerAsync(
+        SystemInstanceOperation operation,
+        SystemInstanceLifecycle lifecycle,
+        string leaseOwner,
+        CancellationToken cancellationToken = default);
+    Task<SystemInstanceOperation?> GetByIdAsync(Guid operationId, CancellationToken cancellationToken = default);
 }

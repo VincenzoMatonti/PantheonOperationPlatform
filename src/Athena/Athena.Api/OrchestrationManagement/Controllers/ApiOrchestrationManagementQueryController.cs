@@ -4,6 +4,7 @@ using Athena.Api.OrchestrationManagement.Mappings;
 using Athena.Api.OrchestrationManagement.Requests;
 using Athena.Api.OrchestrationManagement.Responses;
 using Athena.Application.OrchestrationManagement.UseCases;
+using Athena.Application.Common.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,13 +14,24 @@ namespace Athena.Api.OrchestrationManagement.Controllers;
 [Route("api/orchestrations/management")]
 public class OrchestrationManagementQueryController(
     OrchestrationLifecycleUseCaseHandler lifecycleHandler,
-    OrchestrationLifecycleOperationUseCaseHandler operationHandler) : ControllerBase
+    OrchestrationLifecycleOperationUseCaseHandler operationHandler,
+    OrchestrationStatusSynchronizationService statusSynchronizationService) : ControllerBase
 {
     private readonly OrchestrationLifecycleUseCaseHandler _lifecycleHandler = lifecycleHandler;
     private readonly OrchestrationLifecycleOperationUseCaseHandler _operationHandler = operationHandler;
+    private readonly OrchestrationStatusSynchronizationService _statusSynchronizationService = statusSynchronizationService;
 
     // =====================================================================
     // ORCHESTRATION LIFECYCLE QUERIES
+    [HttpGet("{orchestrationId:guid}/aggregate-status")]
+    [ProducesResponseType(typeof(ApiResponse<OrchestrationAggregateStatusDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<OrchestrationAggregateStatusDto>>> GetAggregateStatus(
+        Guid orchestrationId, CancellationToken cancellationToken)
+    {
+        var result = await _statusSynchronizationService.GetAggregateStatusAsync(orchestrationId, cancellationToken);
+        return Ok(ApiResponseBuilder.BuildSuccess(result));
+    }
+
     [HttpGet("{orchestrationId:guid}/lifecycle")]
     [ProducesResponseType(typeof(ApiResponse<OrchestrationLifecycleQueryResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<OrchestrationLifecycleQueryResponse>>> GetLifecycleById(

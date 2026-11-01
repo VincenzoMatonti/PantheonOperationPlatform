@@ -12,6 +12,7 @@ public sealed class SystemInstanceLifecycle
     public SystemInstanceOperationalStatus OperationalStatus { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
+    public DateTime? ObservedAtUtc { get; private set; }
     public bool IsDeleted { get; private set; }
 
     public static SystemInstanceLifecycle Create(SystemInstanceId id)
@@ -42,6 +43,20 @@ public sealed class SystemInstanceLifecycle
         if (OperationalStatus == status) return;
         OperationalStatus = status;
         Touch();
+    }
+
+    public bool SetObservedOperationalStatus(SystemInstanceOperationalStatus status, DateTime observedAtUtc)
+    {
+        EnsureNotDeleted();
+        if (!Enum.IsDefined(status)) throw new SystemInstanceManagementException(SystemInstanceManagementErrorCode.InvalidOperationalStatus, $"Operational status '{status}' is invalid.", DomainErrorType.Validation);
+        if (observedAtUtc.Kind != DateTimeKind.Utc)
+            throw new SystemInstanceManagementException(SystemInstanceManagementErrorCode.InvalidOperationalStatus, "Observation timestamp must be UTC.", DomainErrorType.Validation);
+        if (ObservedAtUtc is not null && observedAtUtc <= ObservedAtUtc.Value) return false;
+        var changed = OperationalStatus != status;
+        OperationalStatus = status;
+        ObservedAtUtc = observedAtUtc;
+        Touch();
+        return changed;
     }
 
     public void Delete()

@@ -112,7 +112,7 @@ public sealed class StartSystemInstanceCommand(SystemInstancesService service) :
     protected override Task<object> ExecuteOperationAsync(Guid id, CancellationToken cancellationToken) =>
         WrapAsync(Service.StartAsync(id, cancellationToken));
 
-    private static async Task<object> WrapAsync(Task<SystemInstanceStatusResponse> operation) => await operation;
+    private static async Task<object> WrapAsync(Task<SystemInstanceOperationResponse> operation) => await operation;
 }
 
 public sealed class StopSystemInstanceCommand(SystemInstancesService service) : SystemInstanceIdCommand(service)
@@ -120,7 +120,7 @@ public sealed class StopSystemInstanceCommand(SystemInstancesService service) : 
     protected override Task<object> ExecuteOperationAsync(Guid id, CancellationToken cancellationToken) =>
         WrapAsync(Service.StopAsync(id, cancellationToken));
 
-    private static async Task<object> WrapAsync(Task<SystemInstanceStatusResponse> operation) => await operation;
+    private static async Task<object> WrapAsync(Task<SystemInstanceOperationResponse> operation) => await operation;
 }
 
 public sealed class RestartSystemInstanceCommand(SystemInstancesService service) : SystemInstanceIdCommand(service)
@@ -128,7 +128,7 @@ public sealed class RestartSystemInstanceCommand(SystemInstancesService service)
     protected override Task<object> ExecuteOperationAsync(Guid id, CancellationToken cancellationToken) =>
         WrapAsync(Service.RestartAsync(id, cancellationToken));
 
-    private static async Task<object> WrapAsync(Task<SystemInstanceStatusResponse> operation) => await operation;
+    private static async Task<object> WrapAsync(Task<SystemInstanceOperationResponse> operation) => await operation;
 }
 
 public sealed class RemoveSystemInstanceCommand(SystemInstancesService service) : SystemInstanceIdCommand(service)
@@ -194,6 +194,36 @@ public sealed class GetSystemInstanceOperationsCommand(SystemInstancesService se
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         SystemInstanceCommandOutput.Write(await service.GetOperationsAsync(settings.Id, cancellationToken));
+        return 0;
+    }
+}
+
+public sealed class GetSystemInstanceOperationCommand(SystemInstancesService service) : AsyncCommand<GetSystemInstanceOperationCommand.Settings>
+{
+    public sealed class Settings : CommandSettings
+    {
+        [CommandOption("--id <ID>")]
+        public Guid Id { get; init; }
+
+        [CommandOption("--operation-id <OPERATION_ID>")]
+        public Guid OperationId { get; init; }
+
+        public override ValidationResult Validate()
+        {
+            if (Id == Guid.Empty) return ValidationResult.Error("SystemInstance ID cannot be empty.");
+            return OperationId == Guid.Empty ? ValidationResult.Error("Operation ID cannot be empty.") : ValidationResult.Success();
+        }
+    }
+
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    {
+        var result = await service.GetOperationAsync(settings.Id, settings.OperationId, cancellationToken);
+        if (result is null)
+        {
+            AnsiConsole.MarkupLine($"[yellow]Operation '{settings.OperationId}' was not found for SystemInstance '{settings.Id}'.[/]");
+            return 1;
+        }
+        SystemInstanceCommandOutput.Write(result);
         return 0;
     }
 }

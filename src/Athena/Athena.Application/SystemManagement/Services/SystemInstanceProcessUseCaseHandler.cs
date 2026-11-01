@@ -1,5 +1,6 @@
 using Athena.Application.Common.Services;
 using Athena.Application.SystemManagement.Contracts;
+using Athena.Domain.System.Management.Enums;
 
 namespace Athena.Application.SystemManagement.Services;
 
@@ -45,6 +46,25 @@ public sealed class SystemInstanceProcessUseCaseHandler(
 
     public Task<IReadOnlyList<SystemInstanceOperationDto>> GetOperationsAsync(Guid id, CancellationToken cancellationToken = default) =>
         ExecuteAsync(() => _service.GetOperationsAsync(id, cancellationToken), cancellationToken);
+
+    public Task<SystemInstanceOperationDto> EnqueueOperationAsync(
+        Guid id,
+        SystemInstanceOperationType type,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(() => _service.EnqueueOperationAsync(id, type, cancellationToken), cancellationToken);
+
+    public Task<SystemInstanceOperationDto?> GetOperationAsync(
+        Guid id,
+        Guid operationId,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(() => _service.GetOperationAsync(id, operationId, cancellationToken), cancellationToken);
+
+    public Task<SystemInstanceOperationDto?> ResolveOutcomeUnknownOperationAsync(
+        Guid id,
+        Guid operationId,
+        string reason,
+        CancellationToken cancellationToken = default) =>
+        ExecuteAsync(() => _service.ResolveOutcomeUnknownOperationAsync(id, operationId, reason, cancellationToken), cancellationToken);
 
     private async Task<T> ExecuteAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
     {

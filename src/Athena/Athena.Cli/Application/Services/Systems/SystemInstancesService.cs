@@ -19,13 +19,13 @@ public sealed class SystemInstancesService(ISystemInstances systemInstances)
     public Task<SystemInstanceStatusResponse> RegisterAsync(RegisterSystemInstanceRequest request, CancellationToken cancellationToken = default) =>
         _systemInstances.RegisterAsync(request, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> StartAsync(Guid id, CancellationToken cancellationToken = default) =>
+    public Task<SystemInstanceOperationResponse> StartAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.StartAsync(id, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> StopAsync(Guid id, CancellationToken cancellationToken = default) =>
+    public Task<SystemInstanceOperationResponse> StopAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.StopAsync(id, cancellationToken);
 
-    public Task<SystemInstanceStatusResponse> RestartAsync(Guid id, CancellationToken cancellationToken = default) =>
+    public Task<SystemInstanceOperationResponse> RestartAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.RestartAsync(id, cancellationToken);
 
     public Task<SystemInstanceStatusResponse> RemoveAsync(Guid id, CancellationToken cancellationToken = default) =>
@@ -42,4 +42,7 @@ public sealed class SystemInstancesService(ISystemInstances systemInstances)
 
     public Task<IReadOnlyList<SystemInstanceOperationResponse>> GetOperationsAsync(Guid id, CancellationToken cancellationToken = default) =>
         _systemInstances.GetOperationsAsync(id, cancellationToken);
+
+    public Task<SystemInstanceOperationResponse?> GetOperationAsync(Guid id, Guid operationId, CancellationToken cancellationToken = default) =>
+        _systemInstances.GetOperationAsync(id, operationId, cancellationToken);
 }

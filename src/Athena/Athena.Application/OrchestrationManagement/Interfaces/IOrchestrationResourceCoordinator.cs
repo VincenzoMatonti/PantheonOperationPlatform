@@ -1,6 +1,12 @@
+using Athena.Application.OrchestrationManagement.Enums;
+
 namespace Athena.Application.OrchestrationManagement.Interfaces;
 
-public sealed record OrchestrationResourceLifecycleSummary(string DesiredState, string OperationalStatus);
+public sealed record OrchestrationResourceLifecycleSummary(
+    ResourceAggregateStatus AggregateStatus,
+    string DesiredState,
+    string OperationalStatus,
+    DateTime? LatestObservedAtUtc);
 
 public interface IOrchestrationResourceCoordinator
 {

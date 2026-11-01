@@ -50,24 +50,27 @@ public class ApiSystemInstanceProcessController(SystemInstanceProcessUseCaseHand
     }
 
     [HttpPost("{id:guid}/start")]
-    [ProducesResponseType(typeof(ApiResponse<SystemInstanceExecutionStatus>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<SystemInstanceExecutionStatus>>> Start([FromRoute] Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationDto>), StatusCodes.Status202Accepted)]
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationDto>>> Start([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        return Ok(ApiResponseBuilder.BuildSuccess(await _service.StartAsync(id, cancellationToken)));
+        var operation = await _service.EnqueueOperationAsync(id, Athena.Domain.System.Management.Enums.SystemInstanceOperationType.Start, cancellationToken);
+        return AcceptedAtAction(nameof(GetOperation), new { id, operationId = operation.Id }, ApiResponseBuilder.BuildSuccess(operation));
     }
 
     [HttpPost("{id:guid}/stop")]
-    [ProducesResponseType(typeof(ApiResponse<SystemInstanceExecutionStatus>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<SystemInstanceExecutionStatus>>> Stop([FromRoute] Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationDto>), StatusCodes.Status202Accepted)]
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationDto>>> Stop([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        return Ok(ApiResponseBuilder.BuildSuccess(await _service.StopAsync(id, cancellationToken)));
+        var operation = await _service.EnqueueOperationAsync(id, Athena.Domain.System.Management.Enums.SystemInstanceOperationType.Stop, cancellationToken);
+        return AcceptedAtAction(nameof(GetOperation), new { id, operationId = operation.Id }, ApiResponseBuilder.BuildSuccess(operation));
     }
 
     [HttpPost("{id:guid}/restart")]
-    [ProducesResponseType(typeof(ApiResponse<SystemInstanceExecutionStatus>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<SystemInstanceExecutionStatus>>> Restart([FromRoute] Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationDto>), StatusCodes.Status202Accepted)]
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationDto>>> Restart([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        return Ok(ApiResponseBuilder.BuildSuccess(await _service.RestartAsync(id, cancellationToken)));
+        var operation = await _service.EnqueueOperationAsync(id, Athena.Domain.System.Management.Enums.SystemInstanceOperationType.Restart, cancellationToken);
+        return AcceptedAtAction(nameof(GetOperation), new { id, operationId = operation.Id }, ApiResponseBuilder.BuildSuccess(operation));
     }
 
     [HttpDelete("{id:guid}")]
@@ -108,5 +111,30 @@ public class ApiSystemInstanceProcessController(SystemInstanceProcessUseCaseHand
         [FromRoute] Guid id, CancellationToken cancellationToken)
     {
         return Ok(ApiResponseBuilder.BuildSuccess(await _service.GetOperationsAsync(id, cancellationToken)));
+    }
+
+    [HttpGet("{id:guid}/operations/{operationId:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationDto>>> GetOperation(
+        [FromRoute] Guid id,
+        [FromRoute] Guid operationId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _service.GetOperationAsync(id, operationId, cancellationToken);
+        return result is null ? NotFound() : Ok(ApiResponseBuilder.BuildSuccess(result));
+    }
+
+    [HttpPost("{id:guid}/operations/{operationId:guid}/resolve-unknown")]
+    [ProducesResponseType(typeof(ApiResponse<SystemInstanceOperationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<SystemInstanceOperationDto>>> ResolveUnknownOperation(
+        [FromRoute] Guid id,
+        [FromRoute] Guid operationId,
+        [FromBody] ResolveSystemInstanceOperationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _service.ResolveOutcomeUnknownOperationAsync(id, operationId, request.Reason, cancellationToken);
+        return result is null ? NotFound() : Ok(ApiResponseBuilder.BuildSuccess(result));
     }
 }
